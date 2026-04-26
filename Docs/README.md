@@ -6,6 +6,7 @@
 
 - [プロダクト仕様](./product-spec.md): アプリの目的、対象ユーザー、MVP範囲、非対応範囲
 - [機能仕様](./functional-spec.md): 画面、機能、入力項目、振る舞い
+- [仕様決定事項](./spec-decisions.md): 実装前に決めるべき仕様論点、推奨案、決定状況
 - [データ設計](./data-model.md): エンティティ、項目、制約、ステータス
 - [API仕様](./api-spec.md): バックエンドAPIの初期案
 - [実装前決定事項](./implementation-decisions.md): 実装前に決める技術方針、仕様境界、推奨初期値
