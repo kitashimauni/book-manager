@@ -8,6 +8,8 @@
 - API仕様の初期案を決める
 - バーコードと外部API連携の仕様を決める
 - 保管場所タグの仕様を決める
+- 分類タグの仕様を決める
+- Export/Importの仕様を決める
 - 実装タスクをIssue化する
 
 ## Phase 1: MVP実装
@@ -24,6 +26,8 @@
 - DB接続を設定する
 - `books` テーブルを作成する
 - `locations` テーブルを作成する
+- `classification_tags` テーブルを作成する
+- `book_classification_tags` テーブルを作成する
 - バリデーションを実装する
 
 ### 3. 本CRUD API
@@ -35,6 +39,8 @@
 - 本削除API
 - 本のバーコードから書誌情報を取得するAPI
 - 保管場所タグAPI
+- 分類タグAPI
+- Export/Import API
 - APIテスト
 
 ### 4. フロントエンド基盤
@@ -52,8 +58,10 @@
 - 本詳細画面
 - 本編集画面
 - 保管場所タグ管理画面
+- 分類タグ管理画面
 - 本のバーコード読み取りによる書誌情報取得
 - 管理用バーコード入力、検索
+- JSON Export/Import画面
 - 削除確認
 
 ### 6. MVP仕上げ
@@ -61,6 +69,7 @@
 - README整備
 - 動作確認手順の整理
 - エラーハンドリングの確認
+- セルフホスト向け設定の整理
 - UIの最低限の調整
 
 ## Phase 2以降
@@ -70,7 +79,7 @@
 - 貸出管理
 - ユーザー認証
 - 複数ユーザー対応
-- CSVインポート、エクスポート
+- CSV Import/Export
 - 重複登録チェックの強化
 - 棚卸しワークフロー
 
@@ -81,12 +90,17 @@
 - Setup: Backendプロジェクトを初期化する
 - Backend: booksテーブルを作成する
 - Backend: locationsテーブルを作成する
+- Backend: classification_tagsテーブルを作成する
 - Backend: 本CRUD APIを実装する
 - Backend: バーコード書誌情報取得APIを実装する
 - Backend: 保管場所タグAPIを実装する
+- Backend: 分類タグAPIを実装する
+- Backend: Export/Import APIを実装する
 - Frontend: 本一覧画面を実装する
 - Frontend: 本登録、編集画面を実装する
 - Frontend: 本詳細画面を実装する
 - Frontend: 保管場所タグ管理画面を実装する
+- Frontend: 分類タグ管理画面を実装する
 - Frontend: バーコード入力と書誌情報取得を実装する
+- Frontend: Export/Import画面を実装する
 - QA: MVPの動作確認手順を作成する
