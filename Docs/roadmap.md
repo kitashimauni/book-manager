@@ -18,6 +18,7 @@
 
 - `Frontend/` を作成する
 - `Backend/` を作成する
+- Docker Compose設定を作成する
 - ローカル開発手順を `Docs/` に追加する
 
 ### 2. バックエンド基盤
@@ -71,11 +72,13 @@
 - 動作確認手順の整理
 - エラーハンドリングの確認
 - セルフホスト向け設定の整理
+- SQLiteデータベースファイルのマウントとバックアップ手順の整理
 - UIの最低限の調整
 
 ## Phase 2以降
 
-- 蔵書管理の全機能を持つAndroidアプリ
+- 外部カメラ入力クライアント
+- 蔵書管理の全機能を持つネイティブアプリ
 - 表紙画像表示
 - 貸出管理
 - ユーザー認証
@@ -89,6 +92,7 @@
 - Docs: MVP仕様を作成する
 - Setup: Frontendプロジェクトを初期化する
 - Setup: Backendプロジェクトを初期化する
+- Setup: Docker Compose構成を作成する
 - Backend: booksテーブルを作成する
 - Backend: locationsテーブルを作成する
 - Backend: classification_tagsテーブルを作成する
@@ -103,6 +107,6 @@
 - Frontend: 保管場所タグ管理画面を実装する
 - Frontend: 分類タグ管理画面を実装する
 - Frontend: バーコード入力と書誌情報取得を実装する
-- Integration: カメラ読み取りクライアント連携を実装する
+- Integration: Webカメラ読み取りと外部入力元連携を実装する
 - Frontend: Export/Import画面を実装する
 - QA: MVPの動作確認手順を作成する
