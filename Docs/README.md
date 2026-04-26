@@ -8,6 +8,7 @@
 - [機能仕様](./functional-spec.md): 画面、機能、入力項目、振る舞い
 - [データ設計](./data-model.md): エンティティ、項目、制約、ステータス
 - [API仕様](./api-spec.md): バックエンドAPIの初期案
+- [実装前決定事項](./implementation-decisions.md): 実装前に決める技術方針、仕様境界、推奨初期値
 - [開発ロードマップ](./roadmap.md): 実装順序、Issue化する単位、将来拡張
 
 ## 仕様更新ルール
