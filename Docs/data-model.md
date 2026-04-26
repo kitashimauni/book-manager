@@ -8,7 +8,7 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 
 | カラム | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
-| `id` | UUIDまたはINTEGER | 必須 | 本の一意識別子 |
+| `id` | UUID | 必須 | 本の一意識別子 |
 | `title` | string | 必須 | タイトル |
 | `author` | string | 任意 | 著者。MVPでは文字列で保持 |
 | `publisher` | string | 任意 | 出版社 |
@@ -18,7 +18,7 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 | `management_barcode` | string | 任意 | 利用者が独自に貼付する管理用バーコード |
 | `external_source` | string | 任意 | 書誌情報の取得元。MVPでは `open_library` |
 | `external_id` | string | 任意 | 外部API側の識別子 |
-| `location_id` | UUIDまたはINTEGER | 任意 | 保管場所タグのID |
+| `location_id` | UUID | 任意 | 保管場所タグのID |
 | `management_memo` | text | 任意 | 管理用メモ |
 | `created_at` | datetime | 必須 | 登録日時 |
 | `updated_at` | datetime | 必須 | 更新日時 |
@@ -27,7 +27,7 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 
 | カラム | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
-| `id` | UUIDまたはINTEGER | 必須 | 分類タグの一意識別子 |
+| `id` | UUID | 必須 | 分類タグの一意識別子 |
 | `name` | string | 必須 | 分類タグ名 |
 | `description` | string | 任意 | 説明 |
 | `source` | string | 必須 | `manual` または `open_library` |
@@ -39,15 +39,15 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 
 | カラム | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
-| `book_id` | UUIDまたはINTEGER | 必須 | 本のID |
-| `classification_tag_id` | UUIDまたはINTEGER | 必須 | 分類タグのID |
+| `book_id` | UUID | 必須 | 本のID |
+| `classification_tag_id` | UUID | 必須 | 分類タグのID |
 | `created_at` | datetime | 必須 | 登録日時 |
 
 ## locations
 
 | カラム | 型 | 必須 | 説明 |
 | --- | --- | --- | --- |
-| `id` | UUIDまたはINTEGER | 必須 | 保管場所タグの一意識別子 |
+| `id` | UUID | 必須 | 保管場所タグの一意識別子 |
 | `name` | string | 必須 | 保管場所名 |
 | `description` | string | 任意 | 説明 |
 | `sort_order` | integer | 必須 | 表示順 |
