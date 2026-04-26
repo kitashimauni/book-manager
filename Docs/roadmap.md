@@ -112,3 +112,30 @@
 - Frontend: Webカメラ読み取りを実装する
 - Frontend: Export/Import画面を実装する
 - QA: MVPの動作確認手順を作成する
+
+## GitHub Issue対応
+
+Phase 1の実装は、以下のGitHub Issueを基本単位として進めます。
+
+### 推奨着手順
+
+1. [#4 Backend: DB migration and application foundation](https://github.com/kitashimauni/book-manager/issues/4)
+2. [#3 Backend: implement locations API](https://github.com/kitashimauni/book-manager/issues/3)
+3. [#2 Backend: implement classification tags API](https://github.com/kitashimauni/book-manager/issues/2)
+4. [#1 Backend: implement books CRUD API](https://github.com/kitashimauni/book-manager/issues/1)
+5. [#7 Backend: harden Open Library ISBN lookup](https://github.com/kitashimauni/book-manager/issues/7)
+6. [#5 Frontend: add routing, API client, and shared layout](https://github.com/kitashimauni/book-manager/issues/5)
+7. [#10 Frontend: implement location and classification tag management screens](https://github.com/kitashimauni/book-manager/issues/10)
+8. [#11 Frontend: implement book create/edit form and ISBN lookup flow](https://github.com/kitashimauni/book-manager/issues/11)
+9. [#12 Frontend: implement book list, search, and detail screens](https://github.com/kitashimauni/book-manager/issues/12)
+10. [#9 Frontend: implement web camera barcode scanning](https://github.com/kitashimauni/book-manager/issues/9)
+11. [#8 Backend: implement JSON export/import API](https://github.com/kitashimauni/book-manager/issues/8)
+12. [#13 Frontend: implement JSON export/import screen](https://github.com/kitashimauni/book-manager/issues/13)
+13. [#6 Backend: add API test coverage](https://github.com/kitashimauni/book-manager/issues/6)
+14. [#15 QA: define MVP smoke test and self-host verification](https://github.com/kitashimauni/book-manager/issues/15)
+
+### 継続Issue
+
+- [#14 Docs: keep implementation docs aligned during MVP](https://github.com/kitashimauni/book-manager/issues/14)
+
+実装時に仕様や挙動が変わった場合は、該当IssueのPRで関連Docsも更新します。
