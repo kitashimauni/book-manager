@@ -1,0 +1,27 @@
+[tools]
+node = "24"
+pnpm = "10.33.2"
+
+[tasks.install]
+description = "Install workspace dependencies"
+run = "pnpm install"
+
+[tasks.dev]
+description = "Run frontend and backend in development mode"
+run = "pnpm dev"
+
+[tasks.build]
+description = "Build all workspace packages"
+run = "pnpm build"
+
+[tasks.test]
+description = "Run all tests"
+run = "pnpm test"
+
+[tasks.lint]
+description = "Run lint checks"
+run = "pnpm lint"
+
+[tasks.typecheck]
+description = "Run TypeScript type checks"
+run = "pnpm typecheck"
