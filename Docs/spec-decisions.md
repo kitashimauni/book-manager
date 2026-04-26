@@ -41,9 +41,8 @@
 - Google Books APIはMVP必須にせず、将来の任意プロバイダー候補に留める
 - ISBNまたはISBNとして解釈できる本のバーコードは、Open Library ISBN APIで完全一致照会する
 - ISBN APIで取得できた場合は1件の書誌情報として扱い、候補選択UIは表示しない
-- ISBN APIで取得できない場合のみ、Search APIへフォールバックできる
-- Search APIへフォールバックした場合のみ複数候補が発生し得る
-- Search APIで複数候補が返った場合は、ユーザーが候補を選択するか手入力に進める
+- ISBN APIで取得できない場合はSearch APIへフォールバックせず、手入力登録に進む
+- MVPでは外部APIによる候補選択UIは実装しない
 - Open Library APIの利用時は `User-Agent` と連絡先を設定する
 - 同一ISBNや同一本バーコードへの照会結果はキャッシュする
 - 外部APIのレート制限を超えないよう、アプリ側で連続照会を制御する
