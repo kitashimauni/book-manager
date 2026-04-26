@@ -18,6 +18,8 @@
 
 - `Frontend/` を作成する
 - `Backend/` を作成する
+- pnpm workspaceを作成する
+- miseでNode.js 24 LTSとpnpm利用環境を固定する
 - Docker Compose設定を作成する
 - ローカル開発手順を `Docs/` に追加する
 
@@ -91,6 +93,7 @@
 - Docs: MVP仕様を作成する
 - Setup: Frontendプロジェクトを初期化する
 - Setup: Backendプロジェクトを初期化する
+- Setup: pnpm workspaceとmise設定を作成する
 - Setup: Docker Compose構成を作成する
 - Backend: booksテーブルを作成する
 - Backend: locationsテーブルを作成する
