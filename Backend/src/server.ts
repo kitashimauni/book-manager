@@ -1,22 +1,15 @@
 import "dotenv/config";
-import cors from "@fastify/cors";
-import Fastify from "fastify";
+import { createApp } from "./app.js";
 import { loadConfig } from "./config/env.js";
-import { registerBookRoutes } from "./routes/books.js";
-import { registerHealthRoutes } from "./routes/health.js";
+import { createDatabaseClient } from "./db/client.js";
+import { runMigrations } from "./db/migrate.js";
 
 const config = loadConfig();
+const database = createDatabaseClient(config);
 
-const app = Fastify({
-  logger: true
-});
+runMigrations(database);
 
-await app.register(cors, {
-  origin: config.corsOrigin
-});
-
-await app.register(registerHealthRoutes);
-await app.register(registerBookRoutes);
+const app = await createApp({ config, database });
 
 try {
   await app.listen({

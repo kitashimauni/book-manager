@@ -36,6 +36,22 @@ docker compose up
 
 Docker Composeでは `./data:/data` をマウントします。通常のバックアップは、ホスト側の `data/book-manager.sqlite` を保存する運用を基本とします。
 
+## DB Migration
+
+Backendは起動時にDrizzle migrationを適用します。migrationファイルは `Backend/drizzle/` に管理します。
+
+Schemaを変更した場合は、以下でmigrationを生成します。
+
+```powershell
+pnpm --filter @book-manager/backend db:generate
+```
+
+手動でmigrationを適用する場合は、`DATABASE_PATH` を指定して以下を実行します。
+
+```powershell
+pnpm --filter @book-manager/backend db:migrate
+```
+
 ## 環境変数
 
 | 名前 | 必須 | 説明 |

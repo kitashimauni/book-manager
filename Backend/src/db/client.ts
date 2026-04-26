@@ -2,11 +2,19 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { loadConfig } from "../config/env.js";
+import type { AppConfig } from "../config/env.js";
+import * as schema from "./schema.js";
 
-const config = loadConfig();
+export type DatabaseClient = ReturnType<typeof createDatabaseClient>;
 
-mkdirSync(dirname(config.databasePath), { recursive: true });
+export function createDatabaseClient(config: Pick<AppConfig, "databasePath">) {
+  mkdirSync(dirname(config.databasePath), { recursive: true });
 
-export const sqlite = new Database(config.databasePath);
-export const db = drizzle(sqlite);
+  const sqlite = new Database(config.databasePath);
+  sqlite.pragma("foreign_keys = ON");
+
+  return {
+    sqlite,
+    db: drizzle(sqlite, { schema })
+  };
+}
