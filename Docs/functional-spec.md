@@ -190,8 +190,10 @@ MVPではトップページ `/` は `/books` に誘導します。
 ### Export
 
 - 本、保管場所タグ、分類タグをまとめてJSON形式でExportします。
-- ExportしたJSONは、同じアプリのImportで復元できる形式にします。
-- MVPではCSV Exportは必須にせず、必要になったら追加します。
+- JSON Exportは、同じアプリのImportで復元できる正式なバックアップ、移行形式とします。
+- 他ツールでの閲覧、分析向けにはCSV Exportを別機能として追加できるようにします。
+- CSV Exportは復元用の正規形式ではなく、Excel、LibreOffice、Python、Rなどで確認、分析するための読み取り用形式として扱います。
+- CSV ImportはMVPでは必須にせず、必要になった時点で列仕様と重複解決ルールを別途決めます。
 
 ### Import
 
