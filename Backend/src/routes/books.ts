@@ -437,7 +437,17 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
       return reply.status(400).send(mapValidationIssues(parsed.error.issues));
     }
 
-    const result = await lookupBookByIsbn(parsed.data.bookBarcode, options.config);
+    let result: Awaited<ReturnType<typeof lookupBookByIsbn>>;
+
+    try {
+      result = await lookupBookByIsbn(parsed.data.bookBarcode, options.config);
+    } catch (error) {
+      request.log.warn({ error }, "Open Library lookup failed");
+
+      return reply.status(502).send({
+        message: "Book metadata lookup failed. Please enter it manually."
+      });
+    }
 
     if (!result) {
       return reply.status(404).send({
