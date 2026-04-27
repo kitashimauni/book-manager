@@ -35,6 +35,55 @@ export type ClassificationTag = {
   updatedAt: string;
 };
 
+export type BookReference = {
+  id: string;
+  name: string;
+};
+
+export type Book = {
+  id: string;
+  title: string;
+  author: string | null;
+  publisher: string | null;
+  publishedDate: string | null;
+  isbn: string | null;
+  bookBarcode: string | null;
+  managementBarcode: string | null;
+  externalSource: string | null;
+  externalId: string | null;
+  location: BookReference | null;
+  classificationTags: BookReference[];
+  managementMemo: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BookFormRequest = {
+  title: string;
+  author?: string | null;
+  publisher?: string | null;
+  publishedDate?: string | null;
+  isbn?: string | null;
+  bookBarcode?: string | null;
+  managementBarcode?: string | null;
+  externalSource?: string | null;
+  externalId?: string | null;
+  locationId?: string | null;
+  classificationTagIds?: string[];
+  managementMemo?: string | null;
+};
+
+export type BookLookupResult = {
+  title: string;
+  author?: string;
+  publisher?: string;
+  publishedDate?: string;
+  isbn?: string;
+  externalSource: "open_library";
+  externalId?: string;
+  classificationTagCandidates: string[];
+};
+
 export type CreateLocationRequest = {
   name: string;
   description?: string;
@@ -94,6 +143,31 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
 
 export function getHealth() {
   return apiRequest<HealthResponse>("/api/health");
+}
+
+export function getBook(id: string) {
+  return apiRequest<Book>(`/api/books/${encodeURIComponent(id)}`);
+}
+
+export function createBook(payload: BookFormRequest) {
+  return apiRequest<Book>("/api/books", {
+    body: JSON.stringify(payload),
+    method: "POST"
+  });
+}
+
+export function updateBook(id: string, payload: BookFormRequest) {
+  return apiRequest<Book>(`/api/books/${encodeURIComponent(id)}`, {
+    body: JSON.stringify(payload),
+    method: "PUT"
+  });
+}
+
+export function lookupBookByBarcode(bookBarcode: string) {
+  return apiRequest<BookLookupResult>("/api/books/lookup", {
+    body: JSON.stringify({ bookBarcode }),
+    method: "POST"
+  });
 }
 
 export function getLocations() {

@@ -229,6 +229,135 @@ button:disabled {
   align-items: start;
 }
 
+.book-form-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 22px;
+  align-items: start;
+}
+
+.book-form-main,
+.book-form-side {
+  display: grid;
+  gap: 18px;
+}
+
+.book-form-side {
+  position: sticky;
+  top: 32px;
+}
+
+.form-section {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 250, 240, 0.64);
+  box-shadow: 0 20px 60px rgba(65, 49, 27, 0.08);
+}
+
+.form-section h3 {
+  margin: 0;
+}
+
+.form-section label {
+  display: grid;
+  gap: 8px;
+  color: #3d493b;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.form-section input,
+.form-section textarea,
+.form-section select {
+  width: 100%;
+  border: 1px solid rgba(65, 55, 39, 0.18);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 600;
+}
+
+.form-section input,
+.form-section select {
+  min-height: 46px;
+  padding: 0 14px;
+}
+
+.form-section textarea {
+  min-height: 132px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.field-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.lookup-panel {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px dashed rgba(85, 107, 79, 0.32);
+  border-radius: 18px;
+  background: rgba(85, 107, 79, 0.08);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+}
+
+.lookup-panel p,
+.subtle-text,
+.inline-message {
+  margin: 0;
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  line-height: 1.7;
+}
+
+.inline-message {
+  color: #385f40;
+  font-weight: 800;
+}
+
+.choice-list,
+.candidate-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.choice-pill,
+.candidate-chip {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid rgba(85, 107, 79, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.52);
+  color: #354433;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.choice-pill input {
+  width: 16px;
+  min-height: 16px;
+}
+
+.candidate-chip {
+  background: rgba(138, 87, 56, 0.1);
+}
+
+.full-width {
+  width: 100%;
+}
+
 .management-form,
 .management-list {
   border: 1px solid var(--line);
@@ -544,6 +673,15 @@ button:disabled {
 
   .management-grid {
     grid-template-columns: 1fr;
+  }
+
+  .book-form-layout,
+  .field-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .book-form-side {
+    position: static;
   }
 
   .management-form {
