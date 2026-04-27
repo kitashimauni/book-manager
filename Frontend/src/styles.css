@@ -36,6 +36,15 @@ select {
   font: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
 .app-shell {
   min-height: 100vh;
   display: grid;
@@ -213,6 +222,218 @@ select {
   font-weight: 700;
 }
 
+.management-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.management-form,
+.management-list {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 250, 240, 0.64);
+  box-shadow: 0 20px 60px rgba(65, 49, 27, 0.08);
+}
+
+.management-form {
+  position: sticky;
+  top: 32px;
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.management-form h3,
+.management-list h3,
+.tag-card h4 {
+  margin: 0;
+}
+
+.management-form label {
+  display: grid;
+  gap: 8px;
+  color: #3d493b;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.management-form input,
+.management-form textarea,
+.management-form select {
+  width: 100%;
+  border: 1px solid rgba(65, 55, 39, 0.18);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 600;
+}
+
+.management-form input,
+.management-form select {
+  min-height: 46px;
+  padding: 0 14px;
+}
+
+.management-form textarea {
+  min-height: 112px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.checkbox-field {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.checkbox-field input {
+  width: 18px;
+  min-height: 18px;
+}
+
+.form-actions,
+.card-actions,
+.list-heading {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-actions,
+.card-actions {
+  flex-wrap: wrap;
+}
+
+.button-primary,
+.button-secondary,
+.button-danger {
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: 999px;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.button-primary {
+  border: 1px solid #2f3a2d;
+  background: #2f3a2d;
+  color: #fff5df;
+  box-shadow: 0 14px 30px rgba(47, 58, 45, 0.18);
+}
+
+.button-secondary {
+  border: 1px solid rgba(85, 107, 79, 0.24);
+  background: rgba(85, 107, 79, 0.1);
+  color: #354433;
+}
+
+.button-danger {
+  border: 1px solid rgba(165, 72, 50, 0.32);
+  background: rgba(165, 72, 50, 0.1);
+  color: #8d3f2b;
+}
+
+.button-primary:hover:not(:disabled),
+.button-secondary:hover:not(:disabled),
+.button-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.management-list {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.list-heading {
+  justify-content: space-between;
+}
+
+.tag-card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.tag-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid rgba(85, 107, 79, 0.18);
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 250, 240, 0.48)),
+    rgba(255, 255, 255, 0.36);
+}
+
+.tag-card.inactive {
+  filter: saturate(0.62);
+  opacity: 0.72;
+}
+
+.tag-card-title {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tag-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  line-height: 1.7;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(102, 114, 98, 0.14);
+  color: #667262;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.status-pill.active {
+  background: rgba(85, 107, 79, 0.16);
+  color: #3f6639;
+}
+
+.meta-list {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 14px 0 0;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+}
+
+.meta-list div {
+  display: grid;
+  gap: 2px;
+}
+
+.meta-list dt {
+  color: var(--cedar);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.meta-list dd {
+  margin: 0;
+  color: #3f4b3d;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
 .state-block {
   max-width: 680px;
   padding: 20px;
@@ -318,6 +539,18 @@ select {
   }
 
   .placeholder-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .management-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .management-form {
+    position: static;
+  }
+
+  .tag-card {
     grid-template-columns: 1fr;
   }
 }
