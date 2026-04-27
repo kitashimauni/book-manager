@@ -84,6 +84,21 @@ export type BookLookupResult = {
   classificationTagCandidates: string[];
 };
 
+export type ListBooksQuery = {
+  q?: string;
+  locationId?: string;
+  classificationTagId?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type ListBooksResponse = {
+  items: Book[];
+  page: number;
+  limit: number;
+  total: number;
+};
+
 export type CreateLocationRequest = {
   name: string;
   description?: string;
@@ -145,6 +160,20 @@ export function getHealth() {
   return apiRequest<HealthResponse>("/api/health");
 }
 
+export function getBooks(query: ListBooksQuery = {}) {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== "") {
+      params.set(key, String(value));
+    }
+  }
+
+  const search = params.toString();
+
+  return apiRequest<ListBooksResponse>(`/api/books${search ? `?${search}` : ""}`);
+}
+
 export function getBook(id: string) {
   return apiRequest<Book>(`/api/books/${encodeURIComponent(id)}`);
 }
@@ -160,6 +189,12 @@ export function updateBook(id: string, payload: BookFormRequest) {
   return apiRequest<Book>(`/api/books/${encodeURIComponent(id)}`, {
     body: JSON.stringify(payload),
     method: "PUT"
+  });
+}
+
+export function deleteBook(id: string) {
+  return apiRequest<void>(`/api/books/${encodeURIComponent(id)}`, {
+    method: "DELETE"
   });
 }
 

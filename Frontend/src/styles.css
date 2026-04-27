@@ -358,6 +358,222 @@ button:disabled {
   width: 100%;
 }
 
+.link-button {
+  text-decoration: none;
+}
+
+.book-list-toolbar {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 250, 240, 0.62);
+}
+
+.book-search-form,
+.filter-row {
+  display: grid;
+  gap: 12px;
+  align-items: end;
+}
+
+.book-search-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.filter-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto auto;
+}
+
+.book-search-form label,
+.filter-row label {
+  display: grid;
+  gap: 7px;
+  color: #3d493b;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.book-search-form input,
+.filter-row select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid rgba(65, 55, 39, 0.18);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 600;
+}
+
+.result-summary {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 700;
+}
+
+.result-summary strong {
+  color: var(--ink);
+  font-size: 1.8rem;
+}
+
+.book-card-list {
+  display: grid;
+  gap: 14px;
+}
+
+.book-card,
+.book-detail {
+  border: 1px solid rgba(85, 107, 79, 0.18);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.64), rgba(255, 250, 240, 0.5)),
+    rgba(255, 255, 255, 0.36);
+  box-shadow: 0 20px 60px rgba(65, 49, 27, 0.08);
+}
+
+.book-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.15fr) minmax(320px, 1fr) minmax(160px, 0.8fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px;
+}
+
+.book-card h3,
+.book-detail h3 {
+  margin: 0;
+  letter-spacing: -0.04em;
+}
+
+.book-card h3 a {
+  text-decoration: none;
+}
+
+.book-card p,
+.book-detail-hero p,
+.memo-box {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  line-height: 1.7;
+}
+
+.book-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+}
+
+.book-meta-grid div,
+.detail-grid div {
+  display: grid;
+  gap: 3px;
+}
+
+.book-meta-grid dt,
+.detail-grid dt {
+  color: var(--cedar);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.book-meta-grid dd,
+.detail-grid dd {
+  min-width: 0;
+  margin: 0;
+  color: #3f4b3d;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.book-tag-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.book-tag-row span {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(85, 107, 79, 0.12);
+  color: #3f6639;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.pagination-bar {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  color: #3f4b3d;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.book-detail {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.book-detail-hero {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.book-detail-hero h3 {
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 1.05;
+}
+
+.detail-section {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(65, 55, 39, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 250, 240, 0.48);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+}
+
+.detail-tags {
+  margin-top: 4px;
+}
+
+.memo-box {
+  min-height: 72px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  white-space: pre-wrap;
+}
+
 .management-form,
 .management-list {
   border: 1px solid var(--line);
@@ -676,12 +892,20 @@ button:disabled {
   }
 
   .book-form-layout,
+  .book-search-form,
+  .filter-row,
+  .book-card,
+  .detail-grid,
   .field-pair {
     grid-template-columns: 1fr;
   }
 
   .book-form-side {
     position: static;
+  }
+
+  .book-detail-hero {
+    flex-direction: column;
   }
 
   .management-form {
