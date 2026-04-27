@@ -309,6 +309,104 @@ button:disabled {
   font-family: "Yu Gothic", "Meiryo", sans-serif;
 }
 
+.camera-scanner {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(65, 55, 39, 0.14);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(246, 213, 155, 0.35), transparent 34%),
+    rgba(47, 58, 45, 0.08);
+}
+
+.scanner-heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.scanner-heading h4 {
+  margin: 0;
+}
+
+.scanner-targets {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scanner-targets label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 7px 11px;
+  border: 1px solid rgba(85, 107, 79, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  color: #354433;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.scanner-targets input {
+  width: 16px;
+  min-height: 16px;
+}
+
+.scanner-preview {
+  position: relative;
+  display: grid;
+  min-height: 220px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px dashed rgba(85, 107, 79, 0.32);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(47, 58, 45, 0.9), rgba(36, 48, 38, 0.82)),
+    #243026;
+}
+
+.scanner-preview::before {
+  content: "カメラ待機中";
+  color: rgba(255, 245, 223, 0.72);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.scanner-preview.active::before {
+  content: "";
+}
+
+.scanner-preview video {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  object-fit: cover;
+}
+
+.scanner-reticle {
+  position: absolute;
+  width: min(78%, 420px);
+  height: 82px;
+  border: 2px solid rgba(246, 213, 155, 0.9);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 999px rgba(0, 0, 0, 0.18),
+    0 0 28px rgba(246, 213, 155, 0.28);
+  pointer-events: none;
+}
+
+.scanner-error {
+  margin: 0;
+  color: #8d3f2b;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
 .lookup-panel p,
 .subtle-text,
 .inline-message {

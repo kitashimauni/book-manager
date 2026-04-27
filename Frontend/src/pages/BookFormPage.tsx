@@ -14,6 +14,10 @@ import {
   type ClassificationTag,
   type Location
 } from "../api/client.js";
+import {
+  CameraBarcodeScanner,
+  type BarcodeScanTarget
+} from "../components/CameraBarcodeScanner.js";
 import { ErrorState, LoadingState } from "../components/StateBlocks.js";
 import { navigateTo } from "../router.js";
 
@@ -213,6 +217,19 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
     }));
   }
 
+  function handleCameraScan(value: string, target: BarcodeScanTarget) {
+    setForm((current) => ({
+      ...current,
+      [target]: value
+    }));
+
+    setLookupMessage(
+      target === "bookBarcode"
+        ? "カメラで読み取った値を本のバーコードに入力しました。必要に応じてOpen Libraryで照会できます。"
+        : "カメラで読み取った値を管理用バーコードに入力しました。"
+    );
+  }
+
   const activeLocations = locations.filter((location) => location.isActive || location.id === form.locationId);
   const activeTags = tags.filter((tag) => tag.isActive || form.classificationTagIds.includes(tag.id));
 
@@ -319,6 +336,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 </p>
                 {lookupMessage ? <p className="inline-message">{lookupMessage}</p> : null}
               </div>
+              <CameraBarcodeScanner onScan={handleCameraScan} />
             </section>
 
             <section className="form-section">
