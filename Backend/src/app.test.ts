@@ -33,14 +33,21 @@ describe("backend application foundation", () => {
   it("applies migrations to a fresh SQLite database", () => {
     const tables = database.sqlite
       .prepare(
-        "select name from sqlite_master where type = 'table' and name in (?, ?, ?, ?) order by name"
+        "select name from sqlite_master where type = 'table' and name in (?, ?, ?, ?, ?) order by name"
       )
-      .all("books", "locations", "classification_tags", "book_classification_tags");
+      .all(
+        "books",
+        "locations",
+        "classification_tags",
+        "book_classification_tags",
+        "external_lookup_cache"
+      );
 
     expect(tables).toEqual([
       { name: "book_classification_tags" },
       { name: "books" },
       { name: "classification_tags" },
+      { name: "external_lookup_cache" },
       { name: "locations" }
     ]);
   });

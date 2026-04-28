@@ -14,7 +14,8 @@ import {
   type CreateBookRequest,
   type UpdateBookRequest
 } from "../schemas/books.js";
-import { lookupBookByIsbn } from "../services/bookLookup.js";
+import { createBookLookupService } from "../services/bookLookup.js";
+import { createSqliteBookLookupCache } from "../services/bookLookupCache.js";
 
 export type BookRouteOptions = {
   config: AppConfig;
@@ -23,6 +24,9 @@ export type BookRouteOptions = {
 
 export async function registerBookRoutes(app: FastifyInstance, options: BookRouteOptions) {
   const { db } = options.database;
+  const bookLookup = createBookLookupService({
+    cache: createSqliteBookLookupCache(options.database, options.config)
+  });
 
   function mapValidationIssues(issues: Array<{ path: PropertyKey[]; message: string }>) {
     return validationError(
@@ -437,10 +441,10 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
       return reply.status(400).send(mapValidationIssues(parsed.error.issues));
     }
 
-    let result: Awaited<ReturnType<typeof lookupBookByIsbn>>;
+    let result: Awaited<ReturnType<typeof bookLookup.lookupBookByIsbn>>;
 
     try {
-      result = await lookupBookByIsbn(parsed.data.bookBarcode, options.config);
+      result = await bookLookup.lookupBookByIsbn(parsed.data.bookBarcode, options.config);
     } catch (error) {
       request.log.warn({ error }, "Book metadata lookup failed");
 

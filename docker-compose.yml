@@ -26,6 +26,7 @@ services:
       BACKEND_PORT: ${BACKEND_PORT:-3001}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       DATABASE_PATH: /data/book-manager.sqlite
+      LOOKUP_CACHE_TTL_DAYS: ${LOOKUP_CACHE_TTL_DAYS:-30}
       OPEN_LIBRARY_APP_NAME: ${OPEN_LIBRARY_APP_NAME:-book-manager}
       OPEN_LIBRARY_CONTACT: ${OPEN_LIBRARY_CONTACT:-}
     ports:

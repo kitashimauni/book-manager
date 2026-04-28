@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AppConfig } from "../config/env.js";
+import type { BookLookupCache } from "./bookLookupCache.js";
 import { createBookLookupService, type IsbnLookupService } from "./bookLookup.js";
 
 const baseConfig: AppConfig = {
@@ -11,6 +12,13 @@ const baseConfig: AppConfig = {
 function lookupService(result: Awaited<ReturnType<IsbnLookupService["lookupBookByIsbn"]>>) {
   return {
     lookupBookByIsbn: vi.fn<IsbnLookupService["lookupBookByIsbn"]>().mockResolvedValue(result)
+  };
+}
+
+function cacheDouble(value: ReturnType<BookLookupCache["get"]> = { found: false }) {
+  return {
+    get: vi.fn<BookLookupCache["get"]>().mockReturnValue(value),
+    set: vi.fn<BookLookupCache["set"]>()
   };
 }
 
@@ -88,5 +96,45 @@ describe("book lookup service", () => {
     expect(result).toBeNull();
     expect(ndlSearch.lookupBookByIsbn).not.toHaveBeenCalled();
     expect(openLibrary.lookupBookByIsbn).not.toHaveBeenCalled();
+  });
+
+  it("uses cached NDL Search results before calling providers", async () => {
+    const cache = cacheDouble({
+      found: true,
+      value: {
+        title: "Cached book",
+        externalSource: "ndl_search",
+        classificationTagCandidates: []
+      }
+    });
+    const ndlSearch = lookupService(null);
+    const openLibrary = lookupService(null);
+    const service = createBookLookupService({ cache, ndlSearch, openLibrary });
+
+    const result = await service.lookupBookByIsbn("9784814400249", baseConfig);
+
+    expect(result?.title).toBe("Cached book");
+    expect(cache.get).toHaveBeenCalledWith("ndl_search", "9784814400249");
+    expect(ndlSearch.lookupBookByIsbn).not.toHaveBeenCalled();
+    expect(openLibrary.lookupBookByIsbn).not.toHaveBeenCalled();
+  });
+
+  it("stores provider misses and fallback hits in the lookup cache", async () => {
+    const cache = cacheDouble();
+    const ndlSearch = lookupService(null);
+    const openLibraryResult = {
+      title: "Clean Code",
+      externalSource: "open_library" as const,
+      classificationTagCandidates: []
+    };
+    const openLibrary = lookupService(openLibraryResult);
+    const service = createBookLookupService({ cache, ndlSearch, openLibrary });
+
+    await expect(service.lookupBookByIsbn("9780132350884", baseConfig)).resolves.toEqual(
+      openLibraryResult
+    );
+
+    expect(cache.set).toHaveBeenCalledWith("ndl_search", "9780132350884", null);
+    expect(cache.set).toHaveBeenCalledWith("open_library", "9780132350884", openLibraryResult);
   });
 });

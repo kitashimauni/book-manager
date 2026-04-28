@@ -2,7 +2,7 @@
 
 ## エンティティ
 
-MVPでは `books`、`locations`、`classification_tags`、`book_classification_tags` を扱います。
+MVPでは `books`、`locations`、`classification_tags`、`book_classification_tags`、`external_lookup_cache` を扱います。
 
 ## books
 
@@ -55,6 +55,21 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 | `created_at` | datetime | 必須 | 登録日時 |
 | `updated_at` | datetime | 必須 | 更新日時 |
 
+## external_lookup_cache
+
+外部APIの照会結果をSQLiteに保存するキャッシュです。再取得可能な派生データのため、Export/Import対象には含めません。
+
+| カラム | 型 | 必須 | 説明 |
+| --- | --- | --- | --- |
+| `id` | string | 必須 | `provider:isbn` 形式の一意識別子 |
+| `isbn` | string | 必須 | 正規化済みISBN |
+| `provider` | string | 必須 | `ndl_search` または `open_library` |
+| `status` | string | 必須 | `hit` または `miss` |
+| `payload` | JSON text | 任意 | 取得できた書誌情報。`miss` の場合は未設定 |
+| `created_at` | datetime | 必須 | 初回保存日時 |
+| `updated_at` | datetime | 必須 | 更新日時 |
+| `expires_at` | datetime | 必須 | キャッシュ有効期限 |
+
 ## 制約
 
 - `title` は空文字を許可しません。
@@ -72,6 +87,7 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 - `classification_tags.name` は一意である必要があります。
 - 既に本に紐づいている分類タグは物理削除せず、`is_active = false` とします。
 - `book_classification_tags` は `book_id` と `classification_tag_id` の組み合わせを一意にします。
+- `external_lookup_cache` は `provider` と `isbn` の組み合わせを一意にします。
 
 ## インデックス候補
 
@@ -88,6 +104,8 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 - `locations.sort_order`
 - `classification_tags.name`
 - `classification_tags.source`
+- `external_lookup_cache.provider`
+- `external_lookup_cache.isbn`
 
 ## 将来の正規化候補
 
@@ -107,3 +125,5 @@ MVPでは以下をJSON形式でExport/Importします。
 - `locations`
 - `classification_tags`
 - `book_classification_tags`
+
+`external_lookup_cache` はExport/Import対象外です。

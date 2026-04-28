@@ -12,8 +12,6 @@ type OpenLibraryBook = {
   subjects?: string[];
 };
 
-type LookupCacheValue = BookLookupResult | null;
-
 export type OpenLibraryLookupServiceOptions = {
   fetchImpl?: typeof fetch;
   sleep?: (milliseconds: number) => Promise<void>;
@@ -45,7 +43,6 @@ export function createOpenLibraryLookupService(options: OpenLibraryLookupService
   const sleep =
     options.sleep ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
   const now = options.now ?? Date.now;
-  const cache = new Map<string, LookupCacheValue>();
   let lastRequestAt: number | null = null;
 
   async function waitForRequestSlot(config: AppConfig) {
@@ -68,10 +65,6 @@ export function createOpenLibraryLookupService(options: OpenLibraryLookupService
         return null;
       }
 
-      if (cache.has(isbn)) {
-        return cache.get(isbn) ?? null;
-      }
-
       await waitForRequestSlot(config);
 
       const response = await fetchImpl(
@@ -82,7 +75,6 @@ export function createOpenLibraryLookupService(options: OpenLibraryLookupService
       );
 
       if (response.status === 404) {
-        cache.set(isbn, null);
         return null;
       }
 
@@ -91,11 +83,7 @@ export function createOpenLibraryLookupService(options: OpenLibraryLookupService
       }
 
       const payload = (await response.json()) as OpenLibraryBook;
-      const result = mapOpenLibraryBook(payload, isbn);
-
-      cache.set(isbn, result);
-
-      return result;
+      return mapOpenLibraryBook(payload, isbn);
     }
   };
 }
