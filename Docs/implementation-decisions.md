@@ -51,6 +51,9 @@
 - 自宅や研究室のセルフホスト環境で動かせる構成を前提にする
 - MVPはローカル開発で完結させつつ、あとからセルフホストしやすいよう設定値を環境変数化する
 - Docker Composeを標準のセルフホスト起動方法とする
+- Docker Composeでは、backend/frontendをそれぞれimageとしてbuildし、実行時にホスト側のソースコードや `node_modules` をbind mountしない
+- WindowsホストとLinuxコンテナでnative dependencyが混ざらないよう、Docker用の依存関係はimage内に閉じ込める
+- Webフロントエンドはnginxで静的配信し、`/api` をbackendへプロキシすることで同一オリジン構成を基本とする
 - SQLiteデータベースファイルはコンテナ内 `/data/book-manager.sqlite` を標準パスとし、Docker volumeまたはホストディレクトリへマウントする
 - SQLiteデータベースファイル自体をバックアップ対象とする
 - 外部書誌APIはAPIキー必須の仕組みに依存しない

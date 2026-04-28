@@ -23,6 +23,7 @@ export async function createApp({ config, database, logger = true }: CreateAppOp
   registerErrorHandler(app);
 
   await app.register(cors, {
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     origin: config.corsOrigin
   });
 

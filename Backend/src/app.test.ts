@@ -70,6 +70,24 @@ describe("backend application foundation", () => {
     });
   });
 
+  it("allows DELETE requests in CORS preflight responses", async () => {
+    const app = await createApp({ config, database, logger: false });
+
+    const response = await app.inject({
+      method: "OPTIONS",
+      url: "/api/books/00000000-0000-4000-8000-000000000000",
+      headers: {
+        origin: "http://localhost:3000",
+        "access-control-request-method": "DELETE"
+      }
+    });
+
+    await app.close();
+
+    expect(response.statusCode).toBe(204);
+    expect(response.headers["access-control-allow-methods"]).toContain("DELETE");
+  });
+
   it("returns the shared validation error response shape", async () => {
     const app = await createApp({ config, database, logger: false });
 

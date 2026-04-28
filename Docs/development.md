@@ -18,12 +18,30 @@ mise run install
 mise run dev
 ```
 
+## 依存関係の更新とテスト
+
+Docker Composeはコンテナ内で依存関係をインストールし、実行時にホスト側の `node_modules` をマウントしません。WindowsホストとLinuxコンテナでnative dependencyが混ざらないよう、Docker用の依存関係はimage内に閉じ込めます。
+
+ホスト側の依存関係を更新する場合や、壊れた `node_modules` を作り直す場合は、念のためDocker Composeのコンテナを停止してから `pnpm install` を実行します。
+
+```powershell
+docker compose down
+pnpm install
+mise run test
+```
+
+通常の実装確認では、ホスト側で `pnpm install` が完了している状態なら `mise run test` を実行します。
+
 ## Docker Compose起動
 
 ```powershell
 Copy-Item .env.example .env
-docker compose up
+docker compose up --build
 ```
+
+Docker Composeでは、backend/frontendはそれぞれDockerfileからbuildしたimageとして動作します。ソースコードや `node_modules` は実行時にbind mountせず、SQLiteデータ保存用の `./data:/data` だけをマウントします。
+
+Frontendコンテナはnginxで静的ファイルを配信し、`/api` をbackendコンテナへプロキシします。Docker Composeでは `DOCKER_VITE_API_BASE_URL` を空にすると同一オリジンの `/api` を使うため、この設定を推奨します。
 
 標準ポート:
 
@@ -58,7 +76,8 @@ pnpm --filter @book-manager/backend db:migrate
 | --- | --- | --- |
 | `FRONTEND_PORT` | 任意 | Frontendの公開ポート。初期値は `3000` |
 | `BACKEND_PORT` | 任意 | Backendの公開ポート。初期値は `3001` |
-| `VITE_API_BASE_URL` | 任意 | Frontendから見るBackend URL |
+| `VITE_API_BASE_URL` | 任意 | ローカル開発時にFrontendから見るBackend URL。空の場合は同一オリジンの `/api` |
+| `DOCKER_VITE_API_BASE_URL` | 任意 | Docker frontend imageのbuild時に埋め込むBackend URL。空の場合はnginxの `/api` proxy |
 | `VITE_DEV_PROXY_TARGET` | 任意 | Vite開発プロキシが接続するBackend URL |
 | `CORS_ORIGIN` | 任意 | Backendが許可するFrontend origin |
 | `DATABASE_PATH` | 任意 | SQLiteデータベースパス |
