@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Backend/Dockerfile
+    environment:
+      BACKEND_PORT: ${BACKEND_PORT:-3001}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      DATABASE_PATH: /data/book-manager.sqlite
+      LOOKUP_CACHE_TTL_DAYS: ${LOOKUP_CACHE_TTL_DAYS:-30}
+      OPEN_LIBRARY_APP_NAME: ${OPEN_LIBRARY_APP_NAME:-book-manager}
+      OPEN_LIBRARY_CONTACT: ${OPEN_LIBRARY_CONTACT:-}
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${DOCKER_VITE_API_BASE_URL:-}
+    environment:
+      FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
