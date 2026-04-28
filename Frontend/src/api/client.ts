@@ -99,6 +99,70 @@ export type ListBooksResponse = {
   total: number;
 };
 
+export type JsonExportPayload = {
+  version: 1;
+  exportedAt?: string;
+  books: Array<Record<string, unknown>>;
+  locations: Array<Record<string, unknown>>;
+  classificationTags: Array<Record<string, unknown>>;
+  bookClassificationTags: Array<Record<string, unknown>>;
+};
+
+export type ImportAction = "overwrite" | "skip";
+export type ImportEntity = "book" | "location" | "classificationTag";
+
+export type ImportConflict = {
+  entity: ImportEntity;
+  matchBy: "id" | "managementBarcode" | "name";
+  incomingId: string;
+  existingId: string;
+  defaultAction: "skip";
+  availableActions: ImportAction[];
+};
+
+export type ImportPreview = {
+  summary: {
+    create: number;
+    conflict: number;
+    error: number;
+  };
+  conflicts: ImportConflict[];
+  errors: Array<{
+    field: string;
+    message: string;
+  }>;
+};
+
+export type ImportRequest = JsonExportPayload & {
+  conflictResolution?: {
+    defaultAction: ImportAction;
+    items: Array<{
+      entity: ImportEntity;
+      incomingId: string;
+      existingId: string;
+      action: ImportAction;
+    }>;
+  };
+};
+
+export type ImportResult = {
+  imported: {
+    books: number;
+    locations: number;
+    classificationTags: number;
+  };
+  overwritten: {
+    books: number;
+    locations: number;
+    classificationTags: number;
+  };
+  skipped: {
+    books: number;
+    locations: number;
+    classificationTags: number;
+  };
+};
+
 export type CreateLocationRequest = {
   name: string;
   description?: string;
@@ -158,6 +222,24 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
 
 export function getHealth() {
   return apiRequest<HealthResponse>("/api/health");
+}
+
+export function exportJsonData() {
+  return apiRequest<JsonExportPayload>("/api/export");
+}
+
+export function previewJsonImport(payload: JsonExportPayload) {
+  return apiRequest<ImportPreview>("/api/import/preview", {
+    body: JSON.stringify(payload),
+    method: "POST"
+  });
+}
+
+export function importJsonData(payload: ImportRequest) {
+  return apiRequest<ImportResult>("/api/import", {
+    body: JSON.stringify(payload),
+    method: "POST"
+  });
 }
 
 export function getBooks(query: ListBooksQuery = {}) {

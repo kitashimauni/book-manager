@@ -229,6 +229,200 @@ button:disabled {
   align-items: start;
 }
 
+.data-flow-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(320px, 1.2fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.data-card,
+.import-preview-panel {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 250, 240, 0.64);
+  box-shadow: 0 20px 60px rgba(65, 49, 27, 0.08);
+}
+
+.data-card h3,
+.import-preview-panel h3,
+.preview-section h4,
+.conflict-card h5,
+.result-group h4 {
+  margin: 0;
+}
+
+.data-card p,
+.conflict-toolbar p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  line-height: 1.7;
+}
+
+.file-input-label,
+.json-paste-field {
+  display: grid;
+  gap: 8px;
+  color: #3d493b;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.file-input-label input,
+.json-paste-field textarea {
+  width: 100%;
+  border: 1px solid rgba(65, 55, 39, 0.18);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 600;
+}
+
+.file-input-label input {
+  min-height: 46px;
+  padding: 10px 14px;
+}
+
+.json-paste-field textarea {
+  min-height: 220px;
+  padding: 12px 14px;
+  font-family: "Cascadia Code", "Consolas", monospace;
+  resize: vertical;
+}
+
+.import-preview-panel {
+  margin-top: 22px;
+}
+
+.import-preview-panel.result {
+  background:
+    radial-gradient(circle at 12% 12%, rgba(92, 127, 79, 0.16), transparent 32%),
+    rgba(255, 250, 240, 0.7);
+}
+
+.import-summary-grid,
+.import-result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-card,
+.result-group {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(85, 107, 79, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.48);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+}
+
+.summary-card strong {
+  color: var(--ink);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.summary-card span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.summary-card.danger {
+  border-color: rgba(165, 72, 50, 0.32);
+  background: rgba(165, 72, 50, 0.1);
+}
+
+.preview-section {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(65, 55, 39, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 250, 240, 0.48);
+}
+
+.preview-section.danger {
+  border-color: rgba(165, 72, 50, 0.32);
+  background: rgba(165, 72, 50, 0.08);
+}
+
+.issue-list,
+.conflict-list {
+  display: grid;
+  gap: 12px;
+}
+
+.issue-list article,
+.conflict-card {
+  padding: 16px;
+  border: 1px solid rgba(85, 107, 79, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.issue-list strong {
+  color: #8d3f2b;
+  font-family: "Cascadia Code", "Consolas", monospace;
+}
+
+.issue-list p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  line-height: 1.7;
+}
+
+.conflict-toolbar,
+.conflict-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.conflict-card {
+  align-items: center;
+}
+
+.conflict-card h5 {
+  margin-top: 10px;
+  color: #3f4b3d;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 1rem;
+}
+
+.conflict-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.conflict-actions label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 7px 11px;
+  border: 1px solid rgba(85, 107, 79, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  color: #354433;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.conflict-actions input {
+  width: 16px;
+  min-height: 16px;
+}
+
 .book-form-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
@@ -987,6 +1181,17 @@ button:disabled {
 
   .management-grid {
     grid-template-columns: 1fr;
+  }
+
+  .data-flow-grid,
+  .import-summary-grid,
+  .import-result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .conflict-toolbar,
+  .conflict-card {
+    flex-direction: column;
   }
 
   .book-form-layout,
