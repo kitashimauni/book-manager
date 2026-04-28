@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import {
+  deleteBook,
   getBooks,
   getClassificationTags,
   getLocations,
@@ -31,6 +32,8 @@ export function BooksPage() {
   const [filters, setFilters] = useState<SearchState>(emptySearch);
   const [locations, setLocations] = useState<Location[]>([]);
   const [page, setPage] = useState(1);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [search, setSearch] = useState<SearchState>(emptySearch);
   const [tags, setTags] = useState<ClassificationTag[]>([]);
   const [total, setTotal] = useState(0);
@@ -101,7 +104,7 @@ export function BooksPage() {
     return () => {
       isMounted = false;
     };
-  }, [filters, page]);
+  }, [filters, page, reloadKey]);
 
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -113,6 +116,30 @@ export function BooksPage() {
     setSearch(nextSearch);
     setFilters(nextSearch);
     setPage(1);
+  }
+
+  async function handleDelete(book: Book) {
+    if (!window.confirm(`「${book.title}」を削除しますか？この操作は元に戻せません。`)) {
+      return;
+    }
+
+    setPendingDeleteId(book.id);
+
+    try {
+      await deleteBook(book.id);
+
+      if (books.length === 1 && page > 1) {
+        setPage((current) => Math.max(1, current - 1));
+      } else {
+        setReloadKey((current) => current + 1);
+      }
+
+      setError(null);
+    } catch (deleteError) {
+      setError(deleteError as ApiError);
+    } finally {
+      setPendingDeleteId(null);
+    }
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -220,7 +247,12 @@ export function BooksPage() {
         <>
           <div className="book-card-list">
             {books.map((book) => (
-              <BookCard book={book} key={book.id} />
+              <BookCard
+                book={book}
+                isDeleting={pendingDeleteId === book.id}
+                key={book.id}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
 
@@ -251,7 +283,15 @@ export function BooksPage() {
   );
 }
 
-function BookCard({ book }: { book: Book }) {
+function BookCard({
+  book,
+  isDeleting,
+  onDelete
+}: {
+  book: Book;
+  isDeleting: boolean;
+  onDelete: (book: Book) => void;
+}) {
   return (
     <article className="book-card">
       <div>
@@ -293,6 +333,14 @@ function BookCard({ book }: { book: Book }) {
         <Link className="button-secondary link-button" href={`/books/${book.id}/edit`}>
           編集
         </Link>
+        <button
+          className="button-danger"
+          disabled={isDeleting}
+          onClick={() => onDelete(book)}
+          type="button"
+        >
+          {isDeleting ? "削除中..." : "削除"}
+        </button>
       </div>
     </article>
   );
