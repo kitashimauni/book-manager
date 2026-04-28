@@ -99,12 +99,12 @@ export function mapNdlSearchResponse(payload: string, fallbackIsbn: string): Boo
     return null;
   }
 
-  const creators = uniqueTexts([...texts(item, "creator"), ...texts(item, "author")]);
+  const responsibilityStatement = extractResponsibilityStatement(item);
   const subjects = uniqueTexts(texts(item, "subject"));
 
   return {
     title,
-    author: creators.length > 0 ? creators.join(", ") : undefined,
+    author: responsibilityStatement,
     publisher: firstText(item, "publisher"),
     publishedDate: firstText(item, "date") ?? firstText(item, "issued"),
     isbn: extractIsbn(item) ?? fallbackIsbn,
@@ -135,6 +135,27 @@ function texts(source: string, localName: string): string[] {
 
 function uniqueTexts(values: string[]): string[] {
   return [...new Set(values)];
+}
+
+function extractResponsibilityStatement(source: string): string | undefined {
+  for (const description of elementContents(source, "description")) {
+    const match = /責任表示[:：]\s*([^<]+)/.exec(description);
+
+    if (match?.[1]) {
+      return normalizeXmlText(match[1]);
+    }
+  }
+
+  return undefined;
+}
+
+function elementContents(source: string, localName: string): string[] {
+  const pattern = new RegExp(
+    `<(?:[\\w.-]+:)?${escapeRegExp(localName)}\\b[^>]*>([\\s\\S]*?)<\\/(?:[\\w.-]+:)?${escapeRegExp(localName)}>`,
+    "gi"
+  );
+
+  return [...source.matchAll(pattern)].map((match) => match[1] ?? "");
 }
 
 function normalizeXmlText(value: string): string {

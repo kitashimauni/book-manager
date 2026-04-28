@@ -27,8 +27,10 @@ describe("NDL Search lookup service", () => {
             <item>
               <title>ハッキングAPI : Web APIを攻撃から守るためのテスト技法</title>
               <link>https://ndlsearch.ndl.go.jp/books/R100000002-I032705948</link>
-              <dc:creator>COREY BALL 著</dc:creator>
-              <dc:creator>田辺 茂也 訳</dc:creator>
+              <description><![CDATA[<p>オライリー・ジャパン,2023,978-4-8144-0024-9<p><ul><li>責任表示：COREY BALL 著,石川朝久 訳,北原憲, 洲崎俊 技術監修</li></ul>]]></description>
+              <author>Ball, Corey,石川, 朝久,COREY BALL 著,石川朝久 訳,北原憲, 洲崎俊 技術監修</author>
+              <dc:creator>Ball, Corey</dc:creator>
+              <dc:creator>石川, 朝久</dc:creator>
               <dc:publisher>オライリー・ジャパン</dc:publisher>
               <dcterms:issued>2023.3</dcterms:issued>
               <dc:identifier>ISBN:978-4-8144-0024-9</dc:identifier>
@@ -56,7 +58,7 @@ describe("NDL Search lookup service", () => {
     );
     expect(result).toEqual({
       title: "ハッキングAPI : Web APIを攻撃から守るためのテスト技法",
-      author: "COREY BALL 著, 田辺 茂也 訳",
+      author: "COREY BALL 著,石川朝久 訳,北原憲, 洲崎俊 技術監修",
       publisher: "オライリー・ジャパン",
       publishedDate: "2023.3",
       isbn: "9784814400249",
@@ -139,5 +141,20 @@ describe("NDL Search lookup service", () => {
 
     expect(result?.title).toBe("A & B");
     expect(result?.classificationTagCandidates).toEqual(["R&D"]);
+  });
+
+  it("does not use NDL author headings as the book author", () => {
+    const result = mapNdlSearchResponse(
+      `<rss><channel><item>
+        <title>著者標目のある本</title>
+        <description><![CDATA[<ul><li>責任表示：山田太郎 著, 佐藤花子 編</li></ul>]]></description>
+        <author>Yamada, Taro,山田, 太郎,山田太郎 著, 佐藤花子 編</author>
+        <dc:creator>Yamada, Taro</dc:creator>
+        <dc:creator>山田, 太郎</dc:creator>
+      </item></channel></rss>`,
+      "9780000000002"
+    );
+
+    expect(result?.author).toBe("山田太郎 著, 佐藤花子 編");
   });
 });
