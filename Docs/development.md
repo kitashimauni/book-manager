@@ -36,6 +36,19 @@ docker compose up
 
 Docker Composeでは `./data:/data` をマウントします。通常のバックアップは、ホスト側の `data/book-manager.sqlite` を保存する運用を基本とします。
 
+## 動作確認
+
+通常の確認では以下を実行します。
+
+```powershell
+mise run lint
+mise run test
+mise run build
+docker compose --env-file .env.example config
+```
+
+Docker Composeで実際に起動したあとのMVP smoke test手順は [#15](https://github.com/kitashimauni/book-manager/issues/15) で整理します。
+
 ## DB Migration
 
 Backendは起動時にDrizzle migrationを適用します。migrationファイルは `Backend/drizzle/` に管理します。

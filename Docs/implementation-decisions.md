@@ -17,7 +17,7 @@
 - Database: SQLite
 - ORM: Drizzle ORM
 - API: REST
-- Test: フロントエンドはVitest、バックエンドはNode.js標準テストランナーまたはVitestを候補にする
+- Test: Backend/FrontendともにVitestを使う
 
 方針:
 
@@ -86,6 +86,11 @@ ISBNの正規化と重複時の扱いを決めます。
 - ハイフンあり、なしの入力を許可する
 - 保存時は数字と `X` のみに正規化する
 - 重複登録は許可し、画面上で警告する方針に留める
+
+決定済み:
+
+- 本のバーコードは多くの場合ISBN/JAN由来だが、内部データとしては `isbn` と `bookBarcode` を分けて保持する
+- 外部API lookupではISBNとして解釈できる値だけを使い、ISBN以外の値ではSearch APIへフォールバックしない
 
 ### 5. 一覧の並び順
 

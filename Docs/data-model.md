@@ -13,8 +13,8 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 | `author` | string | 任意 | 著者。MVPでは文字列で保持 |
 | `publisher` | string | 任意 | 出版社 |
 | `published_date` | date | 任意 | 出版日 |
-| `isbn` | string | 任意 | ISBN-10またはISBN-13 |
-| `book_barcode` | string | 任意 | 書籍自体に印刷されているISBN/JANなどのバーコード |
+| `isbn` | string | 任意 | ISBN-10またはISBN-13。ISBNとして正規化できる値 |
+| `book_barcode` | string | 任意 | 書籍自体に印刷されているISBN/JANなどのバーコード。ISBNと同じ場合もあるが、読み取り値を残せるよう別項目にする |
 | `management_barcode` | string | 任意 | 利用者が独自に貼付する管理用バーコード |
 | `external_source` | string | 任意 | 書誌情報の取得元。MVPでは `ndl_search` または `open_library` |
 | `external_id` | string | 任意 | 外部API側の識別子 |
@@ -93,6 +93,7 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 MVPでは実装しませんが、機能拡張時に以下のテーブル分割を検討します。
 
 - `authors`: 著者を複数人で管理する
+- `external_lookup_cache`: NDLサーチ、Open Libraryなどの書誌情報lookup結果をSQLiteに永続キャッシュする
 - `users`: ユーザー認証、複数ユーザー管理
 - `loans`: 貸出管理
 - `book_images`: 表紙画像管理

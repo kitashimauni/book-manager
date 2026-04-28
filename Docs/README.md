@@ -12,9 +12,11 @@
 - [実装前決定事項](./implementation-decisions.md): 実装前に決める技術方針、仕様境界、推奨初期値
 - [開発手順](./development.md): ローカル開発、Docker Compose、環境変数、バックアップ
 - [開発ロードマップ](./roadmap.md): 実装順序、Issue化する単位、将来拡張
+- [プロジェクト状況](./project-status.md): 現在の実装状況、Open Issue、Open PR
 
 ## 仕様更新ルール
 
 - 実装と仕様に差分が出た場合は、実装変更と同じPull RequestでDocsも更新します。
 - MVPに含める機能は `product-spec.md` の「MVPスコープ」を正とします。
 - 将来拡張はすぐ実装せず、`roadmap.md` の「Phase 2以降」に退避します。
+- 現在の作業状況は `project-status.md` に集約します。
