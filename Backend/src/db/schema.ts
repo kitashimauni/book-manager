@@ -45,7 +45,7 @@ export const classificationTags = sqliteTable(
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     description: text("description"),
-    source: text("source", { enum: ["manual", "open_library"] }).notNull(),
+    source: text("source", { enum: ["manual", "ndl_search", "open_library"] }).notNull(),
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull()

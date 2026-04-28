@@ -4,7 +4,7 @@ export const classificationTagIdParamsSchema = z.object({
   id: z.string().uuid()
 });
 
-export const classificationTagSourceSchema = z.enum(["manual", "open_library"]);
+export const classificationTagSourceSchema = z.enum(["manual", "ndl_search", "open_library"]);
 
 export const createClassificationTagRequestSchema = z.object({
   name: z.string().trim().min(1).max(200),

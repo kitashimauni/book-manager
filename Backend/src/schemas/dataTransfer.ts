@@ -18,7 +18,7 @@ export const exportClassificationTagSchema = z.object({
   id: uuidText,
   name: z.string().trim().min(1).max(200),
   description: nullableText,
-  source: z.enum(["manual", "open_library"]),
+  source: z.enum(["manual", "ndl_search", "open_library"]),
   isActive: z.boolean(),
   createdAt: dateText,
   updatedAt: dateText

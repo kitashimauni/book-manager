@@ -12,6 +12,7 @@ import {
   type BookFormRequest,
   type BookLookupResult,
   type ClassificationTag,
+  type ClassificationTagSource,
   type Location
 } from "../api/client.js";
 import {
@@ -58,6 +59,7 @@ const emptyForm: BookFormState = {
 
 export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   const isEdit = mode === "edit";
+  const [candidateSource, setCandidateSource] = useState<ClassificationTagSource>("open_library");
   const [candidateSubjects, setCandidateSubjects] = useState<string[]>([]);
   const [error, setError] = useState<ApiError | null>(null);
   const [form, setForm] = useState<BookFormState>(emptyForm);
@@ -125,13 +127,17 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
     try {
       const result = await lookupBookByBarcode(lookupValue);
       applyLookupResult(result, lookupValue);
+      setCandidateSource(result.externalSource);
       setCandidateSubjects(result.classificationTagCandidates);
-      setLookupMessage("Open Libraryから取得した情報をフォームに反映しました。保存はまだ行われていません。");
+      setLookupMessage(
+        `${formatLookupSource(result.externalSource)}から取得した情報をフォームに反映しました。保存はまだ行われていません。`
+      );
       setError(null);
     } catch (lookupError) {
       const apiError = lookupError as ApiError;
 
       if (apiError.status === 404 || apiError.status === 502) {
+        setCandidateSource("open_library");
         setCandidateSubjects([]);
         setLookupMessage(`${apiError.message} 手入力で登録できます。`);
       } else {
@@ -188,7 +194,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
     try {
       const createdTag = await createClassificationTag({
         name: candidate,
-        source: "open_library"
+        source: candidateSource
       });
 
       setTags((current) => [...current, createdTag].sort((left, right) => left.name.localeCompare(right.name)));
@@ -225,7 +231,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
 
     setLookupMessage(
       target === "bookBarcode"
-        ? "カメラで読み取った値を本のバーコードに入力しました。必要に応じてOpen Libraryで照会できます。"
+        ? "カメラで読み取った値を本のバーコードに入力しました。必要に応じて外部APIで照会できます。"
         : "カメラで読み取った値を管理用バーコードに入力しました。"
     );
   }
@@ -239,7 +245,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
         <p className="eyebrow">{isEdit ? "Edit Book" : "New Book"}</p>
         <h2>{isEdit ? "本編集" : "本登録"}</h2>
         <p>
-          本のバーコードと管理用バーコードを分けて扱います。Open Library照会は入力補助で、取得した内容は保存前に確認できます。
+          本のバーコードと管理用バーコードを分けて扱います。外部API照会は入力補助で、取得した内容は保存前に確認できます。
         </p>
       </div>
 
@@ -329,7 +335,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
               </div>
               <div className="lookup-panel">
                 <button className="button-secondary" disabled={isLookupLoading} onClick={() => void handleLookup()} type="button">
-                  {isLookupLoading ? "照会中..." : "Open Libraryで照会"}
+                  {isLookupLoading ? "照会中..." : "外部APIで照会"}
                 </button>
                 <p>
                   本のバーコードを優先し、未入力の場合はISBNで照会します。管理用バーコードは照会には使いません。
@@ -400,7 +406,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
 
             <section className="form-section">
               <div>
-                <p className="eyebrow">Open Library Subjects</p>
+                <p className="eyebrow">External Subjects</p>
                 <h3>分類タグ候補</h3>
               </div>
               {candidateSubjects.length === 0 ? (
@@ -484,4 +490,8 @@ function formatApiError(error: ApiError) {
   }
 
   return `${error.message}: ${error.errors.map((item) => item.message).join(", ")}`;
+}
+
+function formatLookupSource(source: BookLookupResult["externalSource"]) {
+  return source === "ndl_search" ? "NDLサーチ" : "Open Library";
 }

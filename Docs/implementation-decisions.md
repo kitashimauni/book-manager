@@ -54,7 +54,7 @@
 - SQLiteデータベースファイルはコンテナ内 `/data/book-manager.sqlite` を標準パスとし、Docker volumeまたはホストディレクトリへマウントする
 - SQLiteデータベースファイル自体をバックアップ対象とする
 - 外部書誌APIはAPIキー必須の仕組みに依存しない
-- Open Library API向けのアプリ名、連絡先は任意環境変数 `OPEN_LIBRARY_APP_NAME` と `OPEN_LIBRARY_CONTACT` で設定できるようにする
+- NDLサーチ、Open Library API向けのアプリ名、連絡先は任意環境変数 `OPEN_LIBRARY_APP_NAME` と `OPEN_LIBRARY_CONTACT` で設定できるようにする
 - HTTPS対応はセルフホスト環境のリバースプロキシや運用方針に委ね、アプリ側では固定しない
 
 ### 2.1 カメラ読み取り連携

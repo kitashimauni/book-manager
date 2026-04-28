@@ -62,8 +62,8 @@ pnpm --filter @book-manager/backend db:migrate
 | `VITE_DEV_PROXY_TARGET` | 任意 | Vite開発プロキシが接続するBackend URL |
 | `CORS_ORIGIN` | 任意 | Backendが許可するFrontend origin |
 | `DATABASE_PATH` | 任意 | SQLiteデータベースパス |
-| `OPEN_LIBRARY_APP_NAME` | 任意 | Open Library APIに送るアプリ名 |
-| `OPEN_LIBRARY_CONTACT` | 任意 | Open Library APIに送る連絡先 |
+| `OPEN_LIBRARY_APP_NAME` | 任意 | NDLサーチ、Open Library APIに送るアプリ名 |
+| `OPEN_LIBRARY_CONTACT` | 任意 | NDLサーチ、Open Library APIに送る連絡先 |
 
 ## HTTPS
 

@@ -173,5 +173,9 @@ function formatDate(value: string) {
 }
 
 function formatExternalSource(source: string | null) {
+  if (source === "ndl_search") {
+    return "NDLサーチ";
+  }
+
   return source === "open_library" ? "Open Library" : source;
 }
