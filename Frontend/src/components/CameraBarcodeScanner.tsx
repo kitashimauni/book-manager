@@ -1,3 +1,4 @@
+import type { BarcodeFormat as ZxingBarcodeFormat, IScannerControls } from "@zxing/browser";
 import { useEffect, useRef, useState } from "react";
 
 export type BarcodeScanTarget = "bookBarcode" | "managementBarcode";
@@ -6,23 +7,9 @@ type CameraBarcodeScannerProps = {
   onScan: (value: string, target: BarcodeScanTarget) => void;
 };
 
-const barcodeFormats = [
-  "ean_13",
-  "ean_8",
-  "upc_a",
-  "upc_e",
-  "code_128",
-  "code_39",
-  "code_93",
-  "codabar",
-  "itf",
-  "qr_code"
-];
-
 export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
-  const frameRef = useRef<number | null>(null);
-  const isScanningRef = useRef(false);
-  const streamRef = useRef<MediaStream | null>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
+  const targetRef = useRef<BarcodeScanTarget>("bookBarcode");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -33,6 +20,10 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
     return () => stopScanner();
   }, []);
 
+  useEffect(() => {
+    targetRef.current = target;
+  }, [target]);
+
   async function startScanner() {
     setErrorMessage(null);
     setLastScannedValue(null);
@@ -42,80 +33,42 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
       return;
     }
 
-    if (!navigator.mediaDevices?.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia || !videoRef.current) {
       setErrorMessage("このブラウザではカメラ入力を利用できません。手入力またはキーボード型リーダーを使ってください。");
       return;
     }
 
-    if (!window.BarcodeDetector) {
-      setErrorMessage("このブラウザではBarcodeDetector APIを利用できません。手入力またはキーボード型リーダーを使ってください。");
-      return;
-    }
-
     try {
-      const detector = createBarcodeDetector(window.BarcodeDetector);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: { ideal: "environment" }
-        }
-      });
-
-      streamRef.current = stream;
-      isScanningRef.current = true;
+      const reader = await createCodeReader();
       setIsScanning(true);
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
+      controlsRef.current = await reader.decodeFromConstraints(
+        {
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" }
+          }
+        },
+        videoRef.current,
+        (result) => {
+          const value = result?.getText().trim();
 
-      scanFrame(detector);
+          if (value) {
+            setLastScannedValue(value);
+            onScan(value, targetRef.current);
+            stopScanner();
+          }
+        }
+      );
     } catch (error) {
       stopScanner();
       setErrorMessage(formatCameraError(error));
     }
   }
 
-  async function scanFrame(detector: BarcodeDetector) {
-    if (!isScanningRef.current) {
-      return;
-    }
-
-    const video = videoRef.current;
-
-    if (video && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-      try {
-        const detectedBarcodes = await detector.detect(video);
-        const value = detectedBarcodes[0]?.rawValue.trim();
-
-        if (value) {
-          setLastScannedValue(value);
-          onScan(value, target);
-          stopScanner();
-          return;
-        }
-      } catch {
-        setErrorMessage("バーコードの読み取りに失敗しました。角度や明るさを変えて再試行してください。");
-      }
-    }
-
-    frameRef.current = window.requestAnimationFrame(() => void scanFrame(detector));
-  }
-
   function stopScanner() {
-    isScanningRef.current = false;
-
-    if (frameRef.current !== null) {
-      window.cancelAnimationFrame(frameRef.current);
-      frameRef.current = null;
-    }
-
-    for (const track of streamRef.current?.getTracks() ?? []) {
-      track.stop();
-    }
-
-    streamRef.current = null;
+    controlsRef.current?.stop();
+    controlsRef.current = null;
 
     if (videoRef.current) {
       videoRef.current.srcObject = null;
@@ -176,14 +129,6 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
   );
 }
 
-function createBarcodeDetector(BarcodeDetectorConstructor: BarcodeDetectorConstructor) {
-  try {
-    return new BarcodeDetectorConstructor({ formats: barcodeFormats });
-  } catch {
-    return new BarcodeDetectorConstructor();
-  }
-}
-
 function formatCameraError(error: unknown) {
   if (error instanceof DOMException) {
     if (error.name === "NotAllowedError") {
@@ -196,4 +141,25 @@ function formatCameraError(error: unknown) {
   }
 
   return "カメラを起動できませんでした。HTTPS、ブラウザ対応、カメラ権限を確認してください。";
+}
+
+async function createCodeReader() {
+  const { BarcodeFormat, BrowserMultiFormatReader } = await import("@zxing/browser");
+  const reader = new BrowserMultiFormatReader();
+  const barcodeFormats = [
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.EAN_8,
+    BarcodeFormat.UPC_A,
+    BarcodeFormat.UPC_E,
+    BarcodeFormat.CODE_128,
+    BarcodeFormat.CODE_39,
+    BarcodeFormat.CODE_93,
+    BarcodeFormat.CODABAR,
+    BarcodeFormat.ITF,
+    BarcodeFormat.QR_CODE
+  ] satisfies ZxingBarcodeFormat[];
+
+  reader.possibleFormats = barcodeFormats;
+
+  return reader;
 }
