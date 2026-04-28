@@ -2,8 +2,6 @@ import type { AppConfig } from "../config/env.js";
 import type { BookLookupResult } from "../schemas/books.js";
 import { isLikelyIsbn, normalizeIsbn } from "./openLibrary.js";
 
-type LookupCacheValue = BookLookupResult | null;
-
 export type NdlSearchLookupServiceOptions = {
   fetchImpl?: typeof fetch;
   sleep?: (milliseconds: number) => Promise<void>;
@@ -25,7 +23,6 @@ export function createNdlSearchLookupService(options: NdlSearchLookupServiceOpti
   const sleep =
     options.sleep ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
   const now = options.now ?? Date.now;
-  const cache = new Map<string, LookupCacheValue>();
   let lastRequestAt: number | null = null;
 
   async function waitForRequestSlot() {
@@ -48,10 +45,6 @@ export function createNdlSearchLookupService(options: NdlSearchLookupServiceOpti
         return null;
       }
 
-      if (cache.has(isbn)) {
-        return cache.get(isbn) ?? null;
-      }
-
       await waitForRequestSlot();
 
       const url = new URL("https://ndlsearch.ndl.go.jp/api/opensearch");
@@ -67,11 +60,7 @@ export function createNdlSearchLookupService(options: NdlSearchLookupServiceOpti
       }
 
       const payload = await response.text();
-      const result = mapNdlSearchResponse(payload, isbn);
-
-      cache.set(isbn, result);
-
-      return result;
+      return mapNdlSearchResponse(payload, isbn);
     }
   };
 }

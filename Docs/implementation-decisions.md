@@ -55,6 +55,7 @@
 - SQLiteデータベースファイル自体をバックアップ対象とする
 - 外部書誌APIはAPIキー必須の仕組みに依存しない
 - NDLサーチ、Open Library API向けのアプリ名、連絡先は任意環境変数 `OPEN_LIBRARY_APP_NAME` と `OPEN_LIBRARY_CONTACT` で設定できるようにする
+- NDLサーチ、Open Library APIの照会結果はSQLiteに保存し、`LOOKUP_CACHE_TTL_DAYS` で有効期限を設定する
 - HTTPS対応はセルフホスト環境のリバースプロキシや運用方針に委ね、アプリ側では固定しない
 
 ### 2.1 カメラ読み取り連携

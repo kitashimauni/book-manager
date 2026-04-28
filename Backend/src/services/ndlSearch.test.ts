@@ -68,7 +68,7 @@ describe("NDL Search lookup service", () => {
     });
   });
 
-  it("returns null and caches repeated misses when no RSS item is returned", async () => {
+  it("returns null when no RSS item is returned", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
       xmlResponse(`<?xml version="1.0" encoding="UTF-8"?><rss><channel /></rss>`)
     );
@@ -78,7 +78,6 @@ describe("NDL Search lookup service", () => {
     });
 
     await expect(service.lookupBookByIsbn("9784814400249", baseConfig)).resolves.toBeNull();
-    await expect(service.lookupBookByIsbn("978-4-8144-0024-9", baseConfig)).resolves.toBeNull();
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });

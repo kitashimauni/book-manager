@@ -75,7 +75,7 @@ describe("Open Library lookup service", () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("returns null for 404 and caches repeated misses", async () => {
+  it("returns null for 404 responses", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 404 }));
     const service = createOpenLibraryLookupService({
       fetchImpl,
@@ -83,7 +83,6 @@ describe("Open Library lookup service", () => {
     });
 
     await expect(service.lookupBookByIsbn("9780132350884", baseConfig)).resolves.toBeNull();
-    await expect(service.lookupBookByIsbn("978-0-13-235088-4", baseConfig)).resolves.toBeNull();
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });

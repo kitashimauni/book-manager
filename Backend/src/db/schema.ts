@@ -73,3 +73,23 @@ export const bookClassificationTags = sqliteTable(
     )
   })
 );
+
+export const externalLookupCache = sqliteTable(
+  "external_lookup_cache",
+  {
+    id: text("id").primaryKey(),
+    isbn: text("isbn").notNull(),
+    provider: text("provider", { enum: ["ndl_search", "open_library"] }).notNull(),
+    status: text("status", { enum: ["hit", "miss"] }).notNull(),
+    payload: text("payload"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+    expiresAt: text("expires_at").notNull()
+  },
+  (table) => ({
+    providerIsbnIdx: uniqueIndex("external_lookup_cache_provider_isbn_idx").on(
+      table.provider,
+      table.isbn
+    )
+  })
+);
