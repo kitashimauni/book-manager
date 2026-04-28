@@ -132,7 +132,7 @@ export function ClassificationTagsPage() {
         <p className="eyebrow">Classification Tags</p>
         <h2>分類タグ管理</h2>
         <p>
-          分類タグを手入力で登録します。Open Libraryのsubjectから確定したタグも同じ一覧で管理し、本の登録・編集時に複数選択できるようにします。
+          分類タグを手入力で登録します。外部APIのsubjectから確定したタグも同じ一覧で管理し、本の登録・編集時に複数選択できるようにします。
         </p>
       </div>
 
@@ -177,6 +177,7 @@ export function ClassificationTagsPage() {
               value={form.source}
             >
               <option value="manual">手入力</option>
+              <option value="ndl_search">NDLサーチ</option>
               <option value="open_library">Open Library</option>
             </select>
           </label>
@@ -219,7 +220,7 @@ export function ClassificationTagsPage() {
 
           {!isLoading && tags.length === 0 ? (
             <EmptyState title="分類タグがまだありません">
-              分類タグはあとから追加できます。Open Libraryから取得したsubjectも、確定したものだけ保存します。
+              分類タグはあとから追加できます。外部APIから取得したsubjectも、確定したものだけ保存します。
             </EmptyState>
           ) : null}
 
@@ -296,5 +297,9 @@ function formatDate(value: string) {
 }
 
 function formatSource(source: ClassificationTagSource) {
+  if (source === "ndl_search") {
+    return "NDLサーチ";
+  }
+
   return source === "open_library" ? "Open Library" : "手入力";
 }

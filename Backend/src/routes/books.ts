@@ -14,7 +14,7 @@ import {
   type CreateBookRequest,
   type UpdateBookRequest
 } from "../schemas/books.js";
-import { lookupBookByIsbn } from "../services/openLibrary.js";
+import { lookupBookByIsbn } from "../services/bookLookup.js";
 
 export type BookRouteOptions = {
   config: AppConfig;
@@ -442,7 +442,7 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
     try {
       result = await lookupBookByIsbn(parsed.data.bookBarcode, options.config);
     } catch (error) {
-      request.log.warn({ error }, "Open Library lookup failed");
+      request.log.warn({ error }, "Book metadata lookup failed");
 
       return reply.status(502).send({
         message: "Book metadata lookup failed. Please enter it manually."

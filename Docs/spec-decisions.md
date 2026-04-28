@@ -37,13 +37,14 @@
 - 外部APIで見つからない場合も手入力登録できる
 - 外部APIの失敗で本登録全体をブロックしない
 - APIキー必須の外部APIには依存しない
-- MVPの外部APIはOpen Library APIを利用する
+- MVPの外部APIはNDLサーチAPIを優先し、見つからない場合のみOpen Library APIへフォールバックする
 - Google Books APIはMVP必須にせず、将来の任意プロバイダー候補に留める
-- ISBNまたはISBNとして解釈できる本のバーコードは、Open Library ISBN APIで完全一致照会する
-- ISBN APIで取得できた場合は1件の書誌情報として扱い、候補選択UIは表示しない
-- ISBN APIで取得できない場合はSearch APIへフォールバックせず、手入力登録に進む
+- ISBNまたはISBNとして解釈できる本のバーコードは、NDLサーチOpenSearch APIで完全一致照会する
+- NDLサーチで取得できない場合は、Open Library ISBN APIで完全一致照会する
+- 完全一致で取得できた場合は1件の書誌情報として扱い、候補選択UIは表示しない
+- NDLサーチ、Open Libraryのどちらでも取得できない場合はSearch APIへフォールバックせず、手入力登録に進む
 - MVPでは外部APIによる候補選択UIは実装しない
-- Open Library APIの利用時は `User-Agent` と連絡先を設定する
+- 外部APIの利用時は `User-Agent` と連絡先を設定する
 - 同一ISBNや同一本バーコードへの照会結果はキャッシュする
 - 外部APIのレート制限を超えないよう、アプリ側で連続照会を制御する
 
@@ -60,11 +61,11 @@
 
 ### 5. 分類はAPI情報を優先し、不足時は分類タグで補う
 
-本の分類情報は、Open Library APIから取得できるsubjectを優先します。APIから分類情報を取得できない場合や、運用上追加したい分類がある場合は、分類タグとして手動登録します。
+本の分類情報は、NDLサーチまたはOpen Library APIから取得できるsubjectを優先します。APIから分類情報を取得できない場合や、運用上追加したい分類がある場合は、分類タグとして手動登録します。
 
 決定済み:
 
-- Open Library APIのsubjectは分類タグ候補として使う
+- NDLサーチまたはOpen Library APIのsubjectは分類タグ候補として使う
 - ユーザーが確定したsubjectのみ分類タグとして保存する
 - APIに分類情報がない場合は分類タグを手動登録する
 - 分類タグは保管場所タグとは別の概念として扱う

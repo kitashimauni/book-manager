@@ -16,7 +16,7 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 | `isbn` | string | 任意 | ISBN-10またはISBN-13 |
 | `book_barcode` | string | 任意 | 書籍自体に印刷されているISBN/JANなどのバーコード |
 | `management_barcode` | string | 任意 | 利用者が独自に貼付する管理用バーコード |
-| `external_source` | string | 任意 | 書誌情報の取得元。MVPでは `open_library` |
+| `external_source` | string | 任意 | 書誌情報の取得元。MVPでは `ndl_search` または `open_library` |
 | `external_id` | string | 任意 | 外部API側の識別子 |
 | `location_id` | UUID | 任意 | 保管場所タグのID |
 | `management_memo` | text | 任意 | 管理用メモ |
@@ -30,7 +30,7 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 | `id` | UUID | 必須 | 分類タグの一意識別子 |
 | `name` | string | 必須 | 分類タグ名 |
 | `description` | string | 任意 | 説明 |
-| `source` | string | 必須 | `manual` または `open_library` |
+| `source` | string | 必須 | `manual`、`ndl_search`、`open_library` |
 | `is_active` | boolean | 必須 | 本の登録、編集で選択可能か |
 | `created_at` | datetime | 必須 | 登録日時 |
 | `updated_at` | datetime | 必須 | 更新日時 |

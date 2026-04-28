@@ -23,7 +23,7 @@ export type Location = {
   updatedAt: string;
 };
 
-export type ClassificationTagSource = "manual" | "open_library";
+export type ClassificationTagSource = "manual" | "ndl_search" | "open_library";
 
 export type ClassificationTag = {
   id: string;
@@ -79,7 +79,7 @@ export type BookLookupResult = {
   publisher?: string;
   publishedDate?: string;
   isbn?: string;
-  externalSource: "open_library";
+  externalSource: "ndl_search" | "open_library";
   externalId?: string;
   classificationTagCandidates: string[];
 };
