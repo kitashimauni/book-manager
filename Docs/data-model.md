@@ -13,8 +13,8 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 | `author` | string | 任意 | 著者。MVPでは文字列で保持 |
 | `publisher` | string | 任意 | 出版社 |
 | `published_date` | date | 任意 | 出版日 |
-| `isbn` | string | 任意 | ISBN-10またはISBN-13 |
-| `book_barcode` | string | 任意 | 書籍自体に印刷されているISBN/JANなどのバーコード |
+| `isbn` | string | 任意 | ISBN-10またはISBN-13。書誌情報取得に使う正規化済みの値 |
+| `book_barcode` | string | 任意 | 実際に読み取った本のバーコード値。ISBN由来の書籍JANコード、雑誌コード、価格コードなどを含み得る |
 | `management_barcode` | string | 任意 | 利用者が独自に貼付する管理用バーコード |
 | `external_source` | string | 任意 | 書誌情報の取得元。MVPでは `ndl_search` または `open_library` |
 | `external_id` | string | 任意 | 外部API側の識別子 |
@@ -61,6 +61,7 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 - `isbn` は未入力を許可します。
 - MVPでは `isbn` の重複は警告に留め、登録自体は許可します。
 - `book_barcode` は未入力を許可します。
+- `book_barcode` はISBNと一致する場合もありますが、ISBNではない読み取り値も許可します。
 - `management_barcode` は未入力を許可します。
 - `management_barcode` は入力された場合、一意である必要があります。
 - `location_id` は未入力を許可します。

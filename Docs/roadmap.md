@@ -40,7 +40,7 @@
 - 本詳細取得API
 - 本更新API
 - 本削除API
-- 本のバーコードから書誌情報を取得するAPI
+- ISBNまたはISBNとして解釈できる本のバーコードから書誌情報を取得するAPI
 - 保管場所タグAPI
 - 分類タグAPI
 - Export/Import API
