@@ -6,6 +6,10 @@ pnpm = "10.33.2"
 description = "Install workspace dependencies"
 run = "pnpm install"
 
+[tasks.install-ci]
+description = "Install workspace dependencies with lockfile verification"
+run = "pnpm install --frozen-lockfile"
+
 [tasks.dev]
 description = "Run frontend and backend in development mode"
 run = "pnpm dev"

@@ -32,6 +32,18 @@ mise run test
 
 通常の実装確認では、ホスト側で `pnpm install` が完了している状態なら `mise run test` を実行します。
 
+## CI
+
+GitHub ActionsではPull Requestと `main` へのpush時に、`mise.toml` で指定したNode.jsとpnpmを使って以下を実行します。
+
+- `mise run install-ci`
+- `mise run typecheck`
+- `mise run test`
+- `mise run build`
+- `docker compose build`
+
+CIでもDocker Composeはホスト側の `node_modules` をマウントせず、Dockerfile内で依存関係をインストールします。
+
 ## Docker Compose起動
 
 ```powershell
