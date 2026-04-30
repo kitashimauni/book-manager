@@ -89,7 +89,7 @@ export function mapNdlSearchResponse(payload: string, fallbackIsbn: string): Boo
   }
 
   const responsibilityStatement = extractResponsibilityStatement(item);
-  const subjects = uniqueTexts(subjectTagTexts(item));
+  const tagCandidates = uniqueTexts([...subjectTagTexts(item), ...genreTagTexts(item)]);
 
   return {
     title,
@@ -99,7 +99,7 @@ export function mapNdlSearchResponse(payload: string, fallbackIsbn: string): Boo
     isbn: extractIsbn(item) ?? fallbackIsbn,
     externalSource: "ndl_search",
     externalId: firstText(item, "link") ?? firstText(item, "guid"),
-    classificationTagCandidates: subjects
+    classificationTagCandidates: tagCandidates
   };
 }
 
@@ -120,12 +120,22 @@ function texts(source: string, localName: string): string[] {
 function subjectTagTexts(source: string): string[] {
   return textElements(source, "subject")
     .filter((element) => !hasSubjectEncodingScheme(element.attributes))
-    .map((element) => normalizeXmlText(element.content))
+    .map((element) => extractStructuredValue(element.content))
     .filter((value) => value.length > 0);
 }
 
 function hasSubjectEncodingScheme(attributes: string): boolean {
   return /\b(?:xsi:type|rdf:datatype|rdf:resource)\s*=/.test(attributes);
+}
+
+function genreTagTexts(source: string): string[] {
+  return textElements(source, "genre")
+    .map((element) => extractStructuredValue(element.content))
+    .filter((value) => value.length > 0);
+}
+
+function extractStructuredValue(source: string): string {
+  return firstText(source, "value") ?? normalizeXmlText(source);
 }
 
 function uniqueTexts(values: string[]): string[] {
