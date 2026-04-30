@@ -89,7 +89,7 @@ export function mapNdlSearchResponse(payload: string, fallbackIsbn: string): Boo
   }
 
   const responsibilityStatement = extractResponsibilityStatement(item);
-  const subjects = uniqueTexts(texts(item, "subject"));
+  const subjects = uniqueTexts(subjectTagTexts(item));
 
   return {
     title,
@@ -112,14 +112,20 @@ function firstText(source: string, localName: string): string | undefined {
 }
 
 function texts(source: string, localName: string): string[] {
-  const pattern = new RegExp(
-    `<(?:[\\w.-]+:)?${escapeRegExp(localName)}\\b[^>]*>([\\s\\S]*?)<\\/(?:[\\w.-]+:)?${escapeRegExp(localName)}>`,
-    "gi"
-  );
-
-  return [...source.matchAll(pattern)]
-    .map((match) => normalizeXmlText(match[1] ?? ""))
+  return textElements(source, localName)
+    .map((element) => normalizeXmlText(element.content))
     .filter((value) => value.length > 0);
+}
+
+function subjectTagTexts(source: string): string[] {
+  return textElements(source, "subject")
+    .filter((element) => !hasSubjectEncodingScheme(element.attributes))
+    .map((element) => normalizeXmlText(element.content))
+    .filter((value) => value.length > 0);
+}
+
+function hasSubjectEncodingScheme(attributes: string): boolean {
+  return /\b(?:xsi:type|rdf:datatype|rdf:resource)\s*=/.test(attributes);
 }
 
 function uniqueTexts(values: string[]): string[] {
@@ -139,12 +145,19 @@ function extractResponsibilityStatement(source: string): string | undefined {
 }
 
 function elementContents(source: string, localName: string): string[] {
+  return textElements(source, localName).map((element) => element.content);
+}
+
+function textElements(source: string, localName: string) {
   const pattern = new RegExp(
-    `<(?:[\\w.-]+:)?${escapeRegExp(localName)}\\b[^>]*>([\\s\\S]*?)<\\/(?:[\\w.-]+:)?${escapeRegExp(localName)}>`,
+    `<(?:[\\w.-]+:)?${escapeRegExp(localName)}\\b([^>]*)>([\\s\\S]*?)<\\/(?:[\\w.-]+:)?${escapeRegExp(localName)}>`,
     "gi"
   );
 
-  return [...source.matchAll(pattern)].map((match) => match[1] ?? "");
+  return [...source.matchAll(pattern)].map((match) => ({
+    attributes: match[1] ?? "",
+    content: match[2] ?? ""
+  }));
 }
 
 function normalizeXmlText(value: string): string {
