@@ -310,6 +310,89 @@ describe("data transfer API", () => {
     });
   });
 
+  it("rejects import payloads with duplicate IDs, management barcodes, names, and relations", async () => {
+    const now = new Date().toISOString();
+    const payload = {
+      version: 1,
+      locations: [
+        exportLocation("00000000-0000-4000-8000-000000000101", "Shared shelf", now),
+        exportLocation("00000000-0000-4000-8000-000000000101", "Duplicate location ID", now),
+        exportLocation("00000000-0000-4000-8000-000000000102", "Shared shelf", now)
+      ],
+      classificationTags: [
+        exportClassificationTag("00000000-0000-4000-8000-000000000201", "Programming", now),
+        exportClassificationTag("00000000-0000-4000-8000-000000000201", "Duplicate tag ID", now),
+        exportClassificationTag("00000000-0000-4000-8000-000000000202", "Programming", now)
+      ],
+      books: [
+        exportBook("00000000-0000-4000-8000-000000000301", "First book", "BM-DUP", now),
+        exportBook("00000000-0000-4000-8000-000000000301", "Duplicate book ID", "BM-OTHER", now),
+        exportBook("00000000-0000-4000-8000-000000000302", "Duplicate barcode", "BM-DUP", now)
+      ],
+      bookClassificationTags: [
+        {
+          bookId: "00000000-0000-4000-8000-000000000301",
+          classificationTagId: "00000000-0000-4000-8000-000000000201",
+          createdAt: now
+        },
+        {
+          bookId: "00000000-0000-4000-8000-000000000301",
+          classificationTagId: "00000000-0000-4000-8000-000000000201",
+          createdAt: now
+        }
+      ]
+    };
+
+    const preview = await app.inject({
+      method: "POST",
+      url: "/api/import/preview",
+      payload
+    });
+
+    expect(preview.statusCode).toBe(200);
+    expect(preview.json()).toMatchObject({
+      summary: {
+        error: 7
+      },
+      errors: expect.arrayContaining([
+        expect.objectContaining({ field: "locations.1.id" }),
+        expect.objectContaining({ field: "locations.2.name" }),
+        expect.objectContaining({ field: "classificationTags.1.id" }),
+        expect.objectContaining({ field: "classificationTags.2.name" }),
+        expect.objectContaining({ field: "books.1.id" }),
+        expect.objectContaining({ field: "books.2.managementBarcode" }),
+        expect.objectContaining({ field: "bookClassificationTags.1.classificationTagId" })
+      ])
+    });
+
+    const imported = await app.inject({
+      method: "POST",
+      url: "/api/import",
+      payload
+    });
+
+    expect(imported.statusCode).toBe(400);
+    expect(imported.json()).toMatchObject({
+      message: "Validation failed",
+      errors: expect.arrayContaining([
+        expect.objectContaining({ field: "books.1.id" }),
+        expect.objectContaining({ field: "books.2.managementBarcode" })
+      ])
+    });
+
+    const exported = await app.inject({
+      method: "GET",
+      url: "/api/export"
+    });
+
+    expect(exported.json()).toMatchObject({
+      books: [],
+      locations: [],
+      classificationTags: [],
+      bookClassificationTags: []
+    });
+  });
+
   async function createLocation(name: string) {
     const response = await app.inject({
       method: "POST",
@@ -340,3 +423,46 @@ describe("data transfer API", () => {
     return response.json();
   }
 });
+
+function exportLocation(id: string, name: string, timestamp: string) {
+  return {
+    id,
+    name,
+    description: null,
+    sortOrder: 0,
+    isActive: true,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+}
+
+function exportClassificationTag(id: string, name: string, timestamp: string) {
+  return {
+    id,
+    name,
+    description: null,
+    source: "manual",
+    isActive: true,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+}
+
+function exportBook(id: string, title: string, managementBarcode: string, timestamp: string) {
+  return {
+    id,
+    title,
+    author: null,
+    publisher: null,
+    publishedDate: null,
+    isbn: null,
+    bookBarcode: null,
+    managementBarcode,
+    externalSource: null,
+    externalId: null,
+    locationId: "00000000-0000-4000-8000-000000000101",
+    managementMemo: null,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+}
