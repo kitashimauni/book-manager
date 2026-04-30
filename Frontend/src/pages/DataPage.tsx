@@ -136,6 +136,10 @@ export function DataPage() {
       });
 
       setImportResult(result);
+      setPreview(null);
+      setImportPayload(null);
+      setConflictActions({});
+      setDefaultAction("skip");
     } catch (importError) {
       setError(importError as ApiError);
     } finally {
