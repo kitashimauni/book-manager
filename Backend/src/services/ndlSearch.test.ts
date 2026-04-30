@@ -142,6 +142,21 @@ describe("NDL Search lookup service", () => {
     expect(result?.classificationTagCandidates).toEqual(["R&D"]);
   });
 
+  it("uses only untyped NDL subjects as classification tag candidates", () => {
+    const result = mapNdlSearchResponse(
+      `<rss><channel><item>
+        <title>分類記号と主題語のある本</title>
+        <dc:subject xsi:type="dcndl:NDC">007.6</dc:subject>
+        <dc:subject rdf:datatype="http://ndl.go.jp/dcndl/terms/NDC">007.6</dc:subject>
+        <dc:subject>情報セキュリティ</dc:subject>
+        <subject>Web API</subject>
+      </item></channel></rss>`,
+      "9780000000002"
+    );
+
+    expect(result?.classificationTagCandidates).toEqual(["情報セキュリティ", "Web API"]);
+  });
+
   it("does not use NDL author headings as the book author", () => {
     const result = mapNdlSearchResponse(
       `<rss><channel><item>

@@ -59,6 +59,7 @@
 - 外部書誌APIはAPIキー必須の仕組みに依存しない
 - NDLサーチ、Open Library API向けのアプリ名、連絡先は任意環境変数 `OPEN_LIBRARY_APP_NAME` と `OPEN_LIBRARY_CONTACT` で設定できるようにする
 - NDLサーチ、Open Library APIの照会結果はSQLiteに保存し、`LOOKUP_CACHE_TTL_DAYS` で有効期限を設定する
+- 将来の再解析に備え、外部APIキャッシュは正規化後の書誌情報だけでなく、request URL、response status、content type、response bodyなどの生レスポンスも保存できる設計へ拡張する
 - HTTPS対応はセルフホスト環境のリバースプロキシや運用方針に委ね、アプリ側では固定しない
 
 ### 2.1 カメラ読み取り連携
