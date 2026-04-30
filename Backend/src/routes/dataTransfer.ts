@@ -410,7 +410,7 @@ function collectConflicts(payload: ImportPayload, existingMaps: ExistingMaps) {
 }
 
 function validateImportReferences(payload: ImportPayload): ApiFieldError[] {
-  const errors: ApiFieldError[] = [];
+  const errors: ApiFieldError[] = validateImportPayloadDuplicates(payload);
   const locationIds = new Set(payload.locations.map((location) => location.id));
   const bookIds = new Set(payload.books.map((book) => book.id));
   const tagIds = new Set(payload.classificationTags.map((tag) => tag.id));
@@ -438,6 +438,59 @@ function validateImportReferences(payload: ImportPayload): ApiFieldError[] {
         message: `Classification tag was not found in import payload: ${relation.classificationTagId}`
       });
     }
+  });
+
+  return errors;
+}
+
+function validateImportPayloadDuplicates(payload: ImportPayload): ApiFieldError[] {
+  return [
+    ...findDuplicateValues(payload.locations, "locations", "id", (location) => location.id),
+    ...findDuplicateValues(payload.locations, "locations", "name", (location) => location.name),
+    ...findDuplicateValues(payload.classificationTags, "classificationTags", "id", (tag) => tag.id),
+    ...findDuplicateValues(payload.classificationTags, "classificationTags", "name", (tag) => tag.name),
+    ...findDuplicateValues(payload.books, "books", "id", (book) => book.id),
+    ...findDuplicateValues(payload.books, "books", "managementBarcode", (book) =>
+      book.managementBarcode?.trim() || null
+    ),
+    ...findDuplicateValues(
+      payload.bookClassificationTags,
+      "bookClassificationTags",
+      "classificationTagId",
+      (relation) => `${relation.bookId}:${relation.classificationTagId}`,
+      "bookId/classificationTagId pair"
+    )
+  ];
+}
+
+function findDuplicateValues<T>(
+  items: T[],
+  collectionName: string,
+  fieldName: string,
+  getValue: (item: T) => string | null,
+  label = fieldName
+): ApiFieldError[] {
+  const errors: ApiFieldError[] = [];
+  const seen = new Map<string, number>();
+
+  items.forEach((item, index) => {
+    const value = getValue(item);
+
+    if (!value) {
+      return;
+    }
+
+    const firstIndex = seen.get(value);
+
+    if (firstIndex === undefined) {
+      seen.set(value, index);
+      return;
+    }
+
+    errors.push({
+      field: `${collectionName}.${index}.${fieldName}`,
+      message: `Duplicate ${label} in import payload: ${value} (first seen at ${collectionName}.${firstIndex}.${fieldName})`
+    });
   });
 
   return errors;
