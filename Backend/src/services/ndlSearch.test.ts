@@ -157,6 +157,42 @@ describe("NDL Search lookup service", () => {
     expect(result?.classificationTagCandidates).toEqual(["情報セキュリティ", "Web API"]);
   });
 
+  it("uses NDL genre values as classification tag candidates", () => {
+    const result = mapNdlSearchResponse(
+      `<rss><channel><item>
+        <title>ジャンルのある本</title>
+        <dcndl:genre>
+          <rdf:Description rdf:about="http://id.ndl.go.jp/auth/ndlgft/001347325">
+            <rdf:value>漫画</rdf:value>
+            <dcndl:transcription>マンガ</dcndl:transcription>
+          </rdf:Description>
+        </dcndl:genre>
+        <dcndl:genre>児童書</dcndl:genre>
+      </item></channel></rss>`,
+      "9780000000002"
+    );
+
+    expect(result?.classificationTagCandidates).toEqual(["漫画", "児童書"]);
+  });
+
+  it("combines untyped NDL subjects and genres without duplicates", () => {
+    const result = mapNdlSearchResponse(
+      `<rss><channel><item>
+        <title>主題語とジャンルのある本</title>
+        <dc:subject>漫画</dc:subject>
+        <dc:subject>歴史</dc:subject>
+        <dcndl:genre>
+          <rdf:Description>
+            <rdf:value>漫画</rdf:value>
+          </rdf:Description>
+        </dcndl:genre>
+      </item></channel></rss>`,
+      "9780000000002"
+    );
+
+    expect(result?.classificationTagCandidates).toEqual(["漫画", "歴史"]);
+  });
+
   it("does not use NDL author headings as the book author", () => {
     const result = mapNdlSearchResponse(
       `<rss><channel><item>

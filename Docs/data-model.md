@@ -130,4 +130,4 @@ MVPでは以下をJSON形式でExport/Importします。
 
 ## 将来のキャッシュ拡張
 
-外部APIレスポンスは、将来NDC分類記号やsubjectの再解釈に使う可能性が高いため、`external_lookup_cache` は正規化後の `payload` だけでなく、request URL、response status、content type、response bodyなどの生レスポンスを保存できる形へ拡張する方針です。
+外部APIレスポンスは、将来NDC分類記号、subject、genreの再解釈に使う可能性が高いため、`external_lookup_cache` は正規化後の `payload` だけでなく、request URL、response status、content type、response bodyなどの生レスポンスを保存できる形へ拡張する方針です。
