@@ -52,6 +52,12 @@ describe("backend application foundation", () => {
     ]);
   });
 
+  it("configures SQLite pragmas for local reliability", () => {
+    expect(database.sqlite.pragma("foreign_keys", { simple: true })).toBe(1);
+    expect(database.sqlite.pragma("journal_mode", { simple: true })).toBe("wal");
+    expect(database.sqlite.pragma("busy_timeout", { simple: true })).toBe(5000);
+  });
+
   it("reports application and database health", async () => {
     const app = await createApp({ config, database, logger: false });
 

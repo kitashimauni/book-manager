@@ -54,14 +54,16 @@ export async function registerDataTransferRoutes(
 ) {
   const { db } = options.database;
 
-  app.get("/api/export", async () => ({
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    books: db.select().from(books).all(),
-    locations: db.select().from(locations).all(),
-    classificationTags: db.select().from(classificationTags).all(),
-    bookClassificationTags: db.select().from(bookClassificationTags).all()
-  }));
+  app.get("/api/export", async () =>
+    db.transaction(() => ({
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      books: db.select().from(books).all(),
+      locations: db.select().from(locations).all(),
+      classificationTags: db.select().from(classificationTags).all(),
+      bookClassificationTags: db.select().from(bookClassificationTags).all()
+    }))
+  );
 
   app.post("/api/import/preview", async (request, reply) => {
     const parsed = importPayloadSchema.safeParse(request.body);

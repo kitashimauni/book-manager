@@ -56,6 +56,7 @@
 - Webフロントエンドはnginxで静的配信し、`/api` をbackendへプロキシすることで同一オリジン構成を基本とする
 - SQLiteデータベースファイルはコンテナ内 `/data/book-manager.sqlite` を標準パスとし、Docker volumeまたはホストディレクトリへマウントする
 - SQLiteデータベースファイル自体をバックアップ対象とする
+- SQLite接続時は `foreign_keys = ON`、`journal_mode = WAL`、`synchronous = NORMAL`、`busy_timeout = 5000` を明示する
 - 外部書誌APIはAPIキー必須の仕組みに依存しない
 - NDLサーチ、Open Library API向けのアプリ名、連絡先は任意環境変数 `OPEN_LIBRARY_APP_NAME` と `OPEN_LIBRARY_CONTACT` で設定できるようにする
 - NDLサーチ、Open Library APIの照会結果はSQLiteに保存し、`LOOKUP_CACHE_TTL_DAYS` で有効期限を設定する
@@ -89,6 +90,7 @@ ISBNの正規化と重複時の扱いを決めます。
 推奨初期案:
 
 - ハイフンあり、なしの入力を許可する
+- ISBN-10/ISBN-13のチェックディジットを検証する
 - 保存時は数字と `X` のみに正規化する
 - 重複登録は許可し、画面上で警告する方針に留める
 
