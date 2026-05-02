@@ -103,31 +103,80 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
     };
   }
 
-  function assertLocationExists(locationId: string | null | undefined) {
+  function validateLocationIsAssignable(
+    locationId: string | null | undefined,
+    currentBook?: { locationId: string | null }
+  ) {
     if (!locationId) {
-      return true;
+      return null;
     }
 
-    return Boolean(
-      db.select({ id: locations.id }).from(locations).where(eq(locations.id, locationId)).get()
-    );
+    const location = db
+      .select({ id: locations.id, isActive: locations.isActive })
+      .from(locations)
+      .where(eq(locations.id, locationId))
+      .get();
+
+    if (!location) {
+      return {
+        field: "locationId",
+        message: "Location was not found."
+      };
+    }
+
+    if (!location.isActive && currentBook?.locationId !== locationId) {
+      return {
+        field: "locationId",
+        message: "Location is inactive."
+      };
+    }
+
+    return null;
   }
 
-  function getMissingClassificationTagIds(tagIds: string[]) {
+  function validateClassificationTagsAreAssignable(tagIds: string[], currentBookId?: string) {
     const uniqueIds = [...new Set(tagIds)];
 
     if (uniqueIds.length === 0) {
-      return [];
+      return null;
     }
 
-    const found = db
-      .select({ id: classificationTags.id })
+    const foundTags = db
+      .select({ id: classificationTags.id, isActive: classificationTags.isActive })
       .from(classificationTags)
       .where(inArray(classificationTags.id, uniqueIds))
-      .all()
+      .all();
+    const foundIds = foundTags.map((tag) => tag.id);
+    const missingTagIds = uniqueIds.filter((id) => !foundIds.includes(id));
+
+    if (missingTagIds.length > 0) {
+      return {
+        field: "classificationTagIds",
+        message: `Classification tags were not found: ${missingTagIds.join(", ")}`
+      };
+    }
+
+    const existingTagIds =
+      currentBookId === undefined
+        ? []
+        : db
+            .select({ id: bookClassificationTags.classificationTagId })
+            .from(bookClassificationTags)
+            .where(eq(bookClassificationTags.bookId, currentBookId))
+            .all()
+            .map((tag) => tag.id);
+    const inactiveTagIds = foundTags
+      .filter((tag) => !tag.isActive && !existingTagIds.includes(tag.id))
       .map((tag) => tag.id);
 
-    return uniqueIds.filter((id) => !found.includes(id));
+    if (inactiveTagIds.length > 0) {
+      return {
+        field: "classificationTagIds",
+        message: `Classification tags are inactive: ${inactiveTagIds.join(", ")}`
+      };
+    }
+
+    return null;
   }
 
   function assertManagementBarcodeIsUnique(
@@ -172,24 +221,20 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
       .run();
   }
 
-  function validateBookRelations(payload: CreateBookRequest | UpdateBookRequest) {
-    if ("locationId" in payload && !assertLocationExists(payload.locationId)) {
-      return {
-        field: "locationId",
-        message: "Location was not found."
-      };
+  function validateBookRelations(
+    payload: CreateBookRequest | UpdateBookRequest,
+    currentBook?: { id: string; locationId: string | null }
+  ) {
+    if ("locationId" in payload) {
+      const locationError = validateLocationIsAssignable(payload.locationId, currentBook);
+
+      if (locationError) {
+        return locationError;
+      }
     }
 
-    const missingTagIds =
-      "classificationTagIds" in payload && payload.classificationTagIds
-        ? getMissingClassificationTagIds(payload.classificationTagIds)
-        : [];
-
-    if (missingTagIds.length > 0) {
-      return {
-        field: "classificationTagIds",
-        message: `Classification tags were not found: ${missingTagIds.join(", ")}`
-      };
+    if ("classificationTagIds" in payload && payload.classificationTagIds) {
+      return validateClassificationTagsAreAssignable(payload.classificationTagIds, currentBook?.id);
     }
 
     return null;
@@ -288,28 +333,38 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
     const now = new Date().toISOString();
     const id = randomUUID();
 
-    db.transaction(() => {
-      db.insert(books)
-        .values({
-          id,
-          title: parsed.data.title,
-          author: parsed.data.author,
-          publisher: parsed.data.publisher,
-          publishedDate: parsed.data.publishedDate,
-          isbn: parsed.data.isbn,
-          bookBarcode: parsed.data.bookBarcode,
-          managementBarcode: parsed.data.managementBarcode,
-          externalSource: parsed.data.externalSource,
-          externalId: parsed.data.externalId,
-          locationId: parsed.data.locationId ?? null,
-          managementMemo: parsed.data.managementMemo,
-          createdAt: now,
-          updatedAt: now
-        })
-        .run();
+    try {
+      db.transaction(() => {
+        db.insert(books)
+          .values({
+            id,
+            title: parsed.data.title,
+            author: parsed.data.author,
+            publisher: parsed.data.publisher,
+            publishedDate: parsed.data.publishedDate,
+            isbn: parsed.data.isbn,
+            bookBarcode: parsed.data.bookBarcode,
+            managementBarcode: parsed.data.managementBarcode,
+            externalSource: parsed.data.externalSource,
+            externalId: parsed.data.externalId,
+            locationId: parsed.data.locationId ?? null,
+            managementMemo: parsed.data.managementMemo,
+            createdAt: now,
+            updatedAt: now
+          })
+          .run();
 
-      replaceClassificationTags(id, parsed.data.classificationTagIds);
-    });
+        replaceClassificationTags(id, parsed.data.classificationTagIds);
+      });
+    } catch (error) {
+      if (isManagementBarcodeUniqueConstraintError(error)) {
+        return reply.status(409).send({
+          message: "Management barcode already exists."
+        });
+      }
+
+      throw error;
+    }
 
     return reply.status(201).send(getBookWithRelations(id));
   });
@@ -353,7 +408,7 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
       });
     }
 
-    const relationError = validateBookRelations(parsed.data);
+    const relationError = validateBookRelations(parsed.data, current);
 
     if (relationError) {
       return reply.status(400).send(validationError([relationError]));
@@ -365,42 +420,52 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
       });
     }
 
-    db.transaction(() => {
-      db.update(books)
-        .set({
-          title: parsed.data.title ?? current.title,
-          author: parsed.data.author === undefined ? current.author : parsed.data.author,
-          publisher: parsed.data.publisher === undefined ? current.publisher : parsed.data.publisher,
-          publishedDate:
-            parsed.data.publishedDate === undefined
-              ? current.publishedDate
-              : parsed.data.publishedDate,
-          isbn: parsed.data.isbn === undefined ? current.isbn : parsed.data.isbn,
-          bookBarcode:
-            parsed.data.bookBarcode === undefined ? current.bookBarcode : parsed.data.bookBarcode,
-          managementBarcode:
-            parsed.data.managementBarcode === undefined
-              ? current.managementBarcode
-              : parsed.data.managementBarcode,
-          externalSource:
-            parsed.data.externalSource === undefined
-              ? current.externalSource
-              : parsed.data.externalSource,
-          externalId: parsed.data.externalId === undefined ? current.externalId : parsed.data.externalId,
-          locationId: parsed.data.locationId === undefined ? current.locationId : parsed.data.locationId,
-          managementMemo:
-            parsed.data.managementMemo === undefined
-              ? current.managementMemo
-              : parsed.data.managementMemo,
-          updatedAt: new Date().toISOString()
-        })
-        .where(eq(books.id, params.data.id))
-        .run();
+    try {
+      db.transaction(() => {
+        db.update(books)
+          .set({
+            title: parsed.data.title ?? current.title,
+            author: parsed.data.author === undefined ? current.author : parsed.data.author,
+            publisher: parsed.data.publisher === undefined ? current.publisher : parsed.data.publisher,
+            publishedDate:
+              parsed.data.publishedDate === undefined
+                ? current.publishedDate
+                : parsed.data.publishedDate,
+            isbn: parsed.data.isbn === undefined ? current.isbn : parsed.data.isbn,
+            bookBarcode:
+              parsed.data.bookBarcode === undefined ? current.bookBarcode : parsed.data.bookBarcode,
+            managementBarcode:
+              parsed.data.managementBarcode === undefined
+                ? current.managementBarcode
+                : parsed.data.managementBarcode,
+            externalSource:
+              parsed.data.externalSource === undefined
+                ? current.externalSource
+                : parsed.data.externalSource,
+            externalId: parsed.data.externalId === undefined ? current.externalId : parsed.data.externalId,
+            locationId: parsed.data.locationId === undefined ? current.locationId : parsed.data.locationId,
+            managementMemo:
+              parsed.data.managementMemo === undefined
+                ? current.managementMemo
+                : parsed.data.managementMemo,
+            updatedAt: new Date().toISOString()
+          })
+          .where(eq(books.id, params.data.id))
+          .run();
 
-      if (parsed.data.classificationTagIds) {
-        replaceClassificationTags(params.data.id, parsed.data.classificationTagIds);
+        if (parsed.data.classificationTagIds) {
+          replaceClassificationTags(params.data.id, parsed.data.classificationTagIds);
+        }
+      });
+    } catch (error) {
+      if (isManagementBarcodeUniqueConstraintError(error)) {
+        return reply.status(409).send({
+          message: "Management barcode already exists."
+        });
       }
-    });
+
+      throw error;
+    }
 
     return getBookWithRelations(params.data.id);
   });
@@ -461,4 +526,17 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
 
     return result;
   });
+}
+
+function isManagementBarcodeUniqueConstraintError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const code = "code" in error ? error.code : undefined;
+
+  return (
+    (code === "SQLITE_CONSTRAINT_UNIQUE" || code === "SQLITE_CONSTRAINT") &&
+    error.message.includes("books.management_barcode")
+  );
 }

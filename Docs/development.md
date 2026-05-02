@@ -66,6 +66,8 @@ Frontendコンテナはnginxで静的ファイルを配信し、`/api` をbacken
 
 Docker Composeでは `./data:/data` をマウントします。通常のバックアップは、ホスト側の `data/book-manager.sqlite` を保存する運用を基本とします。
 
+BackendはSQLite接続時に `foreign_keys = ON`、`journal_mode = WAL`、`synchronous = NORMAL`、`busy_timeout = 5000` を設定します。WAL運用では `book-manager.sqlite` に加えて `book-manager.sqlite-wal`、`book-manager.sqlite-shm` が作成されることがあります。バックアップ時はアプリを停止するか、SQLiteのバックアップ手順に従って一貫したファイルを取得してください。
+
 ## DB Migration
 
 Backendは起動時にDrizzle migrationを適用します。migrationファイルは `Backend/drizzle/` に管理します。

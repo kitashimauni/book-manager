@@ -1,5 +1,6 @@
 import type { AppConfig } from "../config/env.js";
 import type { BookLookupResult } from "../schemas/books.js";
+import { isValidIsbn, normalizeIsbn } from "../utils/isbn.js";
 
 type OpenLibraryBook = {
   title?: string;
@@ -21,14 +22,10 @@ export type OpenLibraryLookupServiceOptions = {
 
 const defaultLookupService = createOpenLibraryLookupService();
 
-export function normalizeIsbn(value: string): string {
-  return value.replace(/[^0-9Xx]/g, "").toUpperCase();
-}
+export { normalizeIsbn };
 
 export function isLikelyIsbn(value: string): boolean {
-  const isbn = normalizeIsbn(value);
-
-  return /^\d{9}[\dX]$/.test(isbn) || /^\d{13}$/.test(isbn);
+  return isValidIsbn(value);
 }
 
 export async function lookupBookByIsbn(

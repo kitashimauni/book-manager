@@ -12,6 +12,9 @@ export function createDatabaseClient(config: Pick<AppConfig, "databasePath">) {
 
   const sqlite = new Database(config.databasePath);
   sqlite.pragma("foreign_keys = ON");
+  sqlite.pragma("journal_mode = WAL");
+  sqlite.pragma("synchronous = NORMAL");
+  sqlite.pragma("busy_timeout = 5000");
 
   return {
     sqlite,

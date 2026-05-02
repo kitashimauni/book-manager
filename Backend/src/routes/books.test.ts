@@ -243,6 +243,173 @@ describe("books API", () => {
     });
   });
 
+  it("validates ISBN and publication date inputs", async () => {
+    const valid = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Valid bibliographic data",
+        isbn: "ISBN 0-306-40615-2",
+        publishedDate: "2024-02-29"
+      }
+    });
+
+    expect(valid.statusCode).toBe(201);
+    expect(valid.json()).toMatchObject({
+      isbn: "0306406152",
+      publishedDate: "2024-02-29"
+    });
+
+    const normalizedPartialDate = await app.inject({
+      method: "PUT",
+      url: `/api/books/${valid.json().id}`,
+      payload: {
+        publishedDate: "2023.3"
+      }
+    });
+
+    expect(normalizedPartialDate.statusCode).toBe(200);
+    expect(normalizedPartialDate.json()).toMatchObject({
+      publishedDate: "2023-03"
+    });
+
+    const invalidIsbn = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Invalid ISBN",
+        isbn: "9780132350885"
+      }
+    });
+
+    expect(invalidIsbn.statusCode).toBe(400);
+    expect(invalidIsbn.json()).toMatchObject({
+      errors: [expect.objectContaining({ field: "isbn" })]
+    });
+
+    const invalidDate = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Invalid date",
+        publishedDate: "2023-02-29"
+      }
+    });
+
+    expect(invalidDate.statusCode).toBe(400);
+    expect(invalidDate.json()).toMatchObject({
+      errors: [expect.objectContaining({ field: "publishedDate" })]
+    });
+  });
+
+  it("rejects newly assigned inactive locations and classification tags", async () => {
+    const inactiveLocation = await createLocation("Inactive shelf");
+    const inactiveTag = await createClassificationTag("Inactive tag");
+
+    await app.inject({
+      method: "DELETE",
+      url: `/api/locations/${inactiveLocation.id}`
+    });
+    await app.inject({
+      method: "DELETE",
+      url: `/api/classification-tags/${inactiveTag.id}`
+    });
+
+    const createdWithInactiveLocation = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Inactive location",
+        locationId: inactiveLocation.id
+      }
+    });
+
+    expect(createdWithInactiveLocation.statusCode).toBe(400);
+    expect(createdWithInactiveLocation.json()).toMatchObject({
+      errors: [
+        {
+          field: "locationId",
+          message: "Location is inactive."
+        }
+      ]
+    });
+
+    const createdWithInactiveTag = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Inactive tag",
+        classificationTagIds: [inactiveTag.id]
+      }
+    });
+
+    expect(createdWithInactiveTag.statusCode).toBe(400);
+    expect(createdWithInactiveTag.json()).toMatchObject({
+      errors: [
+        {
+          field: "classificationTagIds",
+          message: `Classification tags are inactive: ${inactiveTag.id}`
+        }
+      ]
+    });
+
+    const plainBook = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Plain book"
+      }
+    });
+
+    const updatedWithInactiveLocation = await app.inject({
+      method: "PUT",
+      url: `/api/books/${plainBook.json().id}`,
+      payload: {
+        locationId: inactiveLocation.id
+      }
+    });
+
+    expect(updatedWithInactiveLocation.statusCode).toBe(400);
+
+    const editableLocation = await createLocation("Current shelf");
+    const editableTag = await createClassificationTag("Current tag");
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Existing book",
+        locationId: editableLocation.id,
+        classificationTagIds: [editableTag.id]
+      }
+    });
+
+    await app.inject({
+      method: "DELETE",
+      url: `/api/locations/${editableLocation.id}`
+    });
+    await app.inject({
+      method: "DELETE",
+      url: `/api/classification-tags/${editableTag.id}`
+    });
+
+    const preserved = await app.inject({
+      method: "PUT",
+      url: `/api/books/${created.json().id}`,
+      payload: {
+        title: "Existing book updated",
+        locationId: editableLocation.id,
+        classificationTagIds: [editableTag.id]
+      }
+    });
+
+    expect(preserved.statusCode).toBe(200);
+    expect(preserved.json()).toMatchObject({
+      title: "Existing book updated",
+      location: expect.objectContaining({ id: editableLocation.id }),
+      classificationTags: [expect.objectContaining({ id: editableTag.id })]
+    });
+  });
+
   it("rejects missing related records and invalid input", async () => {
     const invalid = await app.inject({
       method: "POST",
