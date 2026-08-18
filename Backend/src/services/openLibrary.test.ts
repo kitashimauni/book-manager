@@ -150,6 +150,71 @@ describe("Open Library lookup service", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it("uses the configured minimum interval override", async () => {
+    let currentTime = 0;
+    const sleep = vi.fn(async (milliseconds: number) => {
+      currentTime += milliseconds;
+    });
+    const fetchImpl = vi.fn<typeof fetch>().mockImplementation(async () =>
+      jsonResponse({
+        title: "A book"
+      })
+    );
+    const service = createOpenLibraryLookupService({
+      fetchImpl,
+      sleep,
+      now: () => currentTime,
+      minRequestIntervalMs: 250
+    });
+
+    await service.lookupBookByIsbn("9780132350884", baseConfig);
+    await service.lookupBookByIsbn("9780321125217", baseConfig);
+
+    expect(sleep).toHaveBeenCalledWith(250);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("serializes concurrent lookups and paces the next request", async () => {
+    let currentTime = 0;
+    const sleep = vi.fn(async (milliseconds: number) => {
+      currentTime += milliseconds;
+    });
+    let releaseFirstFetch!: () => void;
+    let firstFetchStarted!: () => void;
+    const firstFetchStartedPromise = new Promise<void>((resolve) => {
+      firstFetchStarted = resolve;
+    });
+    const firstFetch = new Promise<Response>((resolve) => {
+      releaseFirstFetch = () => resolve(jsonResponse({ title: "First" }));
+    });
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementationOnce(async () => {
+        firstFetchStarted();
+        return firstFetch;
+      })
+      .mockResolvedValue(jsonResponse({ title: "Second" }));
+    const service = createOpenLibraryLookupService({
+      fetchImpl,
+      sleep,
+      now: () => currentTime,
+      minRequestIntervalMs: 1000
+    });
+
+    const firstLookup = service.lookupBookByIsbn("9780132350884", baseConfig);
+    await firstFetchStartedPromise;
+
+    const secondLookup = service.lookupBookByIsbn("9780321125217", baseConfig);
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    releaseFirstFetch();
+    await Promise.all([firstLookup, secondLookup]);
+
+    expect(sleep).toHaveBeenCalledWith(1000);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it("exposes ISBN normalization helpers", () => {
     expect(normalizeIsbn("ISBN 0-321-12521-5")).toBe("0321125215");
     expect(isLikelyIsbn("0-321-12521-5")).toBe(true);

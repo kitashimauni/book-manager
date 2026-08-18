@@ -82,6 +82,48 @@ describe("NDL Search lookup service", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it("serializes concurrent lookups and paces the next request", async () => {
+    let currentTime = 0;
+    const sleep = vi.fn(async (milliseconds: number) => {
+      currentTime += milliseconds;
+    });
+    let releaseFirstFetch!: () => void;
+    let firstFetchStarted!: () => void;
+    const firstFetchStartedPromise = new Promise<void>((resolve) => {
+      firstFetchStarted = resolve;
+    });
+    const firstFetch = new Promise<Response>((resolve) => {
+      releaseFirstFetch = () =>
+        resolve(xmlResponse("<rss><channel><item><title>First</title></item></channel></rss>"));
+    });
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockImplementationOnce(async () => {
+        firstFetchStarted();
+        return firstFetch;
+      })
+      .mockResolvedValue(xmlResponse("<rss><channel><item><title>Second</title></item></channel></rss>"));
+    const service = createNdlSearchLookupService({
+      fetchImpl,
+      sleep,
+      now: () => currentTime,
+      minRequestIntervalMs: 1000
+    });
+
+    const firstLookup = service.lookupBookByIsbn("9784814400249", baseConfig);
+    await firstFetchStartedPromise;
+
+    const secondLookup = service.lookupBookByIsbn("9780132350884", baseConfig);
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+
+    releaseFirstFetch();
+    await Promise.all([firstLookup, secondLookup]);
+
+    expect(sleep).toHaveBeenCalledWith(1000);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it("does not call NDL Search for non-ISBN input", async () => {
     const fetchImpl = vi.fn<typeof fetch>();
     const service = createNdlSearchLookupService({
