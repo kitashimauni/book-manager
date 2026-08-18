@@ -1665,6 +1665,10 @@ button:disabled {
     margin-left: 0;
   }
 
+  .view-mode-switcher {
+    display: none;
+  }
+
   .book-form-side {
     position: static;
   }

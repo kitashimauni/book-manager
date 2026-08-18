@@ -54,7 +54,25 @@ export function BooksPage() {
   const [tags, setTags] = useState<ClassificationTag[]>([]);
   const [total, setTotal] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [isCompactViewport, setIsCompactViewport] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 860px)");
+
+    function handleViewportChange() {
+      setIsCompactViewport(mediaQuery.matches);
+
+      if (mediaQuery.matches) {
+        setViewMode("cards");
+      }
+    }
+
+    handleViewportChange();
+    mediaQuery.addEventListener("change", handleViewportChange);
+
+    return () => mediaQuery.removeEventListener("change", handleViewportChange);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -169,6 +187,7 @@ export function BooksPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const hasActiveFilters = Boolean(filters.q || filters.locationId || filters.classificationTagId);
+  const effectiveViewMode = resolveBookViewMode(viewMode, isCompactViewport);
 
   return (
     <section className="page-panel">
@@ -347,7 +366,7 @@ export function BooksPage() {
 
       {!isLoading && books.length > 0 ? (
         <>
-          <div className="book-results" data-view={viewMode}>
+          <div className="book-results" data-view={effectiveViewMode}>
             <div className="book-card-list">
               {books.map((book) => (
                 <BookCard
@@ -386,6 +405,10 @@ export function BooksPage() {
       ) : null}
     </section>
   );
+}
+
+export function resolveBookViewMode(viewMode: ViewMode, isCompactViewport: boolean): ViewMode {
+  return isCompactViewport ? "cards" : viewMode;
 }
 
 function BookCard({
