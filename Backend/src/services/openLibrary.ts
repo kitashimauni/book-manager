@@ -1,6 +1,7 @@
 import type { AppConfig } from "../config/env.js";
 import type { BookLookupResult } from "../schemas/books.js";
 import { isValidIsbn, normalizeIsbn } from "../utils/isbn.js";
+import { createSerializedRequestQueue } from "./requestQueue.js";
 
 type OpenLibraryBook = {
   title?: string;
@@ -40,19 +41,7 @@ export function createOpenLibraryLookupService(options: OpenLibraryLookupService
   const sleep =
     options.sleep ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
   const now = options.now ?? Date.now;
-  let lastRequestAt: number | null = null;
-
-  async function waitForRequestSlot(config: AppConfig) {
-    const minIntervalMs = options.minRequestIntervalMs ?? getOpenLibraryMinIntervalMs(config);
-    const currentTime = now();
-    const elapsed = lastRequestAt === null ? minIntervalMs : currentTime - lastRequestAt;
-
-    if (elapsed < minIntervalMs) {
-      await sleep(minIntervalMs - elapsed);
-    }
-
-    lastRequestAt = now();
-  }
+  const requestQueue = createSerializedRequestQueue({ sleep, now });
 
   return {
     async lookupBookByIsbn(rawIsbn: string, config: AppConfig): Promise<BookLookupResult | null> {
@@ -62,25 +51,25 @@ export function createOpenLibraryLookupService(options: OpenLibraryLookupService
         return null;
       }
 
-      await waitForRequestSlot(config);
+      return requestQueue.enqueue(getOpenLibraryMinIntervalMs(config), async () => {
+        const response = await fetchImpl(
+          `https://openlibrary.org/isbn/${encodeURIComponent(isbn)}.json`,
+          {
+            headers: buildOpenLibraryHeaders(config)
+          }
+        );
 
-      const response = await fetchImpl(
-        `https://openlibrary.org/isbn/${encodeURIComponent(isbn)}.json`,
-        {
-          headers: buildOpenLibraryHeaders(config)
+        if (response.status === 404) {
+          return null;
         }
-      );
 
-      if (response.status === 404) {
-        return null;
-      }
+        if (!response.ok) {
+          throw new Error(`Open Library lookup failed with status ${response.status}`);
+        }
 
-      if (!response.ok) {
-        throw new Error(`Open Library lookup failed with status ${response.status}`);
-      }
-
-      const payload = (await response.json()) as OpenLibraryBook;
-      return mapOpenLibraryBook(payload, isbn);
+        const payload = (await response.json()) as OpenLibraryBook;
+        return mapOpenLibraryBook(payload, isbn);
+      });
     }
   };
 }

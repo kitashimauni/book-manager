@@ -1,6 +1,7 @@
 import type { AppConfig } from "../config/env.js";
 import type { BookLookupResult } from "../schemas/books.js";
 import { isLikelyIsbn, normalizeIsbn } from "./openLibrary.js";
+import { createSerializedRequestQueue } from "./requestQueue.js";
 
 export type NdlSearchLookupServiceOptions = {
   fetchImpl?: typeof fetch;
@@ -23,19 +24,7 @@ export function createNdlSearchLookupService(options: NdlSearchLookupServiceOpti
   const sleep =
     options.sleep ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
   const now = options.now ?? Date.now;
-  let lastRequestAt: number | null = null;
-
-  async function waitForRequestSlot() {
-    const minIntervalMs = options.minRequestIntervalMs ?? 1000;
-    const currentTime = now();
-    const elapsed = lastRequestAt === null ? minIntervalMs : currentTime - lastRequestAt;
-
-    if (elapsed < minIntervalMs) {
-      await sleep(minIntervalMs - elapsed);
-    }
-
-    lastRequestAt = now();
-  }
+  const requestQueue = createSerializedRequestQueue({ sleep, now });
 
   return {
     async lookupBookByIsbn(rawIsbn: string, config: AppConfig): Promise<BookLookupResult | null> {
@@ -45,22 +34,22 @@ export function createNdlSearchLookupService(options: NdlSearchLookupServiceOpti
         return null;
       }
 
-      await waitForRequestSlot();
+      return requestQueue.enqueue(options.minRequestIntervalMs ?? 1000, async () => {
+        const url = new URL("https://ndlsearch.ndl.go.jp/api/opensearch");
+        url.searchParams.set("isbn", isbn);
+        url.searchParams.set("cnt", "1");
 
-      const url = new URL("https://ndlsearch.ndl.go.jp/api/opensearch");
-      url.searchParams.set("isbn", isbn);
-      url.searchParams.set("cnt", "1");
+        const response = await fetchImpl(url.toString(), {
+          headers: buildNdlSearchHeaders(config)
+        });
 
-      const response = await fetchImpl(url.toString(), {
-        headers: buildNdlSearchHeaders(config)
+        if (!response.ok) {
+          throw new Error(`NDL Search lookup failed with status ${response.status}`);
+        }
+
+        const payload = await response.text();
+        return mapNdlSearchResponse(payload, isbn);
       });
-
-      if (!response.ok) {
-        throw new Error(`NDL Search lookup failed with status ${response.status}`);
-      }
-
-      const payload = await response.text();
-      return mapNdlSearchResponse(payload, isbn);
     }
   };
 }
