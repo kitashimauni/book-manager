@@ -32,6 +32,8 @@ mise run test
 
 通常の実装確認では、ホスト側で `pnpm install` が完了している状態なら `mise run test` を実行します。
 
+MVPの画面・API・バックアップ確認は [MVPスモークテスト](./smoke-test.md) にまとめています。
+
 ## CI
 
 GitHub ActionsではPull Requestと `main` へのpush時に、`mise.toml` で指定したNode.jsとpnpmを使って以下を実行します。
@@ -90,7 +92,7 @@ pnpm --filter @book-manager/backend db:migrate
 | --- | --- | --- |
 | `FRONTEND_PORT` | 任意 | Frontendの公開ポート。初期値は `3000` |
 | `BACKEND_PORT` | 任意 | Backendの公開ポート。初期値は `3001` |
-| `VITE_API_BASE_URL` | 任意 | ローカル開発時にFrontendから見るBackend URL。空の場合は同一オリジンの `/api` |
+| `VITE_API_BASE_URL` | 任意 | ローカル開発時にFrontendから見るBackendのorigin。Frontendが `/api` を付加します。空の場合は同一オリジンの `/api` |
 | `DOCKER_VITE_API_BASE_URL` | 任意 | Docker frontend imageのbuild時に埋め込むBackend URL。空の場合はnginxの `/api` proxy |
 | `VITE_DEV_PROXY_TARGET` | 任意 | Vite開発プロキシが接続するBackend URL |
 | `CORS_ORIGIN` | 任意 | Backendが許可するFrontend origin |
