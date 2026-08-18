@@ -44,12 +44,25 @@ export const bookIdParamsSchema = z.object({
   id: z.string().uuid()
 });
 
+export const listBooksSortSchema = z.enum([
+  "updatedAt",
+  "createdAt",
+  "title",
+  "author",
+  "publisher",
+  "publishedDate"
+]);
+
+export const listBooksDirectionSchema = z.enum(["asc", "desc"]);
+
 export const listBooksQuerySchema = z.object({
   q: z.string().trim().optional(),
   locationId: z.string().uuid().optional(),
   classificationTagId: z.string().uuid().optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
-  limit: z.coerce.number().int().min(1).max(100).optional().default(20)
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  sort: listBooksSortSchema.optional().default("updatedAt"),
+  direction: listBooksDirectionSchema.optional().default("desc")
 });
 
 export const createBookRequestSchema = z.object({

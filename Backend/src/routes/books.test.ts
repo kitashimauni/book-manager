@@ -151,8 +151,51 @@ describe("books API", () => {
     expect(filtered.statusCode).toBe(200);
     expect(filtered.json()).toMatchObject({
       total: 1,
-      items: [expect.objectContaining({ title: "Algorithms" })]
+      items: [
+        expect.objectContaining({
+          title: "Algorithms",
+          location: { id: location.id, name: "Office shelf" },
+          classificationTags: [{ id: programming.id, name: "Programming" }]
+        })
+      ]
     });
+  });
+
+  it("sorts books by the requested field and direction", async () => {
+    for (const title of ["Zebra", "Alpha", "Middle"]) {
+      await app.inject({
+        method: "POST",
+        url: "/api/books",
+        payload: { title }
+      });
+    }
+
+    const ascending = await app.inject({
+      method: "GET",
+      url: "/api/books?sort=title&direction=asc&limit=10"
+    });
+    const descending = await app.inject({
+      method: "GET",
+      url: "/api/books?sort=title&direction=desc&limit=10"
+    });
+    const invalid = await app.inject({
+      method: "GET",
+      url: "/api/books?sort=unknown"
+    });
+
+    expect(ascending.statusCode).toBe(200);
+    expect(ascending.json().items.map((book: { title: string }) => book.title)).toEqual([
+      "Alpha",
+      "Middle",
+      "Zebra"
+    ]);
+    expect(descending.statusCode).toBe(200);
+    expect(descending.json().items.map((book: { title: string }) => book.title)).toEqual([
+      "Zebra",
+      "Middle",
+      "Alpha"
+    ]);
+    expect(invalid.statusCode).toBe(400);
   });
 
   it("updates a book and replaces classification tags", async () => {

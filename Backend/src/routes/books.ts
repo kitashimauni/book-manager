@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, like, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like, ne, or, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import type { AppConfig } from "../config/env.js";
@@ -22,6 +22,57 @@ export type BookRouteOptions = {
   database: DatabaseClient;
 };
 
+type BookRelationRow = {
+  id: string;
+  title: string;
+  author: string | null;
+  publisher: string | null;
+  publishedDate: string | null;
+  isbn: string | null;
+  bookBarcode: string | null;
+  managementBarcode: string | null;
+  externalSource: string | null;
+  externalId: string | null;
+  managementMemo: string | null;
+  createdAt: string;
+  updatedAt: string;
+  locationId: string | null;
+  locationName: string | null;
+};
+
+type BookTagRow = {
+  bookId: string;
+  id: string;
+  name: string;
+};
+
+const bookRelationColumns = {
+  id: books.id,
+  title: books.title,
+  author: books.author,
+  publisher: books.publisher,
+  publishedDate: books.publishedDate,
+  isbn: books.isbn,
+  bookBarcode: books.bookBarcode,
+  managementBarcode: books.managementBarcode,
+  externalSource: books.externalSource,
+  externalId: books.externalId,
+  managementMemo: books.managementMemo,
+  createdAt: books.createdAt,
+  updatedAt: books.updatedAt,
+  locationId: locations.id,
+  locationName: locations.name
+};
+
+const bookSortColumns = {
+  updatedAt: books.updatedAt,
+  createdAt: books.createdAt,
+  title: books.title,
+  author: books.author,
+  publisher: books.publisher,
+  publishedDate: books.publishedDate
+};
+
 export async function registerBookRoutes(app: FastifyInstance, options: BookRouteOptions) {
   const { db } = options.database;
   const bookLookup = createBookLookupService({
@@ -37,36 +88,15 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
     );
   }
 
-  function getBookWithRelations(id: string) {
-    const book = db
-      .select({
-        id: books.id,
-        title: books.title,
-        author: books.author,
-        publisher: books.publisher,
-        publishedDate: books.publishedDate,
-        isbn: books.isbn,
-        bookBarcode: books.bookBarcode,
-        managementBarcode: books.managementBarcode,
-        externalSource: books.externalSource,
-        externalId: books.externalId,
-        managementMemo: books.managementMemo,
-        createdAt: books.createdAt,
-        updatedAt: books.updatedAt,
-        locationId: locations.id,
-        locationName: locations.name
-      })
-      .from(books)
-      .leftJoin(locations, eq(books.locationId, locations.id))
-      .where(eq(books.id, id))
-      .get();
-
-    if (!book) {
-      return null;
+  function getTagsByBookIds(bookIds: string[]) {
+    if (bookIds.length === 0) {
+      return new Map<string, BookTagRow[]>();
     }
 
-    const tags = db
+    const tagsByBookId = new Map<string, BookTagRow[]>();
+    const rows = db
       .select({
+        bookId: bookClassificationTags.bookId,
         id: classificationTags.id,
         name: classificationTags.name
       })
@@ -75,10 +105,20 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
         classificationTags,
         eq(bookClassificationTags.classificationTagId, classificationTags.id)
       )
-      .where(eq(bookClassificationTags.bookId, id))
+      .where(inArray(bookClassificationTags.bookId, bookIds))
       .orderBy(classificationTags.name)
       .all();
 
+    for (const row of rows) {
+      const tags = tagsByBookId.get(row.bookId) ?? [];
+      tags.push(row);
+      tagsByBookId.set(row.bookId, tags);
+    }
+
+    return tagsByBookId;
+  }
+
+  function toBookResponse(book: BookRelationRow, tags: BookTagRow[]) {
     return {
       id: book.id,
       title: book.title,
@@ -96,11 +136,28 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
             name: book.locationName
           }
         : null,
-      classificationTags: tags,
+      classificationTags: tags.map(({ id, name }) => ({ id, name })),
       managementMemo: book.managementMemo,
       createdAt: book.createdAt,
       updatedAt: book.updatedAt
     };
+  }
+
+  function getBookWithRelations(id: string) {
+    const book = db
+      .select(bookRelationColumns)
+      .from(books)
+      .leftJoin(locations, eq(books.locationId, locations.id))
+      .where(eq(books.id, id))
+      .get();
+
+    if (!book) {
+      return null;
+    }
+
+    const tags = getTagsByBookIds([id]).get(id) ?? [];
+
+    return toBookResponse(book, tags);
   }
 
   function validateLocationIsAssignable(
@@ -294,17 +351,22 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
       .where(where)
       .get()?.count;
 
+    const sortColumn = bookSortColumns[parsed.data.sort];
+    const sortOrder = parsed.data.direction === "asc" ? asc(sortColumn) : desc(sortColumn);
     const rows = db
-      .select({ id: books.id })
+      .select(bookRelationColumns)
       .from(books)
+      .leftJoin(locations, eq(books.locationId, locations.id))
       .where(where)
-      .orderBy(desc(books.updatedAt))
+      .orderBy(sortOrder, asc(books.id))
       .limit(parsed.data.limit)
       .offset((parsed.data.page - 1) * parsed.data.limit)
       .all();
 
+    const tagsByBookId = getTagsByBookIds(rows.map((row) => row.id));
+
     return {
-      items: rows.map((row) => getBookWithRelations(row.id)),
+      items: rows.map((row) => toBookResponse(row, tagsByBookId.get(row.id) ?? [])),
       page: parsed.data.page,
       limit: parsed.data.limit,
       total: total ?? 0

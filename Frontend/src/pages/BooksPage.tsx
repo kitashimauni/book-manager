@@ -7,7 +7,8 @@ import {
   type ApiError,
   type Book,
   type ClassificationTag,
-  type Location
+  type Location,
+  type ListBooksQuery
 } from "../api/client.js";
 import { Link } from "../components/Link.js";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateBlocks.js";
@@ -16,15 +17,28 @@ const pageSize = 20;
 
 type SearchState = {
   classificationTagId: string;
+  direction: NonNullable<ListBooksQuery["direction"]>;
   locationId: string;
   q: string;
+  sort: NonNullable<ListBooksQuery["sort"]>;
 };
 
 const emptySearch: SearchState = {
   classificationTagId: "",
+  direction: "desc",
   locationId: "",
-  q: ""
+  q: "",
+  sort: "updatedAt"
 };
+
+const sortOptions: Array<{ label: string; value: SearchState["sort"] }> = [
+  { label: "更新日時", value: "updatedAt" },
+  { label: "登録日時", value: "createdAt" },
+  { label: "タイトル", value: "title" },
+  { label: "著者", value: "author" },
+  { label: "出版社", value: "publisher" },
+  { label: "出版日", value: "publishedDate" }
+];
 
 export function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -75,10 +89,12 @@ export function BooksPage() {
       try {
         const result = await getBooks({
           classificationTagId: filters.classificationTagId || undefined,
+          direction: filters.direction,
           limit: pageSize,
           locationId: filters.locationId || undefined,
           page,
-          q: filters.q.trim() || undefined
+          q: filters.q.trim() || undefined,
+          sort: filters.sort
         });
 
         if (!isMounted) {
@@ -202,6 +218,38 @@ export function BooksPage() {
                   {tag.isActive ? "" : "（無効）"}
                 </option>
               ))}
+            </select>
+          </label>
+
+          <label>
+            <span>並び順</span>
+            <select
+              onChange={(event) =>
+                handleFilterChange({ ...search, sort: event.target.value as SearchState["sort"] })
+              }
+              value={search.sort}
+            >
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            <span>方向</span>
+            <select
+              onChange={(event) =>
+                handleFilterChange({
+                  ...search,
+                  direction: event.target.value as SearchState["direction"]
+                })
+              }
+              value={search.direction}
+            >
+              <option value="desc">降順</option>
+              <option value="asc">昇順</option>
             </select>
           </label>
 

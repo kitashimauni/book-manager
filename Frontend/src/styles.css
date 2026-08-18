@@ -247,6 +247,34 @@ button:disabled {
   box-shadow: 0 20px 60px rgba(65, 49, 27, 0.08);
 }
 
+.export-card {
+  border-top: 3px solid rgba(85, 107, 79, 0.48);
+}
+
+.import-card {
+  border-top: 3px solid rgba(165, 72, 50, 0.52);
+}
+
+.safety-note,
+.safety-warning {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 15px;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+.safety-note {
+  background: rgba(85, 107, 79, 0.1);
+  color: #3f6639;
+}
+
+.safety-warning {
+  background: rgba(165, 72, 50, 0.1);
+  color: #8d3f2b;
+}
+
 .data-card h3,
 .import-preview-panel h3,
 .preview-section h4,
@@ -297,6 +325,39 @@ button:disabled {
 
 .import-preview-panel {
   margin-top: 22px;
+}
+
+.import-preview-heading {
+  position: sticky;
+  top: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  margin: -8px -8px 0;
+  padding: 8px;
+  background: rgba(255, 250, 240, 0.94);
+  backdrop-filter: blur(12px);
+}
+
+.preview-source,
+.preview-action-warning {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.preview-action-group {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+
+.preview-action-warning {
+  color: #8d3f2b;
 }
 
 .import-preview-panel.result {
@@ -357,6 +418,9 @@ button:disabled {
 .conflict-list {
   display: grid;
   gap: 12px;
+  max-height: min(58vh, 720px);
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .issue-list article,
@@ -434,6 +498,22 @@ button:disabled {
 .book-form-side {
   display: grid;
   gap: 18px;
+}
+
+.book-form-main > .barcode-section {
+  order: 1;
+}
+
+.book-form-main > .bibliography-section {
+  order: 2;
+}
+
+.book-form-main > .management-section {
+  order: 3;
+}
+
+.book-form-main > .form-action-section {
+  order: 4;
 }
 
 .book-form-side {
@@ -607,6 +687,15 @@ button:disabled {
   margin: 0;
   color: var(--muted);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
+  line-height: 1.7;
+}
+
+.field-help {
+  margin: -2px 0 0;
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
   line-height: 1.7;
 }
 
@@ -943,6 +1032,32 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+.form-action-section {
+  grid-column: 1 / -1;
+  position: sticky;
+  bottom: 16px;
+  z-index: 1;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 250, 240, 0.86)),
+    rgba(255, 250, 240, 0.8);
+  backdrop-filter: blur(12px);
+}
+
+.registration-steps {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 16px 18px 16px 38px;
+  border: 1px solid rgba(85, 107, 79, 0.22);
+  border-radius: 18px;
+  background: rgba(85, 107, 79, 0.08);
+  color: #3f4b3d;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
 .button-primary,
 .button-secondary,
 .button-danger {
@@ -1192,6 +1307,15 @@ button:disabled {
   .conflict-toolbar,
   .conflict-card {
     flex-direction: column;
+  }
+
+  .import-preview-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .preview-action-group {
+    justify-items: stretch;
   }
 
   .book-form-layout,

@@ -24,6 +24,7 @@ export function DataPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
+  const [importSource, setImportSource] = useState<string | null>(null);
   const [jsonText, setJsonText] = useState("");
   const [preview, setPreview] = useState<ImportPreview | null>(null);
 
@@ -50,10 +51,13 @@ export function DataPage() {
       return;
     }
 
+    clearImportReview();
+    setJsonText("");
+
     try {
       const text = await file.text();
       setJsonText(text);
-      await previewText(text);
+      await previewText(text, `ファイル: ${file.name}`);
     } catch (fileError) {
       setError(createFileReadError(fileError));
     } finally {
@@ -62,14 +66,11 @@ export function DataPage() {
   }
 
   async function handlePreview() {
-    await previewText(jsonText);
+    await previewText(jsonText, "JSON貼り付け");
   }
 
-  async function previewText(text: string) {
-    setError(null);
-    setImportResult(null);
-    setPreview(null);
-    setImportPayload(null);
+  async function previewText(text: string, source: string) {
+    clearImportReview();
 
     if (!text.trim()) {
       setError({
@@ -97,6 +98,7 @@ export function DataPage() {
       const result = await previewJsonImport(parsed);
       setImportPayload(parsed);
       setPreview(result);
+      setImportSource(source);
       setDefaultAction("skip");
       setConflictActions(createInitialConflictActions(result.conflicts, "skip"));
     } catch (previewError) {
@@ -119,7 +121,7 @@ export function DataPage() {
       return;
     }
 
-    if (!window.confirm("プレビュー内容に従ってImportを実行しますか？")) {
+    if (!window.confirm(getImportConfirmationMessage(preview.conflicts, conflictActions, defaultAction))) {
       return;
     }
 
@@ -143,6 +145,7 @@ export function DataPage() {
       setImportResult(result);
       setPreview(null);
       setImportPayload(null);
+      setImportSource(null);
       setConflictActions({});
       setDefaultAction("skip");
     } catch (importError) {
@@ -153,6 +156,14 @@ export function DataPage() {
   }
 
   function applyAllConflicts(action: ImportAction) {
+    if (action === "overwrite") {
+      const conflictCount = preview?.conflicts.length ?? 0;
+
+      if (!window.confirm(getBulkOverwriteConfirmationMessage(conflictCount))) {
+        return;
+      }
+    }
+
     setDefaultAction(action);
     setConflictActions(createInitialConflictActions(preview?.conflicts ?? [], action));
   }
@@ -162,6 +173,18 @@ export function DataPage() {
       ...current,
       [conflictKey(conflict)]: action
     }));
+  }
+
+  function clearImportReview() {
+    const reset = createEmptyImportReviewState();
+
+    setError(null);
+    setImportResult(reset.importResult);
+    setPreview(reset.preview);
+    setImportPayload(reset.importPayload);
+    setImportSource(reset.importSource);
+    setConflictActions(reset.conflictActions);
+    setDefaultAction(reset.defaultAction);
   }
 
   return (
@@ -177,24 +200,26 @@ export function DataPage() {
       {error ? <ErrorState title="データ入出力に失敗しました">{formatApiError(error)}</ErrorState> : null}
 
       <div className="data-flow-grid">
-        <section className="data-card">
+        <section className="data-card export-card">
           <div>
             <p className="eyebrow">JSON Export</p>
             <h3>バックアップを書き出す</h3>
             <p>本、保管場所、分類タグ、タグの紐づけをJSONとして保存します。</p>
           </div>
+          <p className="safety-note">Exportは元データを変更しない安全なバックアップ操作です。</p>
           <button className="button-primary" disabled={isExporting} onClick={() => void handleExport()} type="button">
             {isExporting ? "Export中..." : "JSONをExport"}
           </button>
           {exportMessage ? <p className="inline-message">{exportMessage}</p> : null}
         </section>
 
-        <section className="data-card">
+        <section className="data-card import-card">
           <div>
             <p className="eyebrow">JSON Import</p>
             <h3>JSONを読み込む</h3>
             <p>ExportしたJSONファイルを選ぶか、内容を貼り付けてプレビューします。</p>
           </div>
+          <p className="safety-warning">Importはデータを追加・更新します。必ずプレビューを確認してから実行してください。</p>
 
           <label className="file-input-label">
             <span>JSONファイル</span>
@@ -218,19 +243,25 @@ export function DataPage() {
 
       {preview ? (
         <section className="import-preview-panel">
-          <div className="list-heading">
+          <div className="import-preview-heading">
             <div>
               <p className="eyebrow">Import Preview</p>
               <h3>Importプレビュー</h3>
+              <p className="preview-source">入力元: {importSource ?? "JSON"}</p>
             </div>
-            <button
-              className="button-primary"
-              disabled={isImporting || preview.summary.error > 0}
-              onClick={() => void handleImport()}
-              type="button"
-            >
-              {isImporting ? "Import中..." : "この内容でImport"}
-            </button>
+            <div className="preview-action-group">
+              {preview.summary.conflict > 0 ? (
+                <p className="preview-action-warning">競合 {preview.summary.conflict} 件。上書き対象を確認してください。</p>
+              ) : null}
+              <button
+                className="button-primary"
+                disabled={isImporting || preview.summary.error > 0}
+                onClick={() => void handleImport()}
+                type="button"
+              >
+                {isImporting ? "Import中..." : "この内容でImport"}
+              </button>
+            </div>
           </div>
 
           <div className="import-summary-grid">
@@ -263,7 +294,12 @@ export function DataPage() {
                 <button className="button-secondary" onClick={() => applyAllConflicts("skip")} type="button">
                   すべて無視
                 </button>
-                <button className="button-danger" onClick={() => applyAllConflicts("overwrite")} type="button">
+                <button
+                  className="button-danger"
+                  disabled={isImporting}
+                  onClick={() => applyAllConflicts("overwrite")}
+                  type="button"
+                >
                   すべて上書き
                 </button>
               </div>
@@ -402,6 +438,37 @@ export function createFileReadError(error: unknown): ApiError {
     message: `JSONファイルを読み込めませんでした。ファイルを確認して再度お試しください。${detail}`,
     status: 400
   };
+}
+
+export function createEmptyImportReviewState() {
+  return {
+    conflictActions: {} as ConflictActions,
+    defaultAction: "skip" as const,
+    importPayload: null as JsonExportPayload | null,
+    importResult: null as ImportResult | null,
+    importSource: null as string | null,
+    preview: null as ImportPreview | null
+  };
+}
+
+export function getBulkOverwriteConfirmationMessage(conflictCount: number) {
+  return `競合している${conflictCount}件のデータをすべて上書き対象にします。既存データがImport内容で置き換わります。続けますか？`;
+}
+
+export function getImportConfirmationMessage(
+  conflicts: ImportConflict[],
+  conflictActions: ConflictActions,
+  defaultAction: ImportAction
+) {
+  const overwriteCount = conflicts.filter(
+    (conflict) => (conflictActions[conflictKey(conflict)] ?? defaultAction) === "overwrite"
+  ).length;
+
+  if (overwriteCount > 0) {
+    return `Importを実行します。新規データに加えて、既存データ${overwriteCount}件を上書きします。内容を確認しましたか？`;
+  }
+
+  return "Importを実行します。既存データは無視し、新しいデータだけを追加します。内容を確認しましたか？";
 }
 
 function formatEntity(entity: ImportConflict["entity"]) {

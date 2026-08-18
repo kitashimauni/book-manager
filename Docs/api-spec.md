@@ -53,6 +53,12 @@ MVPではREST APIとして設計します。レスポンス形式はJSONです�
 | `classificationTagId` | 任意 | 分類タグID |
 | `page` | 任意 | ページ番号。初期値は1 |
 | `limit` | 任意 | 1ページあたりの件数。初期値は20 |
+| `sort` | 任意 | 並び替え項目。`updatedAt`、`createdAt`、`title`、`author`、`publisher`、`publishedDate`。初期値は `updatedAt` |
+| `direction` | 任意 | 並び順。`asc` または `desc`。初期値は `desc` |
+
+`sort` と `direction` は検索、保管場所、分類タグの絞り込み、ページングと組み合わせて利用できます。主キーを第2ソートキーに使うため、同じ値の本の順序も安定します。
+
+一覧取得では、ページ内の本と保管場所、分類タグをまとめて取得します。レスポンスの形は本詳細取得と同じですが、ページ内の本ごとに個別の関連クエリは実行しません。
 
 ### レスポンス例
 
