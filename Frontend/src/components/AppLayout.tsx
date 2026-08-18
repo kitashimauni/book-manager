@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "./Link.js";
 
 type AppLayoutProps = {
+  backendStatus: ReactNode;
   children: ReactNode;
   currentPath: string;
 };
@@ -14,7 +15,7 @@ const navigationItems = [
   { href: "/data", label: "入出力" }
 ];
 
-export function AppLayout({ children, currentPath }: AppLayoutProps) {
+export function AppLayout({ backendStatus, children, currentPath }: AppLayoutProps) {
   return (
     <div className="app-shell">
       <aside className="sidebar" aria-label="メインナビゲーション">
@@ -37,7 +38,16 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
           ))}
         </nav>
       </aside>
-      <main className="content-shell">{children}</main>
+      <main className="content-shell">
+        <header className="content-header">
+          <div className="content-context">
+            <p className="eyebrow">Workspace</p>
+            <strong>蔵書管理</strong>
+          </div>
+          {backendStatus}
+        </header>
+        {children}
+      </main>
     </div>
   );
 }

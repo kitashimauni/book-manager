@@ -23,6 +23,8 @@ type SearchState = {
   sort: NonNullable<ListBooksQuery["sort"]>;
 };
 
+type ViewMode = "cards" | "dense";
+
 const emptySearch: SearchState = {
   classificationTagId: "",
   direction: "desc",
@@ -51,7 +53,26 @@ export function BooksPage() {
   const [search, setSearch] = useState<SearchState>(emptySearch);
   const [tags, setTags] = useState<ClassificationTag[]>([]);
   const [total, setTotal] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [isCompactViewport, setIsCompactViewport] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 860px)");
+
+    function handleViewportChange() {
+      setIsCompactViewport(mediaQuery.matches);
+
+      if (mediaQuery.matches) {
+        setViewMode("cards");
+      }
+    }
+
+    handleViewportChange();
+    mediaQuery.addEventListener("change", handleViewportChange);
+
+    return () => mediaQuery.removeEventListener("change", handleViewportChange);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -134,6 +155,12 @@ export function BooksPage() {
     setPage(1);
   }
 
+  function clearFilters() {
+    setSearch(emptySearch);
+    setFilters(emptySearch);
+    setPage(1);
+  }
+
   async function handleDelete(book: Book) {
     if (!window.confirm(`「${book.title}」を削除しますか？この操作は元に戻せません。`)) {
       return;
@@ -160,6 +187,7 @@ export function BooksPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const hasActiveFilters = Boolean(filters.q || filters.locationId || filters.classificationTagId);
+  const effectiveViewMode = resolveBookViewMode(viewMode, isCompactViewport);
 
   return (
     <section className="page-panel">
@@ -255,11 +283,7 @@ export function BooksPage() {
 
           <button
             className="button-secondary"
-            onClick={() => {
-              setSearch(emptySearch);
-              setFilters(emptySearch);
-              setPage(1);
-            }}
+            onClick={clearFilters}
             type="button"
           >
             条件をクリア
@@ -269,39 +293,91 @@ export function BooksPage() {
             本を登録
           </Link>
         </div>
+
+        <div className="view-mode-switcher" aria-label="本一覧の表示形式">
+          <span>表示形式:</span>
+          <button
+            aria-pressed={viewMode === "cards"}
+            className="button-secondary"
+            onClick={() => setViewMode("cards")}
+            type="button"
+          >
+            カード
+          </button>
+          <button
+            aria-pressed={viewMode === "dense"}
+            className="button-secondary"
+            onClick={() => setViewMode("dense")}
+            type="button"
+          >
+            密度高めの一覧
+          </button>
+        </div>
       </section>
 
       <div className="result-summary">
-        <strong>{total}</strong>
-        <span>冊</span>
-        {hasActiveFilters ? <span>現在の条件で絞り込み中</span> : <span>登録済みの本</span>}
+          <strong>{total}</strong>
+          <span>冊</span>
+          {hasActiveFilters ? <span>現在の条件で絞り込み中</span> : <span>登録済みの本</span>}
+          <span className="result-sort-status">
+            並び順: {sortOptions.find((option) => option.value === filters.sort)?.label ?? "更新日時"}・
+            {filters.direction === "asc" ? "昇順" : "降順"}
+          </span>
       </div>
 
       {isLoading ? <LoadingState title="本を読み込み中" /> : null}
 
       {!isLoading && books.length === 0 && !hasActiveFilters ? (
-        <EmptyState title="まだ本が登録されていません">
+        <EmptyState
+          actions={
+            <Link className="button-primary link-button" href="/books/new">
+              本を登録する
+            </Link>
+          }
+          details={
+            <ol className="first-run-checklist">
+              <li>
+                必要なら<Link href="/locations">保管場所</Link>を登録する
+              </li>
+              <li>
+                必要なら<Link href="/classification-tags">分類タグ</Link>を登録する
+              </li>
+              <li>本を登録し、バーコードや書誌情報を確認する</li>
+            </ol>
+          }
+          title="まだ本が登録されていません"
+        >
           まずは本登録画面から、バーコード照会または手入力で1冊追加してみましょう。
         </EmptyState>
       ) : null}
 
       {!isLoading && books.length === 0 && hasActiveFilters ? (
-        <EmptyState title="条件に一致する本がありません">
+        <EmptyState
+          actions={
+            <button className="button-secondary" onClick={clearFilters} type="button">
+              条件をクリア
+            </button>
+          }
+          title="条件に一致する本がありません"
+        >
           検索語、保管場所、分類タグの条件を少し広げると見つかるかもしれません。
         </EmptyState>
       ) : null}
 
       {!isLoading && books.length > 0 ? (
         <>
-          <div className="book-card-list">
-            {books.map((book) => (
-              <BookCard
-                book={book}
-                isDeleting={pendingDeleteId === book.id}
-                key={book.id}
-                onDelete={handleDelete}
-              />
-            ))}
+          <div className="book-results" data-view={effectiveViewMode}>
+            <div className="book-card-list">
+              {books.map((book) => (
+                <BookCard
+                  book={book}
+                  isDeleting={pendingDeleteId === book.id}
+                  key={book.id}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+            <DenseBookList books={books} onDelete={handleDelete} pendingDeleteId={pendingDeleteId} />
           </div>
 
           <div className="pagination-bar">
@@ -329,6 +405,10 @@ export function BooksPage() {
       ) : null}
     </section>
   );
+}
+
+export function resolveBookViewMode(viewMode: ViewMode, isCompactViewport: boolean): ViewMode {
+  return isCompactViewport ? "cards" : viewMode;
 }
 
 function BookCard({
@@ -391,6 +471,73 @@ function BookCard({
         </button>
       </div>
     </article>
+  );
+}
+
+function DenseBookList({
+  books,
+  onDelete,
+  pendingDeleteId
+}: {
+  books: Book[];
+  onDelete: (book: Book) => void;
+  pendingDeleteId: string | null;
+}) {
+  return (
+    <div className="book-dense-list" role="table" aria-label="本の密度高めの一覧">
+      <div className="dense-book-row dense-book-header" role="row">
+        <span role="columnheader">本</span>
+        <span role="columnheader">保管場所</span>
+        <span role="columnheader">識別情報</span>
+        <span role="columnheader">分類・更新</span>
+        <span role="columnheader">操作</span>
+      </div>
+      {books.map((book) => (
+        <div className="dense-book-row" key={book.id} role="row">
+          <div className="dense-book-title" role="cell">
+            <Link href={`/books/${book.id}`}>{book.title}</Link>
+            <span>{book.author || "著者未設定"}</span>
+          </div>
+          <div className="dense-book-cell" role="cell">
+            {book.location?.name ?? "保管場所未設定"}
+          </div>
+          <div className="dense-book-cell" role="cell">
+            <strong>{book.managementBarcode || book.bookBarcode || book.isbn || "識別情報なし"}</strong>
+            <small>
+              {book.managementBarcode
+                ? `本: ${book.bookBarcode || book.isbn || "-"}`
+                : `更新: ${formatDate(book.updatedAt)}`}
+            </small>
+          </div>
+          <div className="dense-book-cell" role="cell">
+            <div className="dense-book-tags">
+              {book.classificationTags.length > 0 ? (
+                book.classificationTags.map((tag) => <span key={tag.id}>{tag.name}</span>)
+              ) : (
+                <span>分類なし</span>
+              )}
+            </div>
+            <small>更新: {formatDate(book.updatedAt)}</small>
+          </div>
+          <div className="dense-book-actions" role="cell">
+            <Link className="button-secondary link-button" href={`/books/${book.id}`}>
+              詳細
+            </Link>
+            <Link className="button-secondary link-button" href={`/books/${book.id}/edit`}>
+              編集
+            </Link>
+            <button
+              className="button-danger"
+              disabled={pendingDeleteId === book.id}
+              onClick={() => onDelete(book)}
+              type="button"
+            >
+              {pendingDeleteId === book.id ? "削除中..." : "削除"}
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

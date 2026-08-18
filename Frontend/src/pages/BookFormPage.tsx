@@ -20,6 +20,12 @@ import {
   type BarcodeScanTarget
 } from "../components/CameraBarcodeScanner.js";
 import { ErrorState, LoadingState } from "../components/StateBlocks.js";
+import {
+  focusFirstFieldError,
+  formatFieldLabel,
+  getFieldError,
+  getFormErrorSummary
+} from "../formErrors.js";
 import { navigateTo } from "../router.js";
 
 type BookFormPageProps = {
@@ -172,7 +178,9 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
 
       navigateTo(`/books/${savedBook.id}`);
     } catch (saveError) {
-      setError(saveError as ApiError);
+      const apiError = saveError as ApiError;
+      setError(apiError);
+      focusFirstFieldError(apiError);
     } finally {
       setIsSaving(false);
     }
@@ -249,7 +257,25 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
         </p>
       </div>
 
-      {error ? <ErrorState title="本の保存操作に失敗しました">{formatApiError(error)}</ErrorState> : null}
+      {error ? (
+        <ErrorState
+          details={
+            error.errors?.length ? (
+              <ul className="field-error-list">
+                {error.errors.map((item) => (
+                  <li key={`${item.field}:${item.message}`}>
+                    <a href={`#${item.field}`}>{formatFieldLabel(item.field)}</a>
+                    <span>{item.message}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null
+          }
+          title="本の保存操作に失敗しました"
+        >
+          {getFormErrorSummary(error)}
+        </ErrorState>
+      ) : null}
 
       {isLoading ? (
         <LoadingState title="フォームを読み込み中" />
@@ -266,46 +292,81 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <p className="eyebrow">Bibliography</p>
                 <h3>書誌情報</h3>
               </div>
-              <label>
+              <label className={getFieldError(error, "title") ? "has-error" : undefined}>
                 <span>タイトル</span>
                 <input
+                  aria-describedby={getFieldError(error, "title") ? "title-error" : undefined}
+                  aria-invalid={Boolean(getFieldError(error, "title"))}
+                  id="title"
                   maxLength={200}
                   onChange={(event) => setForm({ ...form, title: event.target.value })}
                   required
                   value={form.title}
                 />
+                {getFieldError(error, "title") ? (
+                  <p className="field-error" id="title-error">
+                    {getFieldError(error, "title")}
+                  </p>
+                ) : null}
               </label>
-              <label>
+              <label className={getFieldError(error, "author") ? "has-error" : undefined}>
                 <span>著者</span>
                 <input
+                  aria-describedby={getFieldError(error, "author") ? "author-error" : undefined}
+                  aria-invalid={Boolean(getFieldError(error, "author"))}
+                  id="author"
                   maxLength={500}
                   onChange={(event) => setForm({ ...form, author: event.target.value })}
                   placeholder="複数名はカンマ区切り"
                   value={form.author}
                 />
+                {getFieldError(error, "author") ? (
+                  <p className="field-error" id="author-error">
+                    {getFieldError(error, "author")}
+                  </p>
+                ) : null}
               </label>
               <div className="field-pair">
-                <label>
+                <label className={getFieldError(error, "publisher") ? "has-error" : undefined}>
                   <span>出版社</span>
                   <input
+                    aria-describedby={getFieldError(error, "publisher") ? "publisher-error" : undefined}
+                    aria-invalid={Boolean(getFieldError(error, "publisher"))}
+                    id="publisher"
                     maxLength={200}
                     onChange={(event) => setForm({ ...form, publisher: event.target.value })}
                     value={form.publisher}
                   />
+                  {getFieldError(error, "publisher") ? (
+                    <p className="field-error" id="publisher-error">
+                      {getFieldError(error, "publisher")}
+                    </p>
+                  ) : null}
                 </label>
-                <label>
+                <label className={getFieldError(error, "publishedDate") ? "has-error" : undefined}>
                   <span>出版日</span>
                   <input
+                    aria-describedby={getFieldError(error, "publishedDate") ? "publishedDate-error" : undefined}
+                    aria-invalid={Boolean(getFieldError(error, "publishedDate"))}
+                    id="publishedDate"
                     maxLength={50}
                     onChange={(event) => setForm({ ...form, publishedDate: event.target.value })}
                     placeholder="YYYY-MM-DD"
                     value={form.publishedDate}
                   />
+                  {getFieldError(error, "publishedDate") ? (
+                    <p className="field-error" id="publishedDate-error">
+                      {getFieldError(error, "publishedDate")}
+                    </p>
+                  ) : null}
                 </label>
               </div>
-              <label>
+              <label className={getFieldError(error, "isbn") ? "has-error" : undefined}>
                 <span>ISBN</span>
                 <input
+                  aria-describedby={getFieldError(error, "isbn") ? "isbn-error" : undefined}
+                  aria-invalid={Boolean(getFieldError(error, "isbn"))}
+                  id="isbn"
                   maxLength={200}
                   onChange={(event) => setForm({ ...form, isbn: event.target.value })}
                   value={form.isbn}
@@ -313,6 +374,11 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <p className="field-help">
                   ISBNは数字とXで構成される書籍識別子です。照会時は本のバーコードを優先し、未入力の場合にISBNを使います。
                 </p>
+                {getFieldError(error, "isbn") ? (
+                  <p className="field-error" id="isbn-error">
+                    {getFieldError(error, "isbn")}
+                  </p>
+                ) : null}
               </label>
             </section>
 
@@ -322,9 +388,12 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <h3>バーコード</h3>
               </div>
               <div className="field-pair">
-                <label>
+                <label className={getFieldError(error, "bookBarcode") ? "has-error" : undefined}>
                   <span>本のバーコード</span>
                   <input
+                    aria-describedby={getFieldError(error, "bookBarcode") ? "bookBarcode-error" : undefined}
+                    aria-invalid={Boolean(getFieldError(error, "bookBarcode"))}
+                    id="bookBarcode"
                     maxLength={200}
                     onChange={(event) => setForm({ ...form, bookBarcode: event.target.value })}
                     placeholder="書籍自体のISBN/JANなど"
@@ -333,10 +402,18 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   <p className="field-help">
                     ISBN由来の書籍JANなど、本そのもののバーコードです。雑誌やISBN以外の値も保存できます。
                   </p>
+                  {getFieldError(error, "bookBarcode") ? (
+                    <p className="field-error" id="bookBarcode-error">
+                      {getFieldError(error, "bookBarcode")}
+                    </p>
+                  ) : null}
                 </label>
-                <label>
+                <label className={getFieldError(error, "managementBarcode") ? "has-error" : undefined}>
                   <span>管理用バーコード</span>
                   <input
+                    aria-describedby={getFieldError(error, "managementBarcode") ? "managementBarcode-error" : undefined}
+                    aria-invalid={Boolean(getFieldError(error, "managementBarcode"))}
+                    id="managementBarcode"
                     maxLength={200}
                     onChange={(event) => setForm({ ...form, managementBarcode: event.target.value })}
                     placeholder="独自に貼付する管理番号"
@@ -345,6 +422,11 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   <p className="field-help">
                     利用者が貼付する蔵書管理用IDです。書誌情報の照会には使いません。
                   </p>
+                  {getFieldError(error, "managementBarcode") ? (
+                    <p className="field-error" id="managementBarcode-error">
+                      {getFieldError(error, "managementBarcode")}
+                    </p>
+                  ) : null}
                 </label>
               </div>
               <div className="lookup-panel">
@@ -364,9 +446,12 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <p className="eyebrow">Management</p>
                 <h3>管理情報</h3>
               </div>
-              <label>
+              <label className={getFieldError(error, "locationId") ? "has-error" : undefined}>
                 <span>保管場所</span>
                 <select
+                  aria-describedby={getFieldError(error, "locationId") ? "locationId-error" : undefined}
+                  aria-invalid={Boolean(getFieldError(error, "locationId"))}
+                  id="locationId"
                   onChange={(event) => setForm({ ...form, locationId: event.target.value })}
                   value={form.locationId}
                 >
@@ -378,22 +463,35 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     </option>
                   ))}
                 </select>
+                {getFieldError(error, "locationId") ? (
+                  <p className="field-error" id="locationId-error">
+                    {getFieldError(error, "locationId")}
+                  </p>
+                ) : null}
               </label>
-              <label>
+              <label className={getFieldError(error, "managementMemo") ? "has-error" : undefined}>
                 <span>管理メモ</span>
                 <textarea
+                  aria-describedby={getFieldError(error, "managementMemo") ? "managementMemo-error" : undefined}
+                  aria-invalid={Boolean(getFieldError(error, "managementMemo"))}
+                  id="managementMemo"
                   maxLength={5000}
                   onChange={(event) => setForm({ ...form, managementMemo: event.target.value })}
                   placeholder="破損、付属品、棚卸し補足など"
                   value={form.managementMemo}
                 />
+                {getFieldError(error, "managementMemo") ? (
+                  <p className="field-error" id="managementMemo-error">
+                    {getFieldError(error, "managementMemo")}
+                  </p>
+                ) : null}
               </label>
             </section>
 
           </div>
 
           <aside className="book-form-side">
-            <section className="form-section">
+            <section className="form-section" id="classificationTagIds" tabIndex={-1}>
               <div>
                 <p className="eyebrow">Classification</p>
                 <h3>分類タグ</h3>
@@ -417,6 +515,11 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   ))}
                 </div>
               )}
+              {getFieldError(error, "classificationTagIds") ? (
+                <p className="field-error" id="classificationTagIds-error">
+                  {getFieldError(error, "classificationTagIds")}
+                </p>
+              ) : null}
             </section>
 
             <section className="form-section">
@@ -501,14 +604,6 @@ function formToPayload(form: BookFormState): BookFormRequest {
 
 function emptyToNull(value: string) {
   return value.trim() || null;
-}
-
-function formatApiError(error: ApiError) {
-  if (!error.errors?.length) {
-    return error.message;
-  }
-
-  return `${error.message}: ${error.errors.map((item) => item.message).join(", ")}`;
 }
 
 function formatLookupSource(source: BookLookupResult["externalSource"]) {

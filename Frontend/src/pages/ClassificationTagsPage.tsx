@@ -9,6 +9,12 @@ import {
   type ClassificationTagSource
 } from "../api/client.js";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateBlocks.js";
+import {
+  focusFirstFieldError,
+  formatFieldLabel,
+  getFieldError,
+  getFormErrorSummary
+} from "../formErrors.js";
 
 type ClassificationTagFormState = {
   description: string;
@@ -75,7 +81,9 @@ export function ClassificationTagsPage() {
       resetForm();
       await loadTags();
     } catch (saveError) {
-      setError(saveError as ApiError);
+      const apiError = saveError as ApiError;
+      setError(apiError);
+      focusFirstFieldError(apiError);
     } finally {
       setIsSaving(false);
     }
@@ -137,7 +145,23 @@ export function ClassificationTagsPage() {
       </div>
 
       {error ? (
-        <ErrorState title="分類タグの操作に失敗しました">{formatApiError(error)}</ErrorState>
+        <ErrorState
+          details={
+            error.errors?.length ? (
+              <ul className="field-error-list">
+                {error.errors.map((item) => (
+                  <li key={`${item.field}:${item.message}`}>
+                    <a href={`#${item.field}`}>{formatFieldLabel(item.field)}</a>
+                    <span>{item.message}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null
+          }
+          title="分類タグの操作に失敗しました"
+        >
+          {getFormErrorSummary(error)}
+        </ErrorState>
       ) : null}
 
       <div className="management-grid">
@@ -147,30 +171,49 @@ export function ClassificationTagsPage() {
             <h3>{editingTag ? "分類タグを編集" : "分類タグを追加"}</h3>
           </div>
 
-          <label>
+          <label className={getFieldError(error, "name") ? "has-error" : undefined}>
             <span>分類タグ名</span>
             <input
+              aria-describedby={getFieldError(error, "name") ? "tag-name-error" : undefined}
+              aria-invalid={Boolean(getFieldError(error, "name"))}
+              id="name"
               maxLength={200}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
               placeholder="例: Software Engineering"
               required
               value={form.name}
             />
+            {getFieldError(error, "name") ? (
+              <p className="field-error" id="tag-name-error">
+                {getFieldError(error, "name")}
+              </p>
+            ) : null}
           </label>
 
-          <label>
+          <label className={getFieldError(error, "description") ? "has-error" : undefined}>
             <span>説明</span>
             <textarea
+              aria-describedby={getFieldError(error, "description") ? "tag-description-error" : undefined}
+              aria-invalid={Boolean(getFieldError(error, "description"))}
+              id="description"
               maxLength={1000}
               onChange={(event) => setForm({ ...form, description: event.target.value })}
               placeholder="分類の基準や補足など"
               value={form.description}
             />
+            {getFieldError(error, "description") ? (
+              <p className="field-error" id="tag-description-error">
+                {getFieldError(error, "description")}
+              </p>
+            ) : null}
           </label>
 
-          <label>
+          <label className={getFieldError(error, "source") ? "has-error" : undefined}>
             <span>由来</span>
             <select
+              aria-describedby={getFieldError(error, "source") ? "source-error" : undefined}
+              aria-invalid={Boolean(getFieldError(error, "source"))}
+              id="source"
               onChange={(event) =>
                 setForm({ ...form, source: event.target.value as ClassificationTagSource })
               }
@@ -180,6 +223,11 @@ export function ClassificationTagsPage() {
               <option value="ndl_search">NDLサーチ</option>
               <option value="open_library">Open Library</option>
             </select>
+            {getFieldError(error, "source") ? (
+              <p className="field-error" id="source-error">
+                {getFieldError(error, "source")}
+              </p>
+            ) : null}
           </label>
 
           {editingTag ? (
@@ -219,7 +267,14 @@ export function ClassificationTagsPage() {
           {isLoading ? <LoadingState title="分類タグを読み込み中" /> : null}
 
           {!isLoading && tags.length === 0 ? (
-            <EmptyState title="分類タグがまだありません">
+            <EmptyState
+              actions={
+                <button className="button-primary" onClick={() => focusField("name")} type="button">
+                  最初の分類タグを追加
+                </button>
+              }
+              title="分類タグがまだありません"
+            >
               分類タグはあとから追加できます。外部APIから取得したsubjectも、確定したものだけ保存します。
             </EmptyState>
           ) : null}
@@ -281,19 +336,15 @@ export function ClassificationTagsPage() {
   );
 }
 
-function formatApiError(error: ApiError) {
-  if (!error.errors?.length) {
-    return error.message;
-  }
-
-  return `${error.message}: ${error.errors.map((item) => item.message).join(", ")}`;
-}
-
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("ja-JP", {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+function focusField(id: string) {
+  document.getElementById(id)?.focus();
 }
 
 function formatSource(source: ClassificationTagSource) {
