@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getApiBaseUrl, getHealth, type ApiError, type HealthResponse } from "./api/client.js";
 import { AppLayout } from "./components/AppLayout.js";
-import { ErrorState, LoadingState } from "./components/StateBlocks.js";
 import { BookDetailPage } from "./pages/BookDetailPage.js";
 import { BookFormPage } from "./pages/BookFormPage.js";
 import { BooksPage } from "./pages/BooksPage.js";
@@ -67,14 +66,10 @@ export function App() {
   const route = resolveRoute(currentPath);
 
   return (
-    <AppLayout currentPath={currentPath}>
-      <section className="overview-card">
-        <div>
-          <p className="eyebrow">Backend API</p>
-          <code>{getApiBaseUrl()}</code>
-        </div>
-        <HealthBadge error={healthError} health={health} isLoading={isHealthLoading} />
-      </section>
+    <AppLayout
+      backendStatus={<HealthBadge error={healthError} health={health} isLoading={isHealthLoading} />}
+      currentPath={currentPath}
+    >
       {renderRoute(route)}
     </AppLayout>
   );
@@ -108,21 +103,17 @@ type HealthBadgeProps = {
 };
 
 function HealthBadge({ error, health, isLoading }: HealthBadgeProps) {
-  if (isLoading) {
-    return <LoadingState title="API確認中" />;
-  }
-
-  if (error) {
-    return <ErrorState title="API未接続">{error.message}</ErrorState>;
-  }
-
   return (
-    <div className="health-badge">
-      <span className="status-dot" />
-      <div>
+    <details className={error ? "status-affordance error" : "status-affordance"}>
+      <summary>
+        <span className="status-dot" />
+        <span>{isLoading ? "API確認中" : error ? "API未接続" : "API接続中"}</span>
+      </summary>
+      <div className="status-details" aria-live="polite">
         <strong>{health?.service ?? "backend"}</strong>
-        <span>DB: {health?.database ?? "unknown"}</span>
+        <span>{error ? error.message : `DB: ${health?.database ?? "unknown"}`}</span>
+        <code>{getApiBaseUrl()}</code>
       </div>
-    </div>
+    </details>
   );
 }

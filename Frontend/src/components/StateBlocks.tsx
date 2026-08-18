@@ -5,20 +5,32 @@ type StateBlockProps = {
   children: ReactNode;
 };
 
-export function EmptyState({ title, children }: StateBlockProps) {
+type EmptyStateProps = StateBlockProps & {
+  actions?: ReactNode;
+  details?: ReactNode;
+};
+
+type ErrorStateProps = StateBlockProps & {
+  details?: ReactNode;
+};
+
+export function EmptyState({ actions, details, title, children }: EmptyStateProps) {
   return (
     <section className="state-block empty-state">
       <h2>{title}</h2>
       <p>{children}</p>
+      {details ? <div className="state-block-details">{details}</div> : null}
+      {actions ? <div className="state-block-actions">{actions}</div> : null}
     </section>
   );
 }
 
-export function ErrorState({ title, children }: StateBlockProps) {
+export function ErrorState({ details, title, children }: ErrorStateProps) {
   return (
     <section className="state-block error-state" role="alert">
       <h2>{title}</h2>
       <p>{children}</p>
+      {details ? <div className="state-block-details">{details}</div> : null}
     </section>
   );
 }

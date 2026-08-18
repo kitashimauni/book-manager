@@ -8,6 +8,12 @@ import {
   type Location
 } from "../api/client.js";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateBlocks.js";
+import {
+  focusFirstFieldError,
+  formatFieldLabel,
+  getFieldError,
+  getFormErrorSummary
+} from "../formErrors.js";
 
 type LocationFormState = {
   description: string;
@@ -75,7 +81,9 @@ export function LocationsPage() {
       resetForm();
       await loadLocations();
     } catch (saveError) {
-      setError(saveError as ApiError);
+      const apiError = saveError as ApiError;
+      setError(apiError);
+      focusFirstFieldError(apiError);
     } finally {
       setIsSaving(false);
     }
@@ -137,7 +145,23 @@ export function LocationsPage() {
       </div>
 
       {error ? (
-        <ErrorState title="保管場所の操作に失敗しました">{formatApiError(error)}</ErrorState>
+        <ErrorState
+          details={
+            error.errors?.length ? (
+              <ul className="field-error-list">
+                {error.errors.map((item) => (
+                  <li key={`${item.field}:${item.message}`}>
+                    <a href={`#${item.field}`}>{formatFieldLabel(item.field)}</a>
+                    <span>{item.message}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null
+          }
+          title="保管場所の操作に失敗しました"
+        >
+          {getFormErrorSummary(error)}
+        </ErrorState>
       ) : null}
 
       <div className="management-grid">
@@ -147,35 +171,59 @@ export function LocationsPage() {
             <h3>{editingLocation ? "保管場所を編集" : "保管場所を追加"}</h3>
           </div>
 
-          <label>
+          <label className={getFieldError(error, "name") ? "has-error" : undefined}>
             <span>保管場所名</span>
             <input
+              aria-describedby={getFieldError(error, "name") ? "location-name-error" : undefined}
+              aria-invalid={Boolean(getFieldError(error, "name"))}
+              id="name"
               maxLength={200}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
               placeholder="例: 研究室 A 棚"
               required
               value={form.name}
             />
+            {getFieldError(error, "name") ? (
+              <p className="field-error" id="location-name-error">
+                {getFieldError(error, "name")}
+              </p>
+            ) : null}
           </label>
 
-          <label>
+          <label className={getFieldError(error, "description") ? "has-error" : undefined}>
             <span>説明</span>
             <textarea
+              aria-describedby={getFieldError(error, "description") ? "location-description-error" : undefined}
+              aria-invalid={Boolean(getFieldError(error, "description"))}
+              id="description"
               maxLength={1000}
               onChange={(event) => setForm({ ...form, description: event.target.value })}
               placeholder="棚番号や補足など"
               value={form.description}
             />
+            {getFieldError(error, "description") ? (
+              <p className="field-error" id="location-description-error">
+                {getFieldError(error, "description")}
+              </p>
+            ) : null}
           </label>
 
-          <label>
+          <label className={getFieldError(error, "sortOrder") ? "has-error" : undefined}>
             <span>表示順</span>
             <input
+              aria-describedby={getFieldError(error, "sortOrder") ? "sortOrder-error" : undefined}
+              aria-invalid={Boolean(getFieldError(error, "sortOrder"))}
+              id="sortOrder"
               min={0}
               onChange={(event) => setForm({ ...form, sortOrder: event.target.value })}
               type="number"
               value={form.sortOrder}
             />
+            {getFieldError(error, "sortOrder") ? (
+              <p className="field-error" id="sortOrder-error">
+                {getFieldError(error, "sortOrder")}
+              </p>
+            ) : null}
           </label>
 
           {editingLocation ? (
@@ -215,7 +263,14 @@ export function LocationsPage() {
           {isLoading ? <LoadingState title="保管場所を読み込み中" /> : null}
 
           {!isLoading && locations.length === 0 ? (
-            <EmptyState title="保管場所がまだありません">
+            <EmptyState
+              actions={
+                <button className="button-primary" onClick={() => focusField("name")} type="button">
+                  最初の保管場所を追加
+                </button>
+              }
+              title="保管場所がまだありません"
+            >
               本を登録する前に、よく使う本棚や部屋を追加しておくと入力が楽になります。
             </EmptyState>
           ) : null}
@@ -277,17 +332,13 @@ export function LocationsPage() {
   );
 }
 
-function formatApiError(error: ApiError) {
-  if (!error.errors?.length) {
-    return error.message;
-  }
-
-  return `${error.message}: ${error.errors.map((item) => item.message).join(", ")}`;
-}
-
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("ja-JP", {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+function focusField(id: string) {
+  document.getElementById(id)?.focus();
 }

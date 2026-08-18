@@ -11,6 +11,7 @@ import {
   type JsonExportPayload
 } from "../api/client.js";
 import { ErrorState } from "../components/StateBlocks.js";
+import { focusFirstFieldError, getFormErrorSummary } from "../formErrors.js";
 
 type ConflictActions = Record<string, ImportAction>;
 
@@ -59,7 +60,9 @@ export function DataPage() {
       setJsonText(text);
       await previewText(text, `ファイル: ${file.name}`);
     } catch (fileError) {
-      setError(createFileReadError(fileError));
+      const apiError = createFileReadError(fileError);
+      setError(apiError);
+      focusFirstFieldError(apiError, "json-import");
     } finally {
       event.target.value = "";
     }
@@ -102,7 +105,9 @@ export function DataPage() {
       setDefaultAction("skip");
       setConflictActions(createInitialConflictActions(result.conflicts, "skip"));
     } catch (previewError) {
-      setError(previewError as ApiError);
+      const apiError = previewError as ApiError;
+      setError(apiError);
+      focusFirstFieldError(apiError, "json-import");
     } finally {
       setIsPreviewing(false);
     }
@@ -149,7 +154,9 @@ export function DataPage() {
       setConflictActions({});
       setDefaultAction("skip");
     } catch (importError) {
-      setError(importError as ApiError);
+      const apiError = importError as ApiError;
+      setError(apiError);
+      focusFirstFieldError(apiError, "json-import");
     } finally {
       setIsImporting(false);
     }
@@ -197,7 +204,25 @@ export function DataPage() {
         </p>
       </div>
 
-      {error ? <ErrorState title="データ入出力に失敗しました">{formatApiError(error)}</ErrorState> : null}
+      {error ? (
+        <ErrorState
+          details={
+            error.errors?.length ? (
+              <ul className="field-error-list">
+                {error.errors.map((item) => (
+                  <li key={`${item.field}:${item.message}`}>
+                    <a href="#json-import">{item.field || "JSON"}</a>
+                    <span>{item.message}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null
+          }
+          title="データ入出力に失敗しました"
+        >
+          {getFormErrorSummary(error)}
+        </ErrorState>
+      ) : null}
 
       <div className="data-flow-grid">
         <section className="data-card export-card">
@@ -229,10 +254,18 @@ export function DataPage() {
           <label className="json-paste-field">
             <span>JSON貼り付け</span>
             <textarea
+              aria-describedby={error?.errors?.length ? "json-import-error" : undefined}
+              aria-invalid={Boolean(error?.errors?.length)}
+              id="json-import"
               onChange={(event) => setJsonText(event.target.value)}
               placeholder='{"version":1,"books":[],"locations":[],"classificationTags":[],"bookClassificationTags":[]}'
               value={jsonText}
             />
+            {error?.errors?.length ? (
+              <p className="field-error" id="json-import-error">
+                上のエラー項目を確認し、JSONを修正してから再度プレビューしてください。
+              </p>
+            ) : null}
           </label>
 
           <button className="button-secondary" disabled={isPreviewing} onClick={() => void handlePreview()} type="button">
@@ -421,14 +454,6 @@ function downloadJson(payload: JsonExportPayload) {
   link.download = `book-manager-export-${new Date().toISOString().slice(0, 10)}.json`;
   link.click();
   URL.revokeObjectURL(url);
-}
-
-function formatApiError(error: ApiError) {
-  if (!error.errors?.length) {
-    return error.message;
-  }
-
-  return `${error.message}: ${error.errors.map((item) => `${item.field} ${item.message}`).join(", ")}`;
 }
 
 export function createFileReadError(error: unknown): ApiError {
