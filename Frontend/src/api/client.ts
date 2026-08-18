@@ -85,11 +85,13 @@ export type BookLookupResult = {
 };
 
 export type ListBooksQuery = {
+  direction?: "asc" | "desc";
   q?: string;
   locationId?: string;
   classificationTagId?: string;
   page?: number;
   limit?: number;
+  sort?: "updatedAt" | "createdAt" | "title" | "author" | "publisher" | "publishedDate";
 };
 
 export type ListBooksResponse = {

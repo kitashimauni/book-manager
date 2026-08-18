@@ -62,4 +62,19 @@ describe("api client", () => {
 
     expect(headers.get("Content-Type")).toBe("application/json");
   });
+
+  it("includes list sorting parameters", async () => {
+    const { getBooks } = await loadClient("");
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({ items: [], page: 1, limit: 20, total: 0 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getBooks({ direction: "asc", limit: 20, page: 2, sort: "title" });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/books?direction=asc&limit=20&page=2&sort=title",
+      expect.anything()
+    );
+  });
 });

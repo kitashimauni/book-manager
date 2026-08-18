@@ -255,8 +255,13 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
         <LoadingState title="フォームを読み込み中" />
       ) : (
         <form className="book-form-layout" onSubmit={handleSubmit}>
+          <ol className="registration-steps">
+            <li>本のバーコードをスキャンまたは入力します。</li>
+            <li>外部APIで照会し、取得できない項目は手入力で補います。</li>
+            <li>保管場所と分類タグを設定して保存します。</li>
+          </ol>
           <div className="book-form-main">
-            <section className="form-section">
+            <section className="form-section bibliography-section">
               <div>
                 <p className="eyebrow">Bibliography</p>
                 <h3>書誌情報</h3>
@@ -305,10 +310,13 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   onChange={(event) => setForm({ ...form, isbn: event.target.value })}
                   value={form.isbn}
                 />
+                <p className="field-help">
+                  ISBNは数字とXで構成される書籍識別子です。入力できる場合は本のバーコードより優先して確認できます。
+                </p>
               </label>
             </section>
 
-            <section className="form-section">
+            <section className="form-section barcode-section">
               <div>
                 <p className="eyebrow">Barcodes</p>
                 <h3>バーコード</h3>
@@ -322,6 +330,9 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     placeholder="書籍自体のISBN/JANなど"
                     value={form.bookBarcode}
                   />
+                  <p className="field-help">
+                    ISBN由来の書籍JANなど、本そのもののバーコードです。雑誌やISBN以外の値も保存できます。
+                  </p>
                 </label>
                 <label>
                   <span>管理用バーコード</span>
@@ -331,6 +342,9 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     placeholder="独自に貼付する管理番号"
                     value={form.managementBarcode}
                   />
+                  <p className="field-help">
+                    利用者が貼付する蔵書管理用IDです。書誌情報の照会には使いません。
+                  </p>
                 </label>
               </div>
               <div className="lookup-panel">
@@ -338,14 +352,14 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   {isLookupLoading ? "照会中..." : "外部APIで照会"}
                 </button>
                 <p>
-                  本のバーコードを優先し、未入力の場合はISBNで照会します。管理用バーコードは照会には使いません。
+                  本のバーコードを優先し、未入力の場合はISBNで照会します。取得できない場合は下の書誌情報を手入力できます。
                 </p>
                 {lookupMessage ? <p className="inline-message">{lookupMessage}</p> : null}
               </div>
               <CameraBarcodeScanner onScan={handleCameraScan} />
             </section>
 
-            <section className="form-section">
+            <section className="form-section management-section">
               <div>
                 <p className="eyebrow">Management</p>
                 <h3>管理情報</h3>
@@ -374,6 +388,22 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   value={form.managementMemo}
                 />
               </label>
+            </section>
+
+            <section className="form-section form-action-section">
+              <div>
+                <p className="eyebrow">Save</p>
+                <h3>内容を確認して保存</h3>
+                <p className="subtle-text">外部APIの結果は保存前に編集できます。入力内容を確認してから確定してください。</p>
+              </div>
+              <div className="form-actions">
+                <button className="button-primary" disabled={isSaving} type="submit">
+                  {isSaving ? "保存中..." : isEdit ? "更新する" : "登録する"}
+                </button>
+                <button className="button-secondary" onClick={() => navigateTo("/books")} type="button">
+                  一覧へ戻る
+                </button>
+              </div>
             </section>
           </div>
 
@@ -427,18 +457,6 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
               )}
             </section>
 
-            <section className="form-section">
-              <div>
-                <p className="eyebrow">Save</p>
-                <h3>保存</h3>
-              </div>
-              <button className="button-primary full-width" disabled={isSaving} type="submit">
-                {isSaving ? "保存中..." : isEdit ? "更新する" : "登録する"}
-              </button>
-              <button className="button-secondary full-width" onClick={() => navigateTo("/books")} type="button">
-                一覧へ戻る
-              </button>
-            </section>
           </aside>
         </form>
       )}
