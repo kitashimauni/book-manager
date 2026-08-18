@@ -150,6 +150,30 @@ describe("Open Library lookup service", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it("uses the configured minimum interval override", async () => {
+    let currentTime = 0;
+    const sleep = vi.fn(async (milliseconds: number) => {
+      currentTime += milliseconds;
+    });
+    const fetchImpl = vi.fn<typeof fetch>().mockImplementation(async () =>
+      jsonResponse({
+        title: "A book"
+      })
+    );
+    const service = createOpenLibraryLookupService({
+      fetchImpl,
+      sleep,
+      now: () => currentTime,
+      minRequestIntervalMs: 250
+    });
+
+    await service.lookupBookByIsbn("9780132350884", baseConfig);
+    await service.lookupBookByIsbn("9780321125217", baseConfig);
+
+    expect(sleep).toHaveBeenCalledWith(250);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it("serializes concurrent lookups and paces the next request", async () => {
     let currentTime = 0;
     const sleep = vi.fn(async (milliseconds: number) => {

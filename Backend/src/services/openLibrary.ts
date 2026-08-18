@@ -51,25 +51,28 @@ export function createOpenLibraryLookupService(options: OpenLibraryLookupService
         return null;
       }
 
-      return requestQueue.enqueue(getOpenLibraryMinIntervalMs(config), async () => {
-        const response = await fetchImpl(
-          `https://openlibrary.org/isbn/${encodeURIComponent(isbn)}.json`,
-          {
-            headers: buildOpenLibraryHeaders(config)
+      return requestQueue.enqueue(
+        options.minRequestIntervalMs ?? getOpenLibraryMinIntervalMs(config),
+        async () => {
+          const response = await fetchImpl(
+            `https://openlibrary.org/isbn/${encodeURIComponent(isbn)}.json`,
+            {
+              headers: buildOpenLibraryHeaders(config)
+            }
+          );
+
+          if (response.status === 404) {
+            return null;
           }
-        );
 
-        if (response.status === 404) {
-          return null;
+          if (!response.ok) {
+            throw new Error(`Open Library lookup failed with status ${response.status}`);
+          }
+
+          const payload = (await response.json()) as OpenLibraryBook;
+          return mapOpenLibraryBook(payload, isbn);
         }
-
-        if (!response.ok) {
-          throw new Error(`Open Library lookup failed with status ${response.status}`);
-        }
-
-        const payload = (await response.json()) as OpenLibraryBook;
-        return mapOpenLibraryBook(payload, isbn);
-      });
+      );
     }
   };
 }
