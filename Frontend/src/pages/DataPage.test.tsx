@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  createEmptyImportReviewState,
   createFileReadError,
   getBulkOverwriteConfirmationMessage,
   getImportConfirmationMessage
@@ -24,6 +25,17 @@ describe("DataPage file import errors", () => {
   it("makes bulk overwrite confirmation explicit", () => {
     expect(getBulkOverwriteConfirmationMessage(3)).toContain("競合している3件");
     expect(getBulkOverwriteConfirmationMessage(3)).toContain("既存データ");
+  });
+
+  it("clears the stale import review before a new file is read", () => {
+    expect(createEmptyImportReviewState()).toEqual({
+      conflictActions: {},
+      defaultAction: "skip",
+      importPayload: null,
+      importResult: null,
+      importSource: null,
+      preview: null
+    });
   });
 
   it("warns before importing conflicts selected for overwrite", () => {

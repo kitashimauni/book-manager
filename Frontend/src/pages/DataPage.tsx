@@ -51,6 +51,9 @@ export function DataPage() {
       return;
     }
 
+    clearImportReview();
+    setJsonText("");
+
     try {
       const text = await file.text();
       setJsonText(text);
@@ -67,11 +70,7 @@ export function DataPage() {
   }
 
   async function previewText(text: string, source: string) {
-    setError(null);
-    setImportResult(null);
-    setPreview(null);
-    setImportPayload(null);
-    setImportSource(null);
+    clearImportReview();
 
     if (!text.trim()) {
       setError({
@@ -174,6 +173,18 @@ export function DataPage() {
       ...current,
       [conflictKey(conflict)]: action
     }));
+  }
+
+  function clearImportReview() {
+    const reset = createEmptyImportReviewState();
+
+    setError(null);
+    setImportResult(reset.importResult);
+    setPreview(reset.preview);
+    setImportPayload(reset.importPayload);
+    setImportSource(reset.importSource);
+    setConflictActions(reset.conflictActions);
+    setDefaultAction(reset.defaultAction);
   }
 
   return (
@@ -426,6 +437,17 @@ export function createFileReadError(error: unknown): ApiError {
   return {
     message: `JSONファイルを読み込めませんでした。ファイルを確認して再度お試しください。${detail}`,
     status: 400
+  };
+}
+
+export function createEmptyImportReviewState() {
+  return {
+    conflictActions: {} as ConflictActions,
+    defaultAction: "skip" as const,
+    importPayload: null as JsonExportPayload | null,
+    importResult: null as ImportResult | null,
+    importSource: null as string | null,
+    preview: null as ImportPreview | null
   };
 }
 

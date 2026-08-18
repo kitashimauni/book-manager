@@ -311,7 +311,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   value={form.isbn}
                 />
                 <p className="field-help">
-                  ISBNは数字とXで構成される書籍識別子です。入力できる場合は本のバーコードより優先して確認できます。
+                  ISBNは数字とXで構成される書籍識別子です。照会時は本のバーコードを優先し、未入力の場合にISBNを使います。
                 </p>
               </label>
             </section>
@@ -390,21 +390,6 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
               </label>
             </section>
 
-            <section className="form-section form-action-section">
-              <div>
-                <p className="eyebrow">Save</p>
-                <h3>内容を確認して保存</h3>
-                <p className="subtle-text">外部APIの結果は保存前に編集できます。入力内容を確認してから確定してください。</p>
-              </div>
-              <div className="form-actions">
-                <button className="button-primary" disabled={isSaving} type="submit">
-                  {isSaving ? "保存中..." : isEdit ? "更新する" : "登録する"}
-                </button>
-                <button className="button-secondary" onClick={() => navigateTo("/books")} type="button">
-                  一覧へ戻る
-                </button>
-              </div>
-            </section>
           </div>
 
           <aside className="book-form-side">
@@ -458,6 +443,22 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
             </section>
 
           </aside>
+
+          <section className="form-section form-action-section">
+            <div>
+              <p className="eyebrow">Save</p>
+              <h3>内容を確認して保存</h3>
+              <p className="subtle-text">外部APIの結果は保存前に編集できます。入力内容を確認してから確定してください。</p>
+            </div>
+            <div className="form-actions">
+              <button className="button-primary" disabled={isSaving} type="submit">
+                {isSaving ? "保存中..." : isEdit ? "更新する" : "登録する"}
+              </button>
+              <button className="button-secondary" onClick={() => navigateTo("/books")} type="button">
+                一覧へ戻る
+              </button>
+            </div>
+          </section>
         </form>
       )}
     </section>
