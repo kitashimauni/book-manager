@@ -66,6 +66,10 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 | `provider` | string | 必須 | `ndl_search` または `open_library` |
 | `status` | string | 必須 | `hit` または `miss` |
 | `payload` | JSON text | 任意 | 正規化後の取得書誌情報。`miss` の場合は未設定 |
+| `request_url` | string | 任意 | 外部APIへ送った照会URL |
+| `response_status` | integer | 任意 | 外部APIのHTTPステータス |
+| `response_content_type` | string | 任意 | 外部APIレスポンスのContent-Type |
+| `response_body` | text | 任意 | 外部APIから受け取った生レスポンス本文 |
 | `created_at` | datetime | 必須 | 初回保存日時 |
 | `updated_at` | datetime | 必須 | 更新日時 |
 | `expires_at` | datetime | 必須 | キャッシュ有効期限 |
@@ -137,6 +141,6 @@ MVPでは以下をJSON形式でExport/Importします。
 
 `external_lookup_cache` はExport/Import対象外です。
 
-## 将来のキャッシュ拡張
+## 外部APIキャッシュの生レスポンス
 
-外部APIレスポンスは、将来NDC分類記号、subject、genreの再解釈に使う可能性が高いため、`external_lookup_cache` は正規化後の `payload` だけでなく、request URL、response status、content type、response bodyなどの生レスポンスを保存できる形へ拡張する方針です。
+`external_lookup_cache` は、正規化後の `payload` に加えて、再解析や障害調査に使えるよう外部APIのrequest URL、response status、content type、response bodyを保存します。キャッシュは再取得可能な派生データのため、引き続きExport/Import対象外です。

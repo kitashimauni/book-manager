@@ -40,6 +40,25 @@ describe("SQLite book lookup cache", () => {
       author: "Author",
       externalSource: "ndl_search",
       classificationTagCandidates: ["Programming"]
+    }, {
+      requestUrl: "https://ndlsearch.ndl.go.jp/api/opensearch?isbn=9784814400249&cnt=1",
+      responseStatus: 200,
+      responseContentType: "application/rss+xml",
+      responseBody: "<rss><channel><item /></channel></rss>"
+    });
+
+    expect(
+      database.sqlite
+        .prepare(
+          `SELECT request_url, response_status, response_content_type, response_body
+           FROM external_lookup_cache WHERE id = ?`
+        )
+        .get("ndl_search:9784814400249")
+    ).toEqual({
+      request_url: "https://ndlsearch.ndl.go.jp/api/opensearch?isbn=9784814400249&cnt=1",
+      response_status: 200,
+      response_content_type: "application/rss+xml",
+      response_body: "<rss><channel><item /></channel></rss>"
     });
 
     database.sqlite.close();

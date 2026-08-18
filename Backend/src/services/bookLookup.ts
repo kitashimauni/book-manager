@@ -1,11 +1,12 @@
 import type { AppConfig } from "../config/env.js";
 import type { BookLookupResult } from "../schemas/books.js";
-import type { BookLookupCache, LookupCacheProvider } from "./bookLookupCache.js";
+import type { BookLookupCache, LookupCacheProvider, LookupResponse } from "./bookLookupCache.js";
 import { createNdlSearchLookupService } from "./ndlSearch.js";
 import { createOpenLibraryLookupService, isLikelyIsbn, normalizeIsbn } from "./openLibrary.js";
 
 export type IsbnLookupService = {
   lookupBookByIsbn(rawIsbn: string, config: AppConfig): Promise<BookLookupResult | null>;
+  lookupBookByIsbnWithMetadata?(rawIsbn: string, config: AppConfig): Promise<LookupResponse>;
 };
 
 export type BookLookupServiceOptions = {
@@ -13,15 +14,6 @@ export type BookLookupServiceOptions = {
   ndlSearch?: IsbnLookupService;
   openLibrary?: IsbnLookupService;
 };
-
-const defaultLookupService = createBookLookupService();
-
-export async function lookupBookByIsbn(
-  rawIsbn: string,
-  config: AppConfig
-): Promise<BookLookupResult | null> {
-  return defaultLookupService.lookupBookByIsbn(rawIsbn, config);
-}
 
 export function createBookLookupService(options: BookLookupServiceOptions = {}) {
   const cache = options.cache;
@@ -40,9 +32,14 @@ export function createBookLookupService(options: BookLookupServiceOptions = {}) 
       return cached.value;
     }
 
+    if (service.lookupBookByIsbnWithMetadata) {
+      const response = await service.lookupBookByIsbnWithMetadata(isbn, config);
+      cache?.set(provider, isbn, response.value, response.metadata);
+      return response.value;
+    }
+
     const result = await service.lookupBookByIsbn(isbn, config);
     cache?.set(provider, isbn, result);
-
     return result;
   }
 

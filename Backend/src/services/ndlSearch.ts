@@ -1,7 +1,9 @@
 import type { AppConfig } from "../config/env.js";
 import type { BookLookupResult } from "../schemas/books.js";
+import type { LookupResponse } from "./bookLookupCache.js";
 import { isLikelyIsbn, normalizeIsbn } from "./openLibrary.js";
 import { createSerializedRequestQueue } from "./requestQueue.js";
+import { appendVolumeMetadata } from "./lookupTitle.js";
 
 export type NdlSearchLookupServiceOptions = {
   fetchImpl?: typeof fetch;
@@ -10,15 +12,6 @@ export type NdlSearchLookupServiceOptions = {
   minRequestIntervalMs?: number;
 };
 
-const defaultLookupService = createNdlSearchLookupService();
-
-export async function lookupBookByIsbn(
-  rawIsbn: string,
-  config: AppConfig
-): Promise<BookLookupResult | null> {
-  return defaultLookupService.lookupBookByIsbn(rawIsbn, config);
-}
-
 export function createNdlSearchLookupService(options: NdlSearchLookupServiceOptions = {}) {
   const fetchImpl = options.fetchImpl ?? fetch;
   const sleep =
@@ -26,31 +19,49 @@ export function createNdlSearchLookupService(options: NdlSearchLookupServiceOpti
   const now = options.now ?? Date.now;
   const requestQueue = createSerializedRequestQueue({ sleep, now });
 
-  return {
-    async lookupBookByIsbn(rawIsbn: string, config: AppConfig): Promise<BookLookupResult | null> {
-      const isbn = normalizeIsbn(rawIsbn);
+  async function lookupBookByIsbnWithMetadata(
+    rawIsbn: string,
+    config: AppConfig
+  ): Promise<LookupResponse> {
+    const isbn = normalizeIsbn(rawIsbn);
 
-      if (!isLikelyIsbn(isbn)) {
-        return null;
+    if (!isLikelyIsbn(isbn)) {
+      return { value: null, metadata: {} };
+    }
+
+    return requestQueue.enqueue(options.minRequestIntervalMs ?? 1000, async () => {
+      const url = new URL("https://ndlsearch.ndl.go.jp/api/opensearch");
+      url.searchParams.set("isbn", isbn);
+      url.searchParams.set("cnt", "1");
+
+      const response = await fetchImpl(url.toString(), {
+        headers: buildNdlSearchHeaders(config)
+      });
+      const payload = await response.text();
+      const metadata = {
+        requestUrl: url.toString(),
+        responseStatus: response.status,
+        responseContentType: response.headers.get("content-type") ?? undefined,
+        responseBody: payload
+      };
+
+      if (!response.ok) {
+        throw new Error(`NDL Search lookup failed with status ${response.status}`);
       }
 
-      return requestQueue.enqueue(options.minRequestIntervalMs ?? 1000, async () => {
-        const url = new URL("https://ndlsearch.ndl.go.jp/api/opensearch");
-        url.searchParams.set("isbn", isbn);
-        url.searchParams.set("cnt", "1");
+      return {
+        value: mapNdlSearchResponse(payload, isbn),
+        metadata
+      };
+    });
+  }
 
-        const response = await fetchImpl(url.toString(), {
-          headers: buildNdlSearchHeaders(config)
-        });
-
-        if (!response.ok) {
-          throw new Error(`NDL Search lookup failed with status ${response.status}`);
-        }
-
-        const payload = await response.text();
-        return mapNdlSearchResponse(payload, isbn);
-      });
-    }
+  return {
+    async lookupBookByIsbn(rawIsbn: string, config: AppConfig): Promise<BookLookupResult | null> {
+      const response = await lookupBookByIsbnWithMetadata(rawIsbn, config);
+      return response.value;
+    },
+    lookupBookByIsbnWithMetadata
   };
 }
 
@@ -81,7 +92,7 @@ export function mapNdlSearchResponse(payload: string, fallbackIsbn: string): Boo
   const tagCandidates = uniqueTexts([...subjectTagTexts(item), ...genreTagTexts(item)]);
 
   return {
-    title,
+    title: appendVolumeMetadata(title, firstText(item, "volume"), firstText(item, "volumeTitle")),
     author: responsibilityStatement,
     publisher: firstText(item, "publisher"),
     publishedDate: firstText(item, "date") ?? firstText(item, "issued"),

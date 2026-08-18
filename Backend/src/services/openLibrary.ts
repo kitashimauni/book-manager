@@ -1,5 +1,7 @@
 import type { AppConfig } from "../config/env.js";
 import type { BookLookupResult } from "../schemas/books.js";
+import type { LookupResponse } from "./bookLookupCache.js";
+import { appendVolumeMetadata } from "./lookupTitle.js";
 import { isValidIsbn, normalizeIsbn } from "../utils/isbn.js";
 import { createSerializedRequestQueue } from "./requestQueue.js";
 
@@ -12,6 +14,9 @@ type OpenLibraryBook = {
   isbn_13?: string[];
   key?: string;
   subjects?: string[];
+  volume?: string;
+  volume_title?: string;
+  volumeTitle?: string;
 };
 
 export type OpenLibraryLookupServiceOptions = {
@@ -21,19 +26,10 @@ export type OpenLibraryLookupServiceOptions = {
   minRequestIntervalMs?: number;
 };
 
-const defaultLookupService = createOpenLibraryLookupService();
-
 export { normalizeIsbn };
 
 export function isLikelyIsbn(value: string): boolean {
   return isValidIsbn(value);
-}
-
-export async function lookupBookByIsbn(
-  rawIsbn: string,
-  config: AppConfig
-): Promise<BookLookupResult | null> {
-  return defaultLookupService.lookupBookByIsbn(rawIsbn, config);
 }
 
 export function createOpenLibraryLookupService(options: OpenLibraryLookupServiceOptions = {}) {
@@ -43,37 +39,54 @@ export function createOpenLibraryLookupService(options: OpenLibraryLookupService
   const now = options.now ?? Date.now;
   const requestQueue = createSerializedRequestQueue({ sleep, now });
 
+  async function lookupBookByIsbnWithMetadata(
+    rawIsbn: string,
+    config: AppConfig
+  ): Promise<LookupResponse> {
+    const isbn = normalizeIsbn(rawIsbn);
+
+    if (!isLikelyIsbn(isbn)) {
+      return { value: null, metadata: {} };
+    }
+
+    return requestQueue.enqueue(
+      options.minRequestIntervalMs ?? getOpenLibraryMinIntervalMs(config),
+      async () => {
+        const requestUrl = `https://openlibrary.org/isbn/${encodeURIComponent(isbn)}.json`;
+        const response = await fetchImpl(requestUrl, {
+          headers: buildOpenLibraryHeaders(config)
+        });
+        const responseBody = await response.text();
+        const metadata = {
+          requestUrl,
+          responseStatus: response.status,
+          responseContentType: response.headers.get("content-type") ?? undefined,
+          responseBody
+        };
+
+        if (response.status === 404) {
+          return { value: null, metadata };
+        }
+
+        if (!response.ok) {
+          throw new Error(`Open Library lookup failed with status ${response.status}`);
+        }
+
+        const payload = JSON.parse(responseBody) as OpenLibraryBook;
+        return {
+          value: mapOpenLibraryBook(payload, isbn),
+          metadata
+        };
+      }
+    );
+  }
+
   return {
     async lookupBookByIsbn(rawIsbn: string, config: AppConfig): Promise<BookLookupResult | null> {
-      const isbn = normalizeIsbn(rawIsbn);
-
-      if (!isLikelyIsbn(isbn)) {
-        return null;
-      }
-
-      return requestQueue.enqueue(
-        options.minRequestIntervalMs ?? getOpenLibraryMinIntervalMs(config),
-        async () => {
-          const response = await fetchImpl(
-            `https://openlibrary.org/isbn/${encodeURIComponent(isbn)}.json`,
-            {
-              headers: buildOpenLibraryHeaders(config)
-            }
-          );
-
-          if (response.status === 404) {
-            return null;
-          }
-
-          if (!response.ok) {
-            throw new Error(`Open Library lookup failed with status ${response.status}`);
-          }
-
-          const payload = (await response.json()) as OpenLibraryBook;
-          return mapOpenLibraryBook(payload, isbn);
-        }
-      );
-    }
+      const response = await lookupBookByIsbnWithMetadata(rawIsbn, config);
+      return response.value;
+    },
+    lookupBookByIsbnWithMetadata
   };
 }
 
@@ -99,7 +112,7 @@ function mapOpenLibraryBook(
   }
 
   return {
-    title: payload.title,
+    title: appendVolumeMetadata(payload.title, payload.volume, payload.volume_title, payload.volumeTitle),
     author: payload.by_statement,
     publisher: payload.publishers?.[0],
     publishedDate: payload.publish_date,

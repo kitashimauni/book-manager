@@ -82,6 +82,25 @@ describe("NDL Search lookup service", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it("returns the raw response metadata for caching", async () => {
+    const responseBody = `<rss><channel><item><title>キャッシュ対象</title></item></channel></rss>`;
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(xmlResponse(responseBody));
+    const service = createNdlSearchLookupService({
+      fetchImpl,
+      minRequestIntervalMs: 0
+    });
+
+    await expect(service.lookupBookByIsbnWithMetadata("9784814400249", baseConfig)).resolves.toEqual({
+      value: expect.objectContaining({ title: "キャッシュ対象" }),
+      metadata: {
+        requestUrl: "https://ndlsearch.ndl.go.jp/api/opensearch?isbn=9784814400249&cnt=1",
+        responseStatus: 200,
+        responseContentType: "application/rss+xml",
+        responseBody
+      }
+    });
+  });
+
   it("serializes concurrent lookups and paces the next request", async () => {
     let currentTime = 0;
     const sleep = vi.fn(async (milliseconds: number) => {
@@ -182,6 +201,43 @@ describe("NDL Search lookup service", () => {
 
     expect(result?.title).toBe("A & B");
     expect(result?.classificationTagCandidates).toEqual(["R&D"]);
+  });
+
+  it("appends volume metadata to the lookup title", () => {
+    const result = mapNdlSearchResponse(
+      `<rss><channel><item>
+        <title>シリーズ名</title>
+        <dcndl:volume>1</dcndl:volume>
+      </item></channel></rss>`,
+      "9780000000002"
+    );
+
+    expect(result?.title).toBe("シリーズ名 1");
+  });
+
+  it("appends the volume title when volume metadata is absent", () => {
+    const result = mapNdlSearchResponse(
+      `<rss><channel><item>
+        <title>シリーズ名</title>
+        <dcndl:volumeTitle>上巻</dcndl:volumeTitle>
+      </item></channel></rss>`,
+      "9780000000002"
+    );
+
+    expect(result?.title).toBe("シリーズ名 上巻");
+  });
+
+  it("does not duplicate volume metadata already present in the title", () => {
+    const result = mapNdlSearchResponse(
+      `<rss><channel><item>
+        <title>シリーズ名 1 上巻</title>
+        <dcndl:volume>1</dcndl:volume>
+        <dcndl:volumeTitle>上巻</dcndl:volumeTitle>
+      </item></channel></rss>`,
+      "9780000000002"
+    );
+
+    expect(result?.title).toBe("シリーズ名 1 上巻");
   });
 
   it("uses only untyped NDL subjects as classification tag candidates", () => {

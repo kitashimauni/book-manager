@@ -137,4 +137,32 @@ describe("book lookup service", () => {
     expect(cache.set).toHaveBeenCalledWith("ndl_search", "9780132350884", null);
     expect(cache.set).toHaveBeenCalledWith("open_library", "9780132350884", openLibraryResult);
   });
+
+  it("stores provider response metadata with lookup results", async () => {
+    const cache = cacheDouble();
+    const ndlResult = {
+      title: "日本語の本",
+      externalSource: "ndl_search" as const,
+      classificationTagCandidates: []
+    };
+    const metadata = {
+      requestUrl: "https://ndlsearch.ndl.go.jp/api/opensearch?isbn=9784814400249&cnt=1",
+      responseStatus: 200,
+      responseContentType: "application/rss+xml",
+      responseBody: "<rss />"
+    };
+    const ndlSearch: IsbnLookupService = {
+      lookupBookByIsbn: vi.fn().mockResolvedValue(ndlResult),
+      lookupBookByIsbnWithMetadata: vi.fn().mockResolvedValue({
+        value: ndlResult,
+        metadata
+      })
+    };
+    const openLibrary = lookupService(null);
+    const service = createBookLookupService({ cache, ndlSearch, openLibrary });
+
+    await expect(service.lookupBookByIsbn("9784814400249", baseConfig)).resolves.toEqual(ndlResult);
+
+    expect(cache.set).toHaveBeenCalledWith("ndl_search", "9784814400249", ndlResult, metadata);
+  });
 });

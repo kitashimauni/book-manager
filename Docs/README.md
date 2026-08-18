@@ -19,3 +19,14 @@
 - 実装と仕様に差分が出た場合は、実装変更と同じPull RequestでDocsも更新します。
 - MVPに含める機能は `product-spec.md` の「MVPスコープ」を正とします。
 - 将来拡張はすぐ実装せず、`roadmap.md` の「Phase 2以降」に退避します。
+
+## 実装時のDocs確認項目
+
+実装Issueに対応するPull Requestでは、変更内容に応じて以下のDocsを確認・更新します。
+
+- APIの入出力やエラー処理を変更した場合は `api-spec.md` を更新します。
+- テーブル、カラム、制約、Export/Import範囲を変更した場合は `data-model.md` を更新します。
+- 画面の入力項目やユーザー操作を変更した場合は `functional-spec.md` を更新します。
+- 実装上の技術的な判断や開発手順を変更した場合は `implementation-decisions.md` または `development.md` を更新します。
+- 仕様の未実装部分や保留理由が変わった場合は `roadmap.md` を更新します。
+- PR本文には、Docsを更新したファイルまたは確認して変更不要だった範囲を記載します。
