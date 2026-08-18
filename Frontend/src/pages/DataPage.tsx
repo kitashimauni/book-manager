@@ -50,10 +50,15 @@ export function DataPage() {
       return;
     }
 
-    const text = await file.text();
-    setJsonText(text);
-    await previewText(text);
-    event.target.value = "";
+    try {
+      const text = await file.text();
+      setJsonText(text);
+      await previewText(text);
+    } catch (fileError) {
+      setError(createFileReadError(fileError));
+    } finally {
+      event.target.value = "";
+    }
   }
 
   async function handlePreview() {
@@ -388,6 +393,15 @@ function formatApiError(error: ApiError) {
   }
 
   return `${error.message}: ${error.errors.map((item) => `${item.field} ${item.message}`).join(", ")}`;
+}
+
+export function createFileReadError(error: unknown): ApiError {
+  const detail = error instanceof Error && error.message ? ` (${error.message})` : "";
+
+  return {
+    message: `JSONファイルを読み込めませんでした。ファイルを確認して再度お試しください。${detail}`,
+    status: 400
+  };
 }
 
 function formatEntity(entity: ImportConflict["entity"]) {

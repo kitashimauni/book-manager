@@ -26,6 +26,22 @@ MVPではREST APIとして設計します。レスポンス形式はJSONです�
 | `POST` | `/api/import/preview` | Import内容を検証し、追加、上書き候補、無視候補、エラーを取得 |
 | `POST` | `/api/import` | 蔵書データをJSON形式でImport |
 
+## GET /api/health
+
+アプリケーションとデータベースが応答可能かを確認します。
+
+### 成功時
+
+- HTTPステータス: `200 OK`
+
+```json
+{
+  "ok": true,
+  "service": "book-manager-backend",
+  "database": "ok"
+}
+```
+
 ## GET /api/books
 
 ### クエリパラメータ

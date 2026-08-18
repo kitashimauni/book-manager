@@ -11,6 +11,7 @@
 - [API仕様](./api-spec.md): バックエンドAPIの初期案
 - [実装前決定事項](./implementation-decisions.md): 実装前に決める技術方針、仕様境界、推奨初期値
 - [開発手順](./development.md): ローカル開発、Docker Compose、環境変数、バックアップ
+- [MVPスモークテスト](./smoke-test.md): リリース前の画面、API、Docker、SQLite確認項目
 - [開発ロードマップ](./roadmap.md): 実装順序、Issue化する単位、将来拡張
 
 ## 仕様更新ルール

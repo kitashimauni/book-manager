@@ -1,13 +1,20 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createBook, deleteBook } from "./client.js";
+
+async function loadClient(baseUrl: string) {
+  vi.resetModules();
+  vi.stubEnv("VITE_API_BASE_URL", baseUrl);
+  return import("./client.js");
+}
 
 describe("api client", () => {
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
-  it("does not send a JSON content type for requests without a body", async () => {
+  it("uses the same-origin API root by default", async () => {
+    const { deleteBook, getApiBaseUrl } = await loadClient("");
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 204 }));
     vi.stubGlobal("fetch", fetchMock);
 
@@ -16,6 +23,7 @@ describe("api client", () => {
     const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
     const headers = init?.headers as Headers;
 
+    expect(getApiBaseUrl()).toBe("/api");
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/books/00000000-0000-4000-8000-000000000000",
       expect.objectContaining({ method: "DELETE" })
@@ -23,7 +31,22 @@ describe("api client", () => {
     expect(headers.has("Content-Type")).toBe(false);
   });
 
+  it("uses the configured backend API root", async () => {
+    const { deleteBook, getApiBaseUrl } = await loadClient("http://localhost:3001/");
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await deleteBook("00000000-0000-4000-8000-000000000000");
+
+    expect(getApiBaseUrl()).toBe("http://localhost:3001/api");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3001/api/books/00000000-0000-4000-8000-000000000000",
+      expect.objectContaining({ method: "DELETE" })
+    );
+  });
+
   it("sends a JSON content type for requests with a body", async () => {
+    const { createBook } = await loadClient("");
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       Response.json({
         id: "00000000-0000-4000-8000-000000000000",

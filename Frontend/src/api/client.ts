@@ -188,10 +188,16 @@ export type UpdateClassificationTagRequest = Omit<
   description?: string | null;
 };
 
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+export function resolveApiBaseUrl(baseUrl = configuredApiBaseUrl) {
+  const normalizedBaseUrl = (baseUrl ?? "").replace(/\/$/, "");
+
+  return normalizedBaseUrl ? `${normalizedBaseUrl}/api` : "/api";
+}
 
 export function getApiBaseUrl() {
-  return apiBaseUrl || "/api";
+  return resolveApiBaseUrl();
 }
 
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
@@ -201,7 +207,8 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const response = await fetch(`${getApiBaseUrl()}${normalizedPath}`, {
     ...init,
     headers
   });
@@ -224,22 +231,22 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
 }
 
 export function getHealth() {
-  return apiRequest<HealthResponse>("/api/health");
+  return apiRequest<HealthResponse>("/health");
 }
 
 export function exportJsonData() {
-  return apiRequest<JsonExportPayload>("/api/export");
+  return apiRequest<JsonExportPayload>("/export");
 }
 
 export function previewJsonImport(payload: JsonExportPayload) {
-  return apiRequest<ImportPreview>("/api/import/preview", {
+  return apiRequest<ImportPreview>("/import/preview", {
     body: JSON.stringify(payload),
     method: "POST"
   });
 }
 
 export function importJsonData(payload: ImportRequest) {
-  return apiRequest<ImportResult>("/api/import", {
+  return apiRequest<ImportResult>("/import", {
     body: JSON.stringify(payload),
     method: "POST"
   });
@@ -256,84 +263,84 @@ export function getBooks(query: ListBooksQuery = {}) {
 
   const search = params.toString();
 
-  return apiRequest<ListBooksResponse>(`/api/books${search ? `?${search}` : ""}`);
+  return apiRequest<ListBooksResponse>(`/books${search ? `?${search}` : ""}`);
 }
 
 export function getBook(id: string) {
-  return apiRequest<Book>(`/api/books/${encodeURIComponent(id)}`);
+  return apiRequest<Book>(`/books/${encodeURIComponent(id)}`);
 }
 
 export function createBook(payload: BookFormRequest) {
-  return apiRequest<Book>("/api/books", {
+  return apiRequest<Book>("/books", {
     body: JSON.stringify(payload),
     method: "POST"
   });
 }
 
 export function updateBook(id: string, payload: BookFormRequest) {
-  return apiRequest<Book>(`/api/books/${encodeURIComponent(id)}`, {
+  return apiRequest<Book>(`/books/${encodeURIComponent(id)}`, {
     body: JSON.stringify(payload),
     method: "PUT"
   });
 }
 
 export function deleteBook(id: string) {
-  return apiRequest<void>(`/api/books/${encodeURIComponent(id)}`, {
+  return apiRequest<void>(`/books/${encodeURIComponent(id)}`, {
     method: "DELETE"
   });
 }
 
 export function lookupBookByBarcode(bookBarcode: string) {
-  return apiRequest<BookLookupResult>("/api/books/lookup", {
+  return apiRequest<BookLookupResult>("/books/lookup", {
     body: JSON.stringify({ bookBarcode }),
     method: "POST"
   });
 }
 
 export function getLocations() {
-  return apiRequest<{ items: Location[] }>("/api/locations");
+  return apiRequest<{ items: Location[] }>("/locations");
 }
 
 export function createLocation(payload: CreateLocationRequest) {
-  return apiRequest<Location>("/api/locations", {
+  return apiRequest<Location>("/locations", {
     body: JSON.stringify(payload),
     method: "POST"
   });
 }
 
 export function updateLocation(id: string, payload: UpdateLocationRequest) {
-  return apiRequest<Location>(`/api/locations/${encodeURIComponent(id)}`, {
+  return apiRequest<Location>(`/locations/${encodeURIComponent(id)}`, {
     body: JSON.stringify(payload),
     method: "PUT"
   });
 }
 
 export function disableLocation(id: string) {
-  return apiRequest<void>(`/api/locations/${encodeURIComponent(id)}`, {
+  return apiRequest<void>(`/locations/${encodeURIComponent(id)}`, {
     method: "DELETE"
   });
 }
 
 export function getClassificationTags() {
-  return apiRequest<{ items: ClassificationTag[] }>("/api/classification-tags");
+  return apiRequest<{ items: ClassificationTag[] }>("/classification-tags");
 }
 
 export function createClassificationTag(payload: CreateClassificationTagRequest) {
-  return apiRequest<ClassificationTag>("/api/classification-tags", {
+  return apiRequest<ClassificationTag>("/classification-tags", {
     body: JSON.stringify(payload),
     method: "POST"
   });
 }
 
 export function updateClassificationTag(id: string, payload: UpdateClassificationTagRequest) {
-  return apiRequest<ClassificationTag>(`/api/classification-tags/${encodeURIComponent(id)}`, {
+  return apiRequest<ClassificationTag>(`/classification-tags/${encodeURIComponent(id)}`, {
     body: JSON.stringify(payload),
     method: "PUT"
   });
 }
 
 export function disableClassificationTag(id: string) {
-  return apiRequest<void>(`/api/classification-tags/${encodeURIComponent(id)}`, {
+  return apiRequest<void>(`/classification-tags/${encodeURIComponent(id)}`, {
     method: "DELETE"
   });
 }

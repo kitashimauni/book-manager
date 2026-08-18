@@ -89,23 +89,32 @@ MVPでは `books`、`locations`、`classification_tags`、`book_classification_t
 - `book_classification_tags` は `book_id` と `classification_tag_id` の組み合わせを一意にします。
 - `external_lookup_cache` は `provider` と `isbn` の組み合わせを一意にします。
 
-## インデックス候補
+## インデックス方針
 
-- `title`
-- `author`
-- `isbn`
-- `book_barcode`
-- `management_barcode`
-- `external_source`
-- `external_id`
-- `location_id`
-- `updated_at`
+MVPでは、検索性能のための非ユニークインデックスはまだ実装していません。現在実装しているインデックスは、データの一意性を担保するためのUNIQUEインデックスです。
+
+### 実装済みのUNIQUEインデックス
+
 - `locations.name`
-- `locations.sort_order`
+- `books.management_barcode`
 - `classification_tags.name`
+- `book_classification_tags(book_id, classification_tag_id)`
+- `external_lookup_cache(provider, isbn)`
+
+### 将来のインデックス候補
+
+検索件数や実データ量を見て、必要になった時点で以下の非ユニークインデックスを追加します。
+
+- `books.title`
+- `books.author`
+- `books.isbn`
+- `books.book_barcode`
+- `books.external_source`
+- `books.external_id`
+- `books.location_id`
+- `books.updated_at`
+- `locations.sort_order`
 - `classification_tags.source`
-- `external_lookup_cache.provider`
-- `external_lookup_cache.isbn`
 
 ## 将来の正規化候補
 
