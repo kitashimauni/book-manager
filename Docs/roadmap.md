@@ -88,6 +88,21 @@
 - 重複登録チェックの強化
 - 棚卸しワークフロー
 
+## 現在の実装状況
+
+Phase 1のMVP機能は実装済みです。PR #80では、MVP期間中のDocs整合、外部書誌情報キャッシュの生レスポンス保存、巻情報を含むタイトル生成、不要なLookupサービスの共有インスタンス削除を完了扱いにします。
+
+### PR #80で完了扱いにするIssue
+
+- [#14 Docs: keep implementation docs aligned during MVP](https://github.com/kitashimauni/book-manager/issues/14)
+- [#59 Backend: cache raw external lookup request and response payloads](https://github.com/kitashimauni/book-manager/issues/59)
+- [#65 Backend: append volume metadata to lookup titles](https://github.com/kitashimauni/book-manager/issues/65)
+- [#74 Backend: remove unused singleton lookup service exports](https://github.com/kitashimauni/book-manager/issues/74)
+
+### 保留しているIssue
+
+- [#60 Backend: derive classification tag suggestions from NDC codes](https://github.com/kitashimauni/book-manager/issues/60): NDCマスタの採用元と収録範囲が未確定のため、現時点では実装しません。
+
 ## 初期Issue案
 
 - Docs: MVP仕様を作成する

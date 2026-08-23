@@ -1,10 +1,11 @@
 export function appendVolumeMetadata(title: string, ...metadata: Array<string | undefined>) {
+  const outputTitle = title.trim();
   const normalizedTitle = normalizeText(title);
   const additions = uniqueMetadata(metadata)
     .filter((value) => !containsMetadata(normalizedTitle, value))
     .join(" ");
 
-  return additions ? `${normalizedTitle} ${additions}` : normalizedTitle;
+  return additions ? `${outputTitle} ${additions}` : outputTitle;
 }
 
 function uniqueMetadata(values: Array<string | undefined>) {
@@ -41,7 +42,7 @@ function containsMetadata(title: string, metadata: string): boolean {
     const before = normalizedTitle[index - 1];
     const after = normalizedTitle[index + normalizedMetadata.length];
 
-    if (!isWordCharacter(before) && !isWordCharacter(after)) {
+    if (!isAsciiWordCharacter(before) && !isAsciiWordCharacter(after)) {
       return true;
     }
 
@@ -49,6 +50,6 @@ function containsMetadata(title: string, metadata: string): boolean {
   }
 }
 
-function isWordCharacter(value: string | undefined): boolean {
-  return value ? /[\p{L}\p{N}]/u.test(value) : false;
+function isAsciiWordCharacter(value: string | undefined): boolean {
+  return value ? /[A-Za-z0-9]/.test(value) : false;
 }
