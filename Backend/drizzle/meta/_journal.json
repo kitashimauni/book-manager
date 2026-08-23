@@ -15,6 +15,13 @@
       "when": 1777381108677,
       "tag": "0001_aromatic_white_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787066391497,
+      "tag": "0002_elite_nova",
+      "breakpoints": true
     }
   ]
 }

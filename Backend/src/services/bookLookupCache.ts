@@ -6,6 +6,18 @@ import type { BookLookupResult } from "../schemas/books.js";
 
 export type LookupCacheProvider = BookLookupResult["externalSource"];
 
+export type LookupCacheMetadata = {
+  requestUrl?: string;
+  responseStatus?: number;
+  responseContentType?: string;
+  responseBody?: string;
+};
+
+export type LookupResponse = {
+  value: BookLookupResult | null;
+  metadata: LookupCacheMetadata;
+};
+
 export type LookupCacheRead =
   | {
       found: true;
@@ -17,7 +29,12 @@ export type LookupCacheRead =
 
 export type BookLookupCache = {
   get(provider: LookupCacheProvider, isbn: string): LookupCacheRead;
-  set(provider: LookupCacheProvider, isbn: string, value: BookLookupResult | null): void;
+  set(
+    provider: LookupCacheProvider,
+    isbn: string,
+    value: BookLookupResult | null,
+    metadata?: LookupCacheMetadata
+  ): void;
 };
 
 export type SqliteBookLookupCacheOptions = {
@@ -64,7 +81,7 @@ export function createSqliteBookLookupCache(
         return { found: false };
       }
     },
-    set(provider, isbn, value) {
+    set(provider, isbn, value, metadata) {
       const currentDate = now();
       const timestamp = currentDate.toISOString();
       const id = `${provider}:${isbn}`;
@@ -77,6 +94,10 @@ export function createSqliteBookLookupCache(
           provider,
           status: value ? "hit" : "miss",
           payload: value ? JSON.stringify(value) : null,
+          requestUrl: metadata?.requestUrl ?? null,
+          responseStatus: metadata?.responseStatus ?? null,
+          responseContentType: metadata?.responseContentType ?? null,
+          responseBody: metadata?.responseBody ?? null,
           createdAt: timestamp,
           updatedAt: timestamp,
           expiresAt: expiryDate(currentDate).toISOString()
@@ -86,6 +107,10 @@ export function createSqliteBookLookupCache(
           set: {
             status: value ? "hit" : "miss",
             payload: value ? JSON.stringify(value) : null,
+            requestUrl: metadata?.requestUrl ?? null,
+            responseStatus: metadata?.responseStatus ?? null,
+            responseContentType: metadata?.responseContentType ?? null,
+            responseBody: metadata?.responseBody ?? null,
             updatedAt: timestamp,
             expiresAt: expiryDate(currentDate).toISOString()
           }

@@ -82,6 +82,10 @@ export const externalLookupCache = sqliteTable(
     provider: text("provider", { enum: ["ndl_search", "open_library"] }).notNull(),
     status: text("status", { enum: ["hit", "miss"] }).notNull(),
     payload: text("payload"),
+    requestUrl: text("request_url"),
+    responseStatus: integer("response_status"),
+    responseContentType: text("response_content_type"),
+    responseBody: text("response_body"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
     expiresAt: text("expires_at").notNull()

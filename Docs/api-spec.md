@@ -230,6 +230,7 @@ ISBNまたはISBNとして解釈できる本のバーコードから外部APIで
 - 外部APIを呼び出す場合は、アプリ名と連絡先を含む `User-Agent` を設定します。
 - 外部APIの利用は低頻度のリアルタイム照会に限定し、同じISBNの照会結果は `provider + normalized ISBN` 単位でSQLiteにキャッシュします。
 - キャッシュは取得成功だけでなく未検出結果も保存し、有効期限は `LOOKUP_CACHE_TTL_DAYS` で設定します。初期値は30日です。
+- キャッシュには正規化済みの書誌情報に加えて、request URL、response status、response content type、response bodyの生レスポンス情報も保存します。これらは再解析・障害調査用で、Export/Import対象外です。
 - 外部APIへの連続リクエストはプロバイダごとのキューで直列化してアプリ側で制限し、未識別時1 req/sec、識別時3 req/secを超えないようにします。
 - 外部APIが失敗しても本の手入力登録はできるようにします。
 - 外部APIの失敗時は `502 Bad Gateway` として返し、フロントエンドでは手入力登録へ進める案内を表示します。
