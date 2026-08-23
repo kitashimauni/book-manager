@@ -149,8 +149,6 @@ Phase 1の実装は、以下のGitHub Issueを基本単位として進めます�
 13. [#6 Backend: add API test coverage](https://github.com/kitashimauni/book-manager/issues/6)
 14. [#15 QA: define MVP smoke test and self-host verification](https://github.com/kitashimauni/book-manager/issues/15)
 
-### 継続Issue
+### 実装後のDocs更新
 
-- [#14 Docs: keep implementation docs aligned during MVP](https://github.com/kitashimauni/book-manager/issues/14)
-
-実装時に仕様や挙動が変わった場合は、該当IssueのPRで関連Docsも更新します。
+仕様や挙動が変わった場合は、該当IssueのPRで関連Docsも更新します。
