@@ -73,7 +73,9 @@
 
 - NDLサーチのsubjectは、`xsi:type` や `rdf:datatype` などの型指定がない主題語を分類タグ候補として使う
 - NDLサーチの`dcndl:genre`は、ジャンル・形式用語として分類タグ候補に使う
-- NDLサーチのsubjectに含まれるNDC、NDLCなどの分類記号は分類タグ名として直接使わず、将来のNDCマスタ照合による候補生成に使う
+- NDLサーチの`dcndl:NDC9`またはNDC9分類URIのsubjectは、日本図書館協会のNDC9 Linked Dataを照合し、文脈付き分類項目名を分類タグ候補に使う
+- NDC8、NDC10、版不明のNDC、NDLCなどの未対応分類記号は分類タグ候補に使わない
+- NDC9マスタに存在しない分類記号は、生のコードを候補にせず無視する
 - Open Library APIのsubjectsは分類タグ候補として使う
 - ユーザーが確定した候補のみ分類タグとして保存する
 - APIに分類情報がない場合は分類タグを手動登録する

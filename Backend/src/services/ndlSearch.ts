@@ -4,6 +4,7 @@ import type { LookupResponse } from "./bookLookupCache.js";
 import { isLikelyIsbn, normalizeIsbn } from "./openLibrary.js";
 import { createSerializedRequestQueue } from "./requestQueue.js";
 import { appendVolumeMetadata } from "./lookupTitle.js";
+import { resolveNdc9Label } from "./ndc9.js";
 
 export type NdlSearchLookupServiceOptions = {
   fetchImpl?: typeof fetch;
@@ -89,7 +90,14 @@ export function mapNdlSearchResponse(payload: string, fallbackIsbn: string): Boo
   }
 
   const responsibilityStatement = extractResponsibilityStatement(item);
-  const tagCandidates = uniqueTexts([...subjectTagTexts(item), ...genreTagTexts(item)]);
+  const ndc9TagCandidates = ndc9SubjectCodes(item)
+    .map((code) => resolveNdc9Label(code))
+    .filter((label): label is string => Boolean(label));
+  const tagCandidates = uniqueTexts([
+    ...subjectTagTexts(item),
+    ...genreTagTexts(item),
+    ...ndc9TagCandidates
+  ]);
 
   return {
     title: appendVolumeMetadata(title, firstText(item, "volume"), firstText(item, "volumeTitle")),
@@ -122,6 +130,41 @@ function subjectTagTexts(source: string): string[] {
     .filter((element) => !hasSubjectEncodingScheme(element.attributes))
     .map((element) => extractStructuredValue(element.content))
     .filter((value) => value.length > 0);
+}
+
+function ndc9SubjectCodes(source: string): string[] {
+  const subjectElements = textElements(source, "subject");
+  const literalCodes = subjectElements
+    .filter((element) => hasNdc9EncodingScheme(element.attributes))
+    .map((element) => normalizeXmlText(element.content));
+  const resourceCodes = [...subjectElements, ...selfClosingElements(source, "subject")]
+    .map((element) => extractNdc9ResourceCode(element.attributes))
+    .filter((code): code is string => Boolean(code));
+
+  return [...literalCodes, ...resourceCodes];
+}
+
+function hasNdc9EncodingScheme(attributes: string): boolean {
+  return (
+    /\bxsi:type\s*=\s*["']dcndl:NDC9["']/i.test(attributes) ||
+    /\brdf:datatype\s*=\s*["']https?:\/\/ndl\.go\.jp\/dcndl\/terms\/NDC9["']/i.test(attributes)
+  );
+}
+
+function extractNdc9ResourceCode(attributes: string): string | undefined {
+  const resource = /\brdf:resource\s*=\s*["'](https?:\/\/id\.ndl\.go\.jp\/class\/ndc9\/[^"']+)["']/i.exec(
+    attributes
+  )?.[1];
+
+  if (!resource) {
+    return undefined;
+  }
+
+  try {
+    return decodeURIComponent(resource.slice(resource.lastIndexOf("/ndc9/") + "/ndc9/".length));
+  } catch {
+    return undefined;
+  }
 }
 
 function hasSubjectEncodingScheme(attributes: string): boolean {
@@ -167,6 +210,17 @@ function textElements(source: string, localName: string) {
   return [...source.matchAll(pattern)].map((match) => ({
     attributes: match[1] ?? "",
     content: match[2] ?? ""
+  }));
+}
+
+function selfClosingElements(source: string, localName: string) {
+  const pattern = new RegExp(
+    `<(?:[\\w.-]+:)?${escapeRegExp(localName)}\\b([^>]*?)/>`,
+    "gi"
+  );
+
+  return [...source.matchAll(pattern)].map((match) => ({
+    attributes: match[1] ?? ""
   }));
 }
 
