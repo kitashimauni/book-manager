@@ -40,7 +40,7 @@
 - 保管場所タグの事前登録
 - 保管場所タグによる置き場所管理、絞り込み
 - 分類タグによる分類、絞り込み
-- NDLサーチの主題語subjectやgenre、またはOpen Library APIのsubjectsを分類タグ候補として利用
+- NDLサーチの主題語subject、genre、NDC9分類名、またはOpen Library APIのsubjectsを分類タグ候補として利用
 - 蔵書データのExport
 - 蔵書データのImport
 - 管理メモの登録

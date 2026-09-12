@@ -291,6 +291,47 @@ describe("NDL Search lookup service", () => {
     expect(result?.classificationTagCandidates).toEqual(["漫画", "歴史"]);
   });
 
+  it("resolves NDC9 subjects while preserving subject and genre candidates", () => {
+    const result = mapNdlSearchResponse(
+      `<rss><channel><item>
+        <title>NDC9のある本</title>
+        <dc:subject>Web API</dc:subject>
+        <dc:subject xsi:type="dcndl:NDC9">007.6</dc:subject>
+        <dc:subject rdf:datatype="http://ndl.go.jp/dcndl/terms/NDC9">913.6</dc:subject>
+        <dcterms:subject rdf:resource="http://id.ndl.go.jp/class/ndc9/007.6"/>
+        <dcterms:subject rdf:resource="http://id.ndl.go.jp/class/ndc9/007.6"></dcterms:subject>
+        <dc:subject xsi:type="dcndl:NDC8">007.6</dc:subject>
+        <dc:subject xsi:type="dcndl:NDLC">KH426</dc:subject>
+        <dcndl:genre>技術</dcndl:genre>
+      </item></channel></rss>`,
+      "9780000000002"
+    );
+
+    expect(result?.classificationTagCandidates).toEqual([
+      "Web API",
+      "技術",
+      "情報科学--データ処理．情報処理",
+      "日本文学--小説．物語--近代：明治以後"
+    ]);
+  });
+
+  it("ignores unsupported or unresolved NDC subjects instead of exposing raw codes", () => {
+    const result = mapNdlSearchResponse(
+      `<rss><channel><item>
+        <title>未解決分類のある本</title>
+        <dc:subject>歴史</dc:subject>
+        <dc:subject xsi:type="dcndl:NDC">007.6</dc:subject>
+        <dc:subject xsi:type="dcndl:NDC8">007.6</dc:subject>
+        <dc:subject xsi:type="dcndl:NDC10">007.6</dc:subject>
+        <dc:subject xsi:type="dcndl:NDC9">999.99</dc:subject>
+        <dcterms:subject rdf:resource="http://id.ndl.go.jp/class/ndc10/007.6"/>
+      </item></channel></rss>`,
+      "9780000000002"
+    );
+
+    expect(result?.classificationTagCandidates).toEqual(["歴史"]);
+  });
+
   it("does not use NDL author headings as the book author", () => {
     const result = mapNdlSearchResponse(
       `<rss><channel><item>

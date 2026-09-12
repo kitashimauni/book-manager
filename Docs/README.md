@@ -13,6 +13,7 @@
 - [開発手順](./development.md): ローカル開発、Docker Compose、環境変数、バックアップ
 - [MVPスモークテスト](./smoke-test.md): リリース前の画面、API、Docker、SQLite確認項目
 - [開発ロードマップ](./roadmap.md): 実装順序、Issue化する単位、将来拡張
+- [第三者データ表示](./third-party.md): 外部データの出典、ライセンス、変換方法
 
 ## 仕様更新ルール
 

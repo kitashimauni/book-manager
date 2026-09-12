@@ -497,7 +497,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <h3>分類タグ</h3>
               </div>
               {activeTags.length === 0 ? (
-                <p className="subtle-text">分類タグはまだありません。候補subjectから追加するか、分類タグ管理画面で作成できます。</p>
+                <p className="subtle-text">分類タグはまだありません。候補subjectやNDC9分類から追加するか、分類タグ管理画面で作成できます。</p>
               ) : (
                 <div className="choice-list">
                   {activeTags.map((tag) => (
@@ -528,7 +528,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <h3>分類タグ候補</h3>
               </div>
               {candidateSubjects.length === 0 ? (
-                <p className="subtle-text">照会でsubjectが取得できた場合、ここに候補として表示します。</p>
+                <p className="subtle-text">照会でsubject、genre、NDC9分類名が取得できた場合、ここに候補として表示します。</p>
               ) : (
                 <div className="candidate-list">
                   {candidateSubjects.map((candidate) => (

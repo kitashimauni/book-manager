@@ -33,6 +33,7 @@ COPY --from=deps /app/Backend/node_modules /app/Backend/node_modules
 COPY --from=build /app/Backend/dist ./dist
 COPY --from=build /app/Backend/drizzle ./drizzle
 COPY --from=build /app/Backend/package.json ./package.json
+COPY Docs/third-party.md ./THIRD_PARTY_NOTICES.md
 
 EXPOSE 3001
 

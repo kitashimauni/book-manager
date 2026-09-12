@@ -90,7 +90,7 @@
 
 ## 現在の実装状況
 
-Phase 1のMVP機能は実装済みです。PR #80では、MVP期間中のDocs整合、外部書誌情報キャッシュの生レスポンス保存、巻情報を含むタイトル生成、不要なLookupサービスの共有インスタンス削除を完了扱いにします。
+Phase 1のMVP機能は実装済みです。PR #80では、MVP期間中のDocs整合、外部書誌情報キャッシュの生レスポンス保存、巻情報を含むタイトル生成、不要なLookupサービスの共有インスタンス削除を完了扱いにしました。#60では、NDC9コードからの分類名候補生成を追加しました。
 
 ### PR #80で完了扱いにするIssue
 
@@ -99,9 +99,9 @@ Phase 1のMVP機能は実装済みです。PR #80では、MVP期間中のDocs整
 - [#65 Backend: append volume metadata to lookup titles](https://github.com/kitashimauni/book-manager/issues/65)
 - [#74 Backend: remove unused singleton lookup service exports](https://github.com/kitashimauni/book-manager/issues/74)
 
-### 保留しているIssue
+### #60で完了扱いにするIssue
 
-- [#60 Backend: derive classification tag suggestions from NDC codes](https://github.com/kitashimauni/book-manager/issues/60): NDCマスタの採用元と収録範囲が未確定のため、現時点では実装しません。
+- [#60 Backend: derive classification tag suggestions from NDC codes](https://github.com/kitashimauni/book-manager/issues/60): JLAのNDC9 Linked Dataを利用し、解決できた分類名だけを候補として返します。NDC8、NDC10、版不明のNDC、NDLC、未解決コードは対象外です。
 
 ## 初期Issue案
 
