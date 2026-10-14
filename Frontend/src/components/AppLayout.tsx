@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "./Link.js";
+import { resolveRoute } from "../router.js";
 
 type AppLayoutProps = {
   backendStatus: ReactNode;
@@ -16,6 +17,8 @@ const navigationItems = [
 ];
 
 export function AppLayout({ backendStatus, children, currentPath }: AppLayoutProps) {
+  const activeNavigationHref = getActiveNavigationHref(currentPath);
+
   return (
     <div className="app-shell">
       <aside className="sidebar" aria-label="メインナビゲーション">
@@ -29,7 +32,7 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
         <nav className="nav-list">
           {navigationItems.map((item) => (
             <Link
-              className={isActive(currentPath, item.href) ? "nav-link active" : "nav-link"}
+              className={activeNavigationHref === item.href ? "nav-link active" : "nav-link"}
               href={item.href}
               key={item.href}
             >
@@ -52,10 +55,22 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
   );
 }
 
-function isActive(currentPath: string, href: string) {
-  if (href === "/books") {
-    return currentPath === "/books" || currentPath.startsWith("/books/");
+export function getActiveNavigationHref(currentPath: string): string | null {
+  switch (resolveRoute(currentPath).name) {
+    case "books":
+      return "/books";
+    case "bookNew":
+      return "/books/new";
+    case "bookDetail":
+    case "bookEdit":
+      return "/books";
+    case "locations":
+      return "/locations";
+    case "classificationTags":
+      return "/classification-tags";
+    case "data":
+      return "/data";
+    case "notFound":
+      return null;
   }
-
-  return currentPath === href || currentPath.startsWith(`${href}/`);
 }
