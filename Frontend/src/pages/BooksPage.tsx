@@ -462,6 +462,7 @@ function BookCard({
           編集
         </Link>
         <button
+          aria-busy={isDeleting}
           className="button-danger"
           disabled={isDeleting}
           onClick={() => onDelete(book)}
@@ -527,6 +528,7 @@ function DenseBookList({
               編集
             </Link>
             <button
+              aria-busy={pendingDeleteId === book.id}
               className="button-danger"
               disabled={pendingDeleteId === book.id}
               onClick={() => onDelete(book)}

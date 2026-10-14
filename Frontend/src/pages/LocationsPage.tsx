@@ -238,7 +238,7 @@ export function LocationsPage() {
           ) : null}
 
           <div className="form-actions">
-            <button className="button-primary" disabled={isSaving} type="submit">
+            <button aria-busy={isSaving} className="button-primary" disabled={isSaving} type="submit">
               {isSaving ? "保存中..." : editingLocation ? "更新する" : "追加する"}
             </button>
             {editingLocation ? (
@@ -304,6 +304,7 @@ export function LocationsPage() {
                     </button>
                     {location.isActive ? (
                       <button
+                        aria-busy={pendingId === location.id}
                         className="button-danger"
                         disabled={pendingId === location.id}
                         onClick={() => void handleDisable(location)}
@@ -313,6 +314,7 @@ export function LocationsPage() {
                       </button>
                     ) : (
                       <button
+                        aria-busy={pendingId === location.id}
                         className="button-secondary"
                         disabled={pendingId === location.id}
                         onClick={() => void handleRestore(location)}

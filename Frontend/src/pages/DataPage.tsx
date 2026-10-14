@@ -232,7 +232,13 @@ export function DataPage() {
             <p>本、保管場所、分類タグ、タグの紐づけをJSONとして保存します。</p>
           </div>
           <p className="safety-note">Exportは元データを変更しない安全なバックアップ操作です。</p>
-          <button className="button-primary" disabled={isExporting} onClick={() => void handleExport()} type="button">
+          <button
+            aria-busy={isExporting}
+            className="button-primary"
+            disabled={isExporting}
+            onClick={() => void handleExport()}
+            type="button"
+          >
             {isExporting ? "Export中..." : "JSONをExport"}
           </button>
           {exportMessage ? <p className="inline-message">{exportMessage}</p> : null}
@@ -268,7 +274,13 @@ export function DataPage() {
             ) : null}
           </label>
 
-          <button className="button-secondary" disabled={isPreviewing} onClick={() => void handlePreview()} type="button">
+          <button
+            aria-busy={isPreviewing}
+            className="button-secondary"
+            disabled={isPreviewing}
+            onClick={() => void handlePreview()}
+            type="button"
+          >
             {isPreviewing ? "プレビュー中..." : "Importプレビュー"}
           </button>
         </section>
@@ -287,6 +299,7 @@ export function DataPage() {
                 <p className="preview-action-warning">競合 {preview.summary.conflict} 件。上書き対象を確認してください。</p>
               ) : null}
               <button
+                aria-busy={isImporting}
                 className="button-primary"
                 disabled={isImporting || preview.summary.error > 0}
                 onClick={() => void handleImport()}
@@ -328,6 +341,7 @@ export function DataPage() {
                   すべて無視
                 </button>
                 <button
+                  aria-busy={isImporting}
                   className="button-danger"
                   disabled={isImporting}
                   onClick={() => applyAllConflicts("overwrite")}

@@ -92,6 +92,7 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
                 編集
               </Link>
               <button
+                aria-busy={isDeleting}
                 className="button-danger"
                 disabled={isDeleting}
                 onClick={() => void handleDelete()}
