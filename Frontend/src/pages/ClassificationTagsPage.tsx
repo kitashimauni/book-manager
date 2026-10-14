@@ -242,7 +242,7 @@ export function ClassificationTagsPage() {
           ) : null}
 
           <div className="form-actions">
-            <button className="button-primary" disabled={isSaving} type="submit">
+            <button aria-busy={isSaving} className="button-primary" disabled={isSaving} type="submit">
               {isSaving ? "保存中..." : editingTag ? "更新する" : "追加する"}
             </button>
             {editingTag ? (
@@ -308,6 +308,7 @@ export function ClassificationTagsPage() {
                     </button>
                     {tag.isActive ? (
                       <button
+                        aria-busy={pendingId === tag.id}
                         className="button-danger"
                         disabled={pendingId === tag.id}
                         onClick={() => void handleDisable(tag)}
@@ -317,6 +318,7 @@ export function ClassificationTagsPage() {
                       </button>
                     ) : (
                       <button
+                        aria-busy={pendingId === tag.id}
                         className="button-secondary"
                         disabled={pendingId === tag.id}
                         onClick={() => void handleRestore(tag)}

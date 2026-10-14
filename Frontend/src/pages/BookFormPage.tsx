@@ -430,7 +430,13 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 </label>
               </div>
               <div className="lookup-panel">
-                <button className="button-secondary" disabled={isLookupLoading} onClick={() => void handleLookup()} type="button">
+                <button
+                  aria-busy={isLookupLoading}
+                  className="button-secondary"
+                  disabled={isLookupLoading}
+                  onClick={() => void handleLookup()}
+                  type="button"
+                >
                   {isLookupLoading ? "照会中..." : "外部APIで照会"}
                 </button>
                 <p>
@@ -554,7 +560,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
               <p className="subtle-text">外部APIの結果は保存前に編集できます。入力内容を確認してから確定してください。</p>
             </div>
             <div className="form-actions">
-              <button className="button-primary" disabled={isSaving} type="submit">
+              <button aria-busy={isSaving} className="button-primary" disabled={isSaving} type="submit">
                 {isSaving ? "保存中..." : isEdit ? "更新する" : "登録する"}
               </button>
               <button className="button-secondary" onClick={() => navigateTo("/books")} type="button">
