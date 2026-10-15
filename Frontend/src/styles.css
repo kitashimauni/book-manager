@@ -812,6 +812,8 @@ button[aria-busy="true"] {
 }
 
 .form-section .choice-pill {
+  display: inline-flex;
+  align-items: center;
   position: relative;
   max-width: 100%;
   min-width: 0;
