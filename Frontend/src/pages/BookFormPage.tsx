@@ -553,12 +553,10 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
 
           </aside>
 
-          <section className="form-section form-action-section">
-            <div>
-              <p className="eyebrow">Save</p>
-              <h3>内容を確認して保存</h3>
-              <p className="subtle-text">外部APIの結果は保存前に編集できます。入力内容を確認してから確定してください。</p>
-            </div>
+          <section
+            aria-label={isEdit ? "本の更新操作" : "本の登録操作"}
+            className="form-action-section"
+          >
             <div className="form-actions">
               <button aria-busy={isSaving} className="button-primary" disabled={isSaving} type="submit">
                 {isSaving ? "保存中..." : isEdit ? "更新する" : "登録する"}
