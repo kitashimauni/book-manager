@@ -288,10 +288,6 @@ export function BooksPage() {
           >
             条件をクリア
           </button>
-
-          <Link className="button-primary link-button" href="/books/new">
-            本を登録
-          </Link>
         </div>
 
         <div className="view-mode-switcher" aria-label="本一覧の表示形式">
