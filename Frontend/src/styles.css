@@ -1253,13 +1253,10 @@ button[aria-busy="true"] {
 
 .form-action-section {
   grid-column: 1 / -1;
-  position: sticky;
-  bottom: 16px;
-  z-index: 1;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 250, 240, 0.86)),
-    rgba(255, 250, 240, 0.8);
-  backdrop-filter: blur(12px);
+  display: grid;
+  gap: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
 }
 
 .registration-steps {
@@ -1731,10 +1728,6 @@ button[aria-busy="true"] {
   }
 
   .book-form-side {
-    position: static;
-  }
-
-  .form-action-section {
     position: static;
   }
 
