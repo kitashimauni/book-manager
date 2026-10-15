@@ -617,7 +617,15 @@ button[aria-busy="true"] {
 .field-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-rows: repeat(4, auto);
+  column-gap: 14px;
+  row-gap: 8px;
+}
+
+.field-pair > label {
+  min-width: 0;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
 }
 
 .lookup-panel {
@@ -753,6 +761,7 @@ button[aria-busy="true"] {
   font-size: 0.88rem;
   font-weight: 600;
   line-height: 1.7;
+  overflow-wrap: anywhere;
 }
 
 .field-error {
@@ -762,6 +771,7 @@ button[aria-busy="true"] {
   font-size: 0.88rem;
   font-weight: 800;
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .form-section input[aria-invalid="true"],
@@ -801,9 +811,51 @@ button[aria-busy="true"] {
   font-weight: 800;
 }
 
-.choice-pill input {
+.form-section .choice-pill {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  max-width: 100%;
+  min-width: 0;
+  justify-content: flex-start;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.form-section .choice-pill span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.form-section .choice-pill input {
   width: 16px;
   min-height: 16px;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+}
+
+.form-section .choice-pill.selected {
+  border-color: rgba(47, 58, 45, 0.76);
+  background: rgba(85, 107, 79, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(47, 58, 45, 0.18);
+}
+
+.form-section .choice-pill.selected::after {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: #2f3a2d;
+  content: "✓";
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 900;
+}
+
+.form-section .choice-pill:focus-within {
+  outline: 3px solid var(--cedar);
+  outline-offset: 3px;
 }
 
 .candidate-chip {
@@ -1708,6 +1760,16 @@ button[aria-busy="true"] {
   .detail-grid,
   .field-pair {
     grid-template-columns: 1fr;
+  }
+
+  .field-pair {
+    grid-template-rows: none;
+    row-gap: 14px;
+  }
+
+  .field-pair > label {
+    grid-row: auto;
+    grid-template-rows: none;
   }
 
   .book-results[data-view="dense"] .book-card-list {
