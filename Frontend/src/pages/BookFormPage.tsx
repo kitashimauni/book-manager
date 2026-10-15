@@ -507,7 +507,10 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
               ) : (
                 <div className="choice-list">
                   {activeTags.map((tag) => (
-                    <label className="choice-pill" key={tag.id}>
+                    <label
+                      className={form.classificationTagIds.includes(tag.id) ? "choice-pill selected" : "choice-pill"}
+                      key={tag.id}
+                    >
                       <input
                         checked={form.classificationTagIds.includes(tag.id)}
                         onChange={() => toggleTag(tag.id)}
