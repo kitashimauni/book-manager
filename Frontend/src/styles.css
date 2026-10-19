@@ -542,22 +542,6 @@ button[aria-busy="true"] {
   gap: 18px;
 }
 
-.book-form-main > .barcode-section {
-  order: 1;
-}
-
-.book-form-main > .bibliography-section {
-  order: 2;
-}
-
-.book-form-main > .management-section {
-  order: 3;
-}
-
-.book-form-main > .form-action-section {
-  order: 4;
-}
-
 .book-form-side {
   position: sticky;
   top: 32px;

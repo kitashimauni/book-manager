@@ -282,11 +282,96 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
       ) : (
         <form className="book-form-layout" onSubmit={handleSubmit}>
           <ol className="registration-steps">
-            <li>本のバーコードをスキャンまたは入力します。</li>
-            <li>外部APIで照会し、取得できない項目は手入力で補います。</li>
-            <li>保管場所と分類タグを設定して保存します。</li>
+            <li>本のバーコードまたはISBNを入力します。</li>
+            <li>必要に応じてカメラで読み取り、読み取り結果の入力先を選びます。</li>
+            <li>外部APIで照会し、書誌情報を確認・補正します。</li>
+            <li>保管場所、分類タグ、管理情報を設定して保存します。</li>
           </ol>
           <div className="book-form-main">
+            <section className="form-section barcode-section">
+              <div>
+                <p className="eyebrow">Barcodes</p>
+                <h3>バーコード</h3>
+              </div>
+              <div className="field-pair">
+                <label className={getFieldError(error, "bookBarcode") ? "has-error" : undefined}>
+                  <span>本のバーコード</span>
+                  <input
+                    aria-describedby={getFieldError(error, "bookBarcode") ? "bookBarcode-error" : undefined}
+                    aria-invalid={Boolean(getFieldError(error, "bookBarcode"))}
+                    id="bookBarcode"
+                    maxLength={200}
+                    onChange={(event) => setForm({ ...form, bookBarcode: event.target.value })}
+                    placeholder="書籍自体のISBN/JANなど"
+                    value={form.bookBarcode}
+                  />
+                  <p className="field-help">
+                    ISBN由来の書籍JANなど、本そのもののバーコードです。雑誌やISBN以外の値も保存できます。
+                  </p>
+                  {getFieldError(error, "bookBarcode") ? (
+                    <p className="field-error" id="bookBarcode-error">
+                      {getFieldError(error, "bookBarcode")}
+                    </p>
+                  ) : null}
+                </label>
+                <label className={getFieldError(error, "managementBarcode") ? "has-error" : undefined}>
+                  <span>管理用バーコード</span>
+                  <input
+                    aria-describedby={getFieldError(error, "managementBarcode") ? "managementBarcode-error" : undefined}
+                    aria-invalid={Boolean(getFieldError(error, "managementBarcode"))}
+                    id="managementBarcode"
+                    maxLength={200}
+                    onChange={(event) => setForm({ ...form, managementBarcode: event.target.value })}
+                    placeholder="独自に貼付する管理番号"
+                    value={form.managementBarcode}
+                  />
+                  <p className="field-help">
+                    利用者が貼付する蔵書管理用IDです。書誌情報の照会には使いません。
+                  </p>
+                  {getFieldError(error, "managementBarcode") ? (
+                    <p className="field-error" id="managementBarcode-error">
+                      {getFieldError(error, "managementBarcode")}
+                    </p>
+                  ) : null}
+                </label>
+              </div>
+              <label className={getFieldError(error, "isbn") ? "has-error" : undefined}>
+                <span>ISBN</span>
+                <input
+                  aria-describedby={getFieldError(error, "isbn") ? "isbn-error" : undefined}
+                  aria-invalid={Boolean(getFieldError(error, "isbn"))}
+                  id="isbn"
+                  maxLength={200}
+                  onChange={(event) => setForm({ ...form, isbn: event.target.value })}
+                  value={form.isbn}
+                />
+                <p className="field-help">
+                  ISBNは数字とXで構成される書籍識別子です。照会時は本のバーコードを優先し、未入力の場合にISBNを使います。
+                </p>
+                {getFieldError(error, "isbn") ? (
+                  <p className="field-error" id="isbn-error">
+                    {getFieldError(error, "isbn")}
+                  </p>
+                ) : null}
+              </label>
+              <CameraBarcodeScanner onScan={handleCameraScan} />
+              <div className="lookup-panel">
+                <button
+                  aria-busy={isLookupLoading}
+                  className="button-secondary"
+                  disabled={isLookupLoading}
+                  onClick={() => void handleLookup()}
+                  type="button"
+                >
+                  {isLookupLoading ? "照会中..." : "外部APIで照会"}
+                </button>
+                <p>
+                  本のバーコードを優先し、未入力の場合はISBNで照会します。取得できない場合は下の書誌情報を手入力できます。
+                </p>
+                {lookupMessage ? <p className="inline-message">{lookupMessage}</p> : null}
+              </div>
+            </section>
+
             <section className="form-section bibliography-section">
               <div>
                 <p className="eyebrow">Bibliography</p>
@@ -361,90 +446,6 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   ) : null}
                 </label>
               </div>
-              <label className={getFieldError(error, "isbn") ? "has-error" : undefined}>
-                <span>ISBN</span>
-                <input
-                  aria-describedby={getFieldError(error, "isbn") ? "isbn-error" : undefined}
-                  aria-invalid={Boolean(getFieldError(error, "isbn"))}
-                  id="isbn"
-                  maxLength={200}
-                  onChange={(event) => setForm({ ...form, isbn: event.target.value })}
-                  value={form.isbn}
-                />
-                <p className="field-help">
-                  ISBNは数字とXで構成される書籍識別子です。照会時は本のバーコードを優先し、未入力の場合にISBNを使います。
-                </p>
-                {getFieldError(error, "isbn") ? (
-                  <p className="field-error" id="isbn-error">
-                    {getFieldError(error, "isbn")}
-                  </p>
-                ) : null}
-              </label>
-            </section>
-
-            <section className="form-section barcode-section">
-              <div>
-                <p className="eyebrow">Barcodes</p>
-                <h3>バーコード</h3>
-              </div>
-              <div className="field-pair">
-                <label className={getFieldError(error, "bookBarcode") ? "has-error" : undefined}>
-                  <span>本のバーコード</span>
-                  <input
-                    aria-describedby={getFieldError(error, "bookBarcode") ? "bookBarcode-error" : undefined}
-                    aria-invalid={Boolean(getFieldError(error, "bookBarcode"))}
-                    id="bookBarcode"
-                    maxLength={200}
-                    onChange={(event) => setForm({ ...form, bookBarcode: event.target.value })}
-                    placeholder="書籍自体のISBN/JANなど"
-                    value={form.bookBarcode}
-                  />
-                  <p className="field-help">
-                    ISBN由来の書籍JANなど、本そのもののバーコードです。雑誌やISBN以外の値も保存できます。
-                  </p>
-                  {getFieldError(error, "bookBarcode") ? (
-                    <p className="field-error" id="bookBarcode-error">
-                      {getFieldError(error, "bookBarcode")}
-                    </p>
-                  ) : null}
-                </label>
-                <label className={getFieldError(error, "managementBarcode") ? "has-error" : undefined}>
-                  <span>管理用バーコード</span>
-                  <input
-                    aria-describedby={getFieldError(error, "managementBarcode") ? "managementBarcode-error" : undefined}
-                    aria-invalid={Boolean(getFieldError(error, "managementBarcode"))}
-                    id="managementBarcode"
-                    maxLength={200}
-                    onChange={(event) => setForm({ ...form, managementBarcode: event.target.value })}
-                    placeholder="独自に貼付する管理番号"
-                    value={form.managementBarcode}
-                  />
-                  <p className="field-help">
-                    利用者が貼付する蔵書管理用IDです。書誌情報の照会には使いません。
-                  </p>
-                  {getFieldError(error, "managementBarcode") ? (
-                    <p className="field-error" id="managementBarcode-error">
-                      {getFieldError(error, "managementBarcode")}
-                    </p>
-                  ) : null}
-                </label>
-              </div>
-              <div className="lookup-panel">
-                <button
-                  aria-busy={isLookupLoading}
-                  className="button-secondary"
-                  disabled={isLookupLoading}
-                  onClick={() => void handleLookup()}
-                  type="button"
-                >
-                  {isLookupLoading ? "照会中..." : "外部APIで照会"}
-                </button>
-                <p>
-                  本のバーコードを優先し、未入力の場合はISBNで照会します。取得できない場合は下の書誌情報を手入力できます。
-                </p>
-                {lookupMessage ? <p className="inline-message">{lookupMessage}</p> : null}
-              </div>
-              <CameraBarcodeScanner onScan={handleCameraScan} />
             </section>
 
             <section className="form-section management-section">
