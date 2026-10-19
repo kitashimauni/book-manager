@@ -239,13 +239,18 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
                 <p className="eyebrow">Camera Scan</p>
                 <h4 id="camera-scanner-title">カメラで読み取る</h4>
               </div>
-              <button className="button-secondary" onClick={closeScanner} type="button">
-                閉じる
+              <button
+                aria-label="カメラ読み取りをキャンセルして閉じる"
+                className="button-secondary"
+                onClick={closeScanner}
+                type="button"
+              >
+                キャンセル
               </button>
             </div>
 
             <p className="subtle-text" id="camera-scanner-description">
-              読み取り結果の入力先を選び、バーコードを枠内に合わせてください。カメラを使わない場合は手入力やキーボード型バーコードリーダーも利用できます。
+              読み取り結果の入力先を選び、バーコードを枠内に合わせてください。
             </p>
 
             <fieldset className="scanner-targets">
@@ -285,12 +290,6 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
                 {errorMessage}
               </p>
             ) : null}
-
-            <div className="scanner-dialog-actions">
-              <button className="button-secondary" onClick={closeScanner} type="button">
-                キャンセル
-              </button>
-            </div>
           </div>
         </div>,
         document.body
