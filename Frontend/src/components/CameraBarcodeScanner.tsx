@@ -1,5 +1,7 @@
-import type { BarcodeFormat as ZxingBarcodeFormat, IScannerControls } from "@zxing/browser";
+import { createPortal } from "react-dom";
+import type { KeyboardEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import type { BarcodeFormat as ZxingBarcodeFormat, IScannerControls } from "@zxing/browser";
 
 export type BarcodeScanTarget = "bookBarcode" | "managementBarcode";
 
@@ -7,124 +9,326 @@ type CameraBarcodeScannerProps = {
   onScan: (value: string, target: BarcodeScanTarget) => void;
 };
 
+const FOCUSABLE_ELEMENT_SELECTOR =
+  'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+
 export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
   const controlsRef = useRef<IScannerControls | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const isMountedRef = useRef(false);
+  const scanSessionRef = useRef(0);
   const targetRef = useRef<BarcodeScanTarget>("bookBarcode");
+  const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [lastScannedValue, setLastScannedValue] = useState<string | null>(null);
   const [target, setTarget] = useState<BarcodeScanTarget>("bookBarcode");
 
   useEffect(() => {
-    return () => stopScanner();
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      stopScanner();
+    };
   }, []);
 
   useEffect(() => {
     targetRef.current = target;
   }, [target]);
 
-  async function startScanner() {
-    setErrorMessage(null);
-    setLastScannedValue(null);
-
-    if (!window.isSecureContext) {
-      setErrorMessage("カメラ読み取りにはHTTPSまたはlocalhostなどの安全なコンテキストが必要です。");
+  useEffect(() => {
+    if (!isOpen) {
       return;
     }
 
-    if (!navigator.mediaDevices?.getUserMedia || !videoRef.current) {
-      setErrorMessage("このブラウザではカメラ入力を利用できません。手入力またはキーボード型リーダーを使ってください。");
+    const previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.focus();
+    void startScanner();
+
+    return () => {
+      stopScanner();
+      document.body.style.overflow = previousOverflow;
+
+      if (previousActiveElement?.isConnected) {
+        previousActiveElement.focus();
+      } else {
+        triggerButtonRef.current?.focus();
+      }
+    };
+  }, [isOpen]);
+
+  function openScanner() {
+    setErrorMessage(null);
+    setLastScannedValue(null);
+    setIsOpen(true);
+  }
+
+  function closeScanner() {
+    stopScanner();
+    setIsOpen(false);
+  }
+
+  function stopScanner() {
+    scanSessionRef.current += 1;
+    controlsRef.current?.stop();
+    controlsRef.current = null;
+
+    const mediaSource = videoRef.current?.srcObject;
+    if (mediaSource && typeof mediaSource === "object" && "getTracks" in mediaSource) {
+      for (const track of (mediaSource as MediaStream).getTracks()) {
+        track.stop();
+      }
+    }
+
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+    }
+
+    if (isMountedRef.current) {
+      setIsScanning(false);
+      setIsStarting(false);
+    }
+  }
+
+  async function startScanner() {
+    const session = scanSessionRef.current + 1;
+    scanSessionRef.current = session;
+    setErrorMessage(null);
+    setLastScannedValue(null);
+    setIsStarting(true);
+    setIsScanning(false);
+
+    if (!window.isSecureContext) {
+      failToStart(session, "カメラ読み取りにはHTTPSまたはlocalhostなどの安全なコンテキストが必要です。");
+      return;
+    }
+
+    const videoElement = videoRef.current;
+    if (!navigator.mediaDevices?.getUserMedia || !videoElement) {
+      failToStart(session, "このブラウザではカメラ入力を利用できません。手入力またはキーボード型リーダーを使ってください。");
       return;
     }
 
     try {
       const reader = await createCodeReader();
-      setIsScanning(true);
+      if (!isSessionActive(session)) {
+        return;
+      }
 
-      controlsRef.current = await reader.decodeFromConstraints(
+      const controls = await reader.decodeFromConstraints(
         {
           audio: false,
           video: {
             facingMode: { ideal: "environment" }
           }
         },
-        videoRef.current,
+        videoElement,
         (result) => {
-          const value = result?.getText().trim();
-
-          if (value) {
-            setLastScannedValue(value);
-            onScan(value, targetRef.current);
-            stopScanner();
+          if (!isSessionActive(session)) {
+            return;
           }
+
+          const value = result?.getText().trim();
+          if (!value) {
+            return;
+          }
+
+          setLastScannedValue(value);
+          onScan(value, targetRef.current);
+          stopScanner();
+          setIsOpen(false);
         }
       );
+
+      if (!isSessionActive(session)) {
+        controls.stop();
+        return;
+      }
+
+      controlsRef.current = controls;
+      setIsStarting(false);
+      setIsScanning(true);
     } catch (error) {
+      if (!isSessionActive(session)) {
+        return;
+      }
+
       stopScanner();
       setErrorMessage(formatCameraError(error));
     }
   }
 
-  function stopScanner() {
-    controlsRef.current?.stop();
-    controlsRef.current = null;
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
+  function failToStart(session: number, message: string) {
+    if (!isSessionActive(session)) {
+      return;
     }
 
-    setIsScanning(false);
+    stopScanner();
+    setErrorMessage(message);
   }
 
+  function isSessionActive(session: number) {
+    return isMountedRef.current && isOpen && scanSessionRef.current === session;
+  }
+
+  function handleDialogKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeScanner();
+      return;
+    }
+
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return;
+    }
+
+    const focusableElements = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_ELEMENT_SELECTOR));
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+
+    if (event.shiftKey && (activeElement === firstElement || activeElement === dialog)) {
+      event.preventDefault();
+      lastElement.focus();
+    } else if (!event.shiftKey && activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
+
+  const modal = isOpen && typeof document !== "undefined"
+    ? createPortal(
+        <div
+          className="scanner-modal"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeScanner();
+            }
+          }}
+        >
+          <div
+            aria-describedby="camera-scanner-description"
+            aria-labelledby="camera-scanner-title"
+            aria-modal="true"
+            className="scanner-dialog"
+            onKeyDown={handleDialogKeyDown}
+            ref={dialogRef}
+            role="dialog"
+            tabIndex={-1}
+          >
+            <div className="scanner-heading">
+              <div>
+                <p className="eyebrow">Camera Scan</p>
+                <h4 id="camera-scanner-title">カメラで読み取る</h4>
+              </div>
+              <button
+                aria-label="カメラ読み取りをキャンセルして閉じる"
+                className="button-secondary"
+                onClick={closeScanner}
+                type="button"
+              >
+                キャンセル
+              </button>
+            </div>
+
+            <p className="subtle-text" id="camera-scanner-description">
+              読み取り結果の入力先を選び、バーコードを枠内に合わせてください。
+            </p>
+
+            <fieldset className="scanner-targets">
+              <legend>読み取り結果の入力先</legend>
+              <label>
+                <input
+                  checked={target === "bookBarcode"}
+                  onChange={() => {
+                    targetRef.current = "bookBarcode";
+                    setTarget("bookBarcode");
+                  }}
+                  type="radio"
+                />
+                <span>本のバーコードへ入力</span>
+              </label>
+              <label>
+                <input
+                  checked={target === "managementBarcode"}
+                  onChange={() => {
+                    targetRef.current = "managementBarcode";
+                    setTarget("managementBarcode");
+                  }}
+                  type="radio"
+                />
+                <span>管理用バーコードへ入力</span>
+              </label>
+            </fieldset>
+
+            <div className={isScanning || isStarting ? "scanner-preview active" : "scanner-preview"}>
+              <video aria-label="バーコードカメラプレビュー" autoPlay muted playsInline ref={videoRef} />
+              <span aria-hidden="true" className="scanner-reticle" />
+              {isStarting ? <span className="scanner-preview-status">カメラを起動しています…</span> : null}
+            </div>
+
+            {errorMessage ? (
+              <p className="scanner-error" role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
+          </div>
+        </div>,
+        document.body
+      )
+    : null;
+
   return (
-    <section className="camera-scanner" aria-label="カメラバーコード読み取り">
+    <section aria-label="カメラバーコード読み取り" className="camera-scanner">
       <div className="scanner-heading">
         <div>
           <p className="eyebrow">Camera Scan</p>
           <h4>カメラで読み取る</h4>
         </div>
-        {isScanning ? (
-          <button className="button-secondary" onClick={stopScanner} type="button">
-            停止
-          </button>
-        ) : (
-          <button className="button-primary" onClick={() => void startScanner()} type="button">
-            カメラを起動
-          </button>
-        )}
-      </div>
-
-      <div className="scanner-targets" aria-label="読み取り結果の入力先">
-        <label>
-          <input
-            checked={target === "bookBarcode"}
-            onChange={() => setTarget("bookBarcode")}
-            type="radio"
-          />
-          <span>本のバーコードへ入力</span>
-        </label>
-        <label>
-          <input
-            checked={target === "managementBarcode"}
-            onChange={() => setTarget("managementBarcode")}
-            type="radio"
-          />
-          <span>管理用バーコードへ入力</span>
-        </label>
-      </div>
-
-      <div className={isScanning ? "scanner-preview active" : "scanner-preview"}>
-        <video muted playsInline ref={videoRef} />
-        <span className="scanner-reticle" />
+        <button
+          aria-haspopup="dialog"
+          className="button-primary"
+          onClick={openScanner}
+          ref={triggerButtonRef}
+          type="button"
+        >
+          カメラで読み取る
+        </button>
       </div>
 
       <p className="subtle-text">
-        対応ブラウザのHTTPSまたはlocalhost環境で利用できます。手入力やキーボード型バーコードリーダーもそのまま使えます。
+        必要なときだけカメラを起動します。HTTPSまたはlocalhost環境で利用でき、手入力やキーボード型バーコードリーダーもそのまま使えます。
       </p>
 
-      {lastScannedValue ? <p className="inline-message">読み取り結果: {lastScannedValue}</p> : null}
-      {errorMessage ? <p className="scanner-error">{errorMessage}</p> : null}
+      {lastScannedValue ? (
+        <p className="inline-message" role="status">
+          読み取り結果: {lastScannedValue}
+        </p>
+      ) : null}
+      {!isOpen && errorMessage ? (
+        <p className="scanner-error" role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
+      {modal}
     </section>
   );
 }
