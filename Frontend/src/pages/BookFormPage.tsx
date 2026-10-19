@@ -283,7 +283,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
         <form className="book-form-layout" onSubmit={handleSubmit}>
           <ol className="registration-steps">
             <li>本のバーコードまたはISBNを入力します。</li>
-            <li>必要に応じてカメラで読み取り、照会対象を選びます。</li>
+            <li>必要に応じてカメラで読み取り、読み取り結果の入力先を選びます。</li>
             <li>外部APIで照会し、書誌情報を確認・補正します。</li>
             <li>保管場所、分類タグ、管理情報を設定して保存します。</li>
           </ol>
