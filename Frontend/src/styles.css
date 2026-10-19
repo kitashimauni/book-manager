@@ -569,6 +569,102 @@ button[aria-busy="true"] {
   font-weight: 800;
 }
 
+.location-field {
+  display: grid;
+  gap: 8px;
+  color: #3d493b;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.location-field.has-error {
+  color: #8d3f2b;
+}
+
+.field-label-row,
+.inline-location-heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.field-label-row label {
+  color: inherit;
+  font: inherit;
+}
+
+.location-add-button {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 0.88rem;
+}
+
+.inline-location-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(85, 107, 79, 0.28);
+  border-radius: 18px;
+  background: rgba(85, 107, 79, 0.08);
+}
+
+.inline-location-heading {
+  align-items: flex-start;
+}
+
+.inline-location-heading h4 {
+  margin: 0;
+}
+
+.inline-location-panel label {
+  display: grid;
+  gap: 8px;
+  color: #3d493b;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+}
+
+.inline-location-panel input,
+.inline-location-panel textarea {
+  width: 100%;
+  border: 1px solid rgba(65, 55, 39, 0.18);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 600;
+}
+
+.inline-location-panel input {
+  min-height: 46px;
+  padding: 0 14px;
+}
+
+.inline-location-panel textarea {
+  min-height: 96px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.inline-location-panel input[aria-invalid="true"] {
+  border-color: rgba(165, 72, 50, 0.65);
+  box-shadow: 0 0 0 3px rgba(165, 72, 50, 0.1);
+}
+
+.inline-location-error {
+  color: #8d3f2b;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.inline-location-error p {
+  margin: 0;
+}
+
 .form-section label.has-error,
 .management-form label.has-error {
   color: #8d3f2b;

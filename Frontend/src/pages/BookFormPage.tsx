@@ -1,7 +1,8 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import {
   createBook,
   createClassificationTag,
+  createLocation,
   getBook,
   getClassificationTags,
   getLocations,
@@ -63,6 +64,16 @@ const emptyForm: BookFormState = {
   title: ""
 };
 
+type InlineLocationFormState = {
+  description: string;
+  name: string;
+};
+
+const emptyInlineLocationForm: InlineLocationFormState = {
+  description: "",
+  name: ""
+};
+
 export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   const isEdit = mode === "edit";
   const [candidateSource, setCandidateSource] = useState<ClassificationTagSource>("open_library");
@@ -71,10 +82,18 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   const [form, setForm] = useState<BookFormState>(emptyForm);
   const [isLoading, setIsLoading] = useState(isEdit);
   const [isLookupLoading, setIsLookupLoading] = useState(false);
+  const [isInlineLocationOpen, setIsInlineLocationOpen] = useState(false);
+  const [isInlineLocationSaving, setIsInlineLocationSaving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [inlineLocationError, setInlineLocationError] = useState<ApiError | null>(null);
+  const [inlineLocationForm, setInlineLocationForm] = useState<InlineLocationFormState>(emptyInlineLocationForm);
+  const [inlineLocationMessage, setInlineLocationMessage] = useState<string | null>(null);
   const [locations, setLocations] = useState<Location[]>([]);
   const [lookupMessage, setLookupMessage] = useState<string | null>(null);
   const [tags, setTags] = useState<ClassificationTag[]>([]);
+  const inlineLocationNameInputRef = useRef<HTMLInputElement | null>(null);
+  const inlineLocationSavingRef = useRef(false);
+  const inlineLocationTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -118,6 +137,18 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
       isMounted = false;
     };
   }, [bookId, isEdit]);
+
+  useEffect(() => {
+    if (isInlineLocationOpen) {
+      inlineLocationNameInputRef.current?.focus();
+    }
+  }, [isInlineLocationOpen]);
+
+  useEffect(() => {
+    if (isInlineLocationOpen && inlineLocationError && !isInlineLocationSaving) {
+      inlineLocationNameInputRef.current?.focus();
+    }
+  }, [inlineLocationError, isInlineLocationOpen, isInlineLocationSaving]);
 
   async function handleLookup() {
     const lookupValue = form.bookBarcode.trim() || form.isbn.trim();
@@ -170,6 +201,15 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isInlineLocationOpen || inlineLocationSavingRef.current) {
+      setInlineLocationError({
+        message: "保管場所の追加を保存またはキャンセルしてから、本を保存してください。",
+        status: 400
+      });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -183,6 +223,80 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
       focusFirstFieldError(apiError);
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  function openInlineLocationPanel() {
+    if (inlineLocationSavingRef.current) {
+      return;
+    }
+
+    setInlineLocationForm(emptyInlineLocationForm);
+    setInlineLocationError(null);
+    setInlineLocationMessage(null);
+    setIsInlineLocationOpen(true);
+  }
+
+  function closeInlineLocationPanel() {
+    if (inlineLocationSavingRef.current) {
+      return;
+    }
+
+    setIsInlineLocationOpen(false);
+    setInlineLocationForm(emptyInlineLocationForm);
+    setInlineLocationError(null);
+    inlineLocationTriggerRef.current?.focus();
+  }
+
+  async function handleInlineLocationSubmit() {
+    if (inlineLocationSavingRef.current) {
+      return;
+    }
+
+    const name = inlineLocationForm.name.trim();
+
+    if (!name) {
+      setInlineLocationError({
+        errors: [{ field: "name", message: "保管場所名を入力してください。" }],
+        message: "入力内容を確認してください。",
+        status: 400
+      });
+      inlineLocationNameInputRef.current?.focus();
+      return;
+    }
+
+    if (name.length > 200) {
+      setInlineLocationError({
+        errors: [{ field: "name", message: "保管場所名は200文字以内で入力してください。" }],
+        message: "入力内容を確認してください。",
+        status: 400
+      });
+      inlineLocationNameInputRef.current?.focus();
+      return;
+    }
+
+    inlineLocationSavingRef.current = true;
+    setIsInlineLocationSaving(true);
+    setInlineLocationError(null);
+
+    try {
+      const createdLocation = await createLocation({
+        description: inlineLocationForm.description.trim() || undefined,
+        name,
+        sortOrder: 0
+      });
+
+      setLocations((current) => [...current, createdLocation].sort(compareLocations));
+      setForm((current) => ({ ...current, locationId: createdLocation.id }));
+      setInlineLocationForm(emptyInlineLocationForm);
+      setInlineLocationMessage(`保管場所「${createdLocation.name}」を追加し、この本に設定しました。`);
+      setIsInlineLocationOpen(false);
+      inlineLocationTriggerRef.current?.focus();
+    } catch (locationSaveError) {
+      setInlineLocationError(locationSaveError as ApiError);
+    } finally {
+      inlineLocationSavingRef.current = false;
+      setIsInlineLocationSaving(false);
     }
   }
 
@@ -246,6 +360,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
 
   const activeLocations = locations.filter((location) => location.isActive || location.id === form.locationId);
   const activeTags = tags.filter((tag) => tag.isActive || form.classificationTagIds.includes(tag.id));
+  const isBookSaveBlocked = isInlineLocationOpen || isInlineLocationSaving;
 
   return (
     <section className="page-panel">
@@ -453,8 +568,19 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <p className="eyebrow">Management</p>
                 <h3>管理情報</h3>
               </div>
-              <label className={getFieldError(error, "locationId") ? "has-error" : undefined}>
-                <span>保管場所</span>
+              <div className={getFieldError(error, "locationId") ? "location-field has-error" : "location-field"}>
+                <div className="field-label-row">
+                  <label htmlFor="locationId">保管場所</label>
+                  <button
+                    className="button-secondary location-add-button"
+                    disabled={isInlineLocationSaving}
+                    onClick={openInlineLocationPanel}
+                    ref={inlineLocationTriggerRef}
+                    type="button"
+                  >
+                    ＋保管場所を追加
+                  </button>
+                </div>
                 <select
                   aria-describedby={getFieldError(error, "locationId") ? "locationId-error" : undefined}
                   aria-invalid={Boolean(getFieldError(error, "locationId"))}
@@ -475,7 +601,111 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     {getFieldError(error, "locationId")}
                   </p>
                 ) : null}
-              </label>
+                {inlineLocationMessage ? (
+                  <p aria-live="polite" className="inline-message">
+                    {inlineLocationMessage}
+                  </p>
+                ) : null}
+                {isInlineLocationOpen ? (
+                  <section
+                    aria-labelledby="inline-location-title"
+                    className="inline-location-panel"
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") {
+                        event.preventDefault();
+                        closeInlineLocationPanel();
+                      }
+                    }}
+                    role="dialog"
+                  >
+                    <div className="inline-location-heading">
+                      <div>
+                        <p className="eyebrow">New Location</p>
+                        <h4 id="inline-location-title">保管場所を追加</h4>
+                      </div>
+                      <button
+                        className="button-secondary"
+                        disabled={isInlineLocationSaving}
+                        onClick={closeInlineLocationPanel}
+                        type="button"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                    <p className="subtle-text">
+                      保存した保管場所は本の登録とは独立して保存されます。本の登録をキャンセルしても削除されません。
+                    </p>
+                    {inlineLocationError ? (
+                      <div aria-live="assertive" className="inline-location-error" role="alert">
+                        {inlineLocationError.errors?.length ? (
+                          <p>入力内容を確認してください。</p>
+                        ) : (
+                          <p>{inlineLocationError.message}</p>
+                        )}
+                      </div>
+                    ) : null}
+                    <label>
+                      <span>保管場所名</span>
+                      <input
+                        aria-describedby={
+                          getFieldError(inlineLocationError, "name") ? "inline-location-name-error" : undefined
+                        }
+                        aria-invalid={Boolean(getFieldError(inlineLocationError, "name"))}
+                        aria-required="true"
+                        id="inline-location-name"
+                        maxLength={200}
+                        onChange={(event) =>
+                          setInlineLocationForm((current) => ({ ...current, name: event.target.value }))
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            void handleInlineLocationSubmit();
+                          }
+                        }}
+                        disabled={isInlineLocationSaving}
+                        ref={inlineLocationNameInputRef}
+                        value={inlineLocationForm.name}
+                      />
+                      {getFieldError(inlineLocationError, "name") ? (
+                        <p className="field-error" id="inline-location-name-error">
+                          {getFieldError(inlineLocationError, "name")}
+                        </p>
+                      ) : null}
+                    </label>
+                    <label>
+                      <span>説明（任意）</span>
+                      <textarea
+                        maxLength={1000}
+                        onChange={(event) =>
+                          setInlineLocationForm((current) => ({ ...current, description: event.target.value }))
+                        }
+                        disabled={isInlineLocationSaving}
+                        value={inlineLocationForm.description}
+                      />
+                    </label>
+                    <div className="form-actions">
+                      <button
+                        aria-busy={isInlineLocationSaving}
+                        className="button-primary"
+                        disabled={isInlineLocationSaving}
+                        onClick={() => void handleInlineLocationSubmit()}
+                        type="button"
+                      >
+                        {isInlineLocationSaving ? "追加中..." : "保管場所を保存"}
+                      </button>
+                      <button
+                        className="button-secondary"
+                        disabled={isInlineLocationSaving}
+                        onClick={closeInlineLocationPanel}
+                        type="button"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                  </section>
+                ) : null}
+              </div>
               <label className={getFieldError(error, "managementMemo") ? "has-error" : undefined}>
                 <span>管理メモ</span>
                 <textarea
@@ -562,10 +792,28 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
             className="form-action-section"
           >
             <div className="form-actions">
-              <button aria-busy={isSaving} className="button-primary" disabled={isSaving} type="submit">
-                {isSaving ? "保存中..." : isEdit ? "更新する" : "登録する"}
+              <button
+                aria-busy={isSaving}
+                className="button-primary"
+                disabled={isSaving || isBookSaveBlocked}
+                type="submit"
+              >
+                {isSaving
+                  ? "保存中..."
+                  : isInlineLocationSaving
+                    ? "保管場所を追加中..."
+                    : isInlineLocationOpen
+                      ? "保管場所を確認中..."
+                      : isEdit
+                        ? "更新する"
+                        : "登録する"}
               </button>
-              <button className="button-secondary" onClick={() => navigateTo("/books")} type="button">
+              <button
+                className="button-secondary"
+                disabled={isInlineLocationSaving}
+                onClick={() => navigateTo("/books")}
+                type="button"
+              >
                 一覧へ戻る
               </button>
             </div>
@@ -612,6 +860,10 @@ function formToPayload(form: BookFormState): BookFormRequest {
 
 function emptyToNull(value: string) {
   return value.trim() || null;
+}
+
+function compareLocations(left: Location, right: Location) {
+  return left.sortOrder - right.sortOrder || left.name.localeCompare(right.name);
 }
 
 function formatLookupSource(source: BookLookupResult["externalSource"]) {
