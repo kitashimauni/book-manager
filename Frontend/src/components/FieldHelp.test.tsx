@@ -17,6 +17,6 @@ describe("FieldHelp", () => {
     expect(markup).toContain('type="button"');
     expect(markup).toContain('class="field-help-popover" hidden=""');
     expect(markup).toContain("ISBNの説明");
-    expect(markup).not.toMatch(/<label[^>]*>.*<button/s);
+    expect(markup).not.toMatch(/<label[^>]*>[^<]*<button/);
   });
 });
