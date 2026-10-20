@@ -621,7 +621,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     value={getBookIdentifierInputValue(form)}
                   />
                   <p className="field-help">
-                    有効なISBN-10はISBNとして、有効なISBN-13は本のバーコードとISBNとして保存します。その他の値は本のバーコードとして保存します。
+                    有効なISBN-10はISBNとして、有効なISBN-13は本のバーコードとISBNとして保存します。その他の値は本のバーコードとして保存します。外部APIで照会するときは、個別編集欄に有効なISBNがあればそれを優先します。
                   </p>
                   {primaryIdentifierError ? (
                     <p className="field-error" id="bookIdentifier-error">
@@ -705,7 +705,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   {isLookupLoading ? "照会中..." : "外部APIで照会"}
                 </button>
                 <p>
-                  入力された値からISBNとして解釈できる値を使って照会します。取得できない場合は下の書誌情報を手入力できます。
+                  入力された値からISBNとして解釈できる値を使って照会します。個別編集欄に有効なISBNがある場合は、そのISBNを優先します。取得できない場合は下の書誌情報を手入力できます。
                 </p>
                 {lookupMessage ? <p className="inline-message">{lookupMessage}</p> : null}
               </div>

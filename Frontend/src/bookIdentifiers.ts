@@ -80,7 +80,7 @@ function isValidIsbn10(isbn: string) {
 }
 
 function isValidIsbn13(isbn: string) {
-  if (!/^\d{13}$/.test(isbn)) {
+  if (!/^(?:978|979)\d{10}$/.test(isbn)) {
     return false;
   }
 

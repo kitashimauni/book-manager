@@ -21,9 +21,9 @@ describe("interpretBookIdentifier", () => {
     });
   });
 
-  it("keeps a non-ISBN barcode out of the ISBN field", () => {
-    expect(interpretBookIdentifier("4901234567890")).toEqual({
-      bookBarcode: "4901234567890",
+  it("keeps a valid non-ISBN JAN out of the ISBN field", () => {
+    expect(interpretBookIdentifier("4901234567894")).toEqual({
+      bookBarcode: "4901234567894",
       isbn: ""
     });
   });
