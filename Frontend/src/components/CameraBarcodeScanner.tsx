@@ -264,7 +264,7 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
                   }}
                   type="radio"
                 />
-                <span>本のバーコードへ入力</span>
+                <span>本のバーコード / ISBNへ入力</span>
               </label>
               <label>
                 <input

@@ -27,6 +27,12 @@ import {
   getFieldError,
   getFormErrorSummary
 } from "../formErrors.js";
+import {
+  getBookIdentifierInputValue,
+  getBookLookupValue,
+  interpretBookIdentifier,
+  mergeLookupIdentifiers
+} from "../bookIdentifiers.js";
 import { navigateTo } from "../router.js";
 
 type BookFormPageProps = {
@@ -189,7 +195,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   }, [inlineTagMessage, isInlineTagOpen, isInlineTagSaving]);
 
   async function handleLookup() {
-    const lookupValue = form.bookBarcode.trim() || form.isbn.trim();
+    const lookupValue = getBookLookupValue(form);
 
     if (!lookupValue) {
       setLookupMessage("本のバーコードまたはISBNを入力してから照会してください。");
@@ -227,13 +233,12 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
     setForm((current) => ({
       ...current,
       author: result.author ?? current.author,
-      bookBarcode: current.bookBarcode || lookupValue,
       externalId: result.externalId ?? current.externalId,
       externalSource: result.externalSource,
-      isbn: result.isbn ?? current.isbn,
       publishedDate: result.publishedDate ?? current.publishedDate,
       publisher: result.publisher ?? current.publisher,
-      title: result.title || current.title
+      title: result.title || current.title,
+      ...mergeLookupIdentifiers(current, lookupValue, result.isbn)
     }));
   }
 
@@ -270,7 +275,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
     } catch (saveError) {
       const apiError = saveError as ApiError;
       setError(apiError);
-      focusFirstFieldError(apiError);
+      focusFirstFieldError(apiError, "bookBarcode");
     } finally {
       setIsSaving(false);
     }
@@ -500,20 +505,37 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   }
 
   function handleCameraScan(value: string, target: BarcodeScanTarget) {
+    if (target === "bookBarcode") {
+      const interpreted = interpretBookIdentifier(value);
+
+      setForm((current) => ({
+        ...current,
+        ...interpreted
+      }));
+      setLookupMessage(
+        interpreted.isbn
+          ? "カメラで読み取った値をISBNとして入力しました。必要に応じて外部APIで照会できます。"
+          : "カメラで読み取った値を本のバーコードに入力しました。必要に応じて書誌情報を手入力できます。"
+      );
+      return;
+    }
+
     setForm((current) => ({
       ...current,
-      [target]: value
+      managementBarcode: value
     }));
-
-    setLookupMessage(
-      target === "bookBarcode"
-        ? "カメラで読み取った値を本のバーコードに入力しました。必要に応じて外部APIで照会できます。"
-        : "カメラで読み取った値を管理用バーコードに入力しました。"
-    );
+    setLookupMessage("カメラで読み取った値を管理用バーコードに入力しました。");
   }
 
   const activeLocations = locations.filter((location) => location.isActive || location.id === form.locationId);
   const activeTags = tags.filter((tag) => tag.isActive || form.classificationTagIds.includes(tag.id));
+  const bookBarcodeError = getFieldError(error, "bookBarcode");
+  const isbnError = getFieldError(error, "isbn");
+  const primaryIdentifierError = bookBarcodeError ?? isbnError;
+  const hasDistinctIdentifierValues =
+    Boolean(form.bookBarcode.trim()) &&
+    Boolean(form.isbn.trim()) &&
+    form.bookBarcode.trim() !== form.isbn.trim();
   const isBookSaveBlocked =
     isInlineLocationOpen ||
     isInlineLocationSaving ||
@@ -539,7 +561,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
         <p className="eyebrow">{isEdit ? "Edit Book" : "New Book"}</p>
         <h2>{isEdit ? "本編集" : "本登録"}</h2>
         <p>
-          本のバーコードと管理用バーコードを分けて扱います。外部API照会は入力補助で、取得した内容は保存前に確認できます。
+          本のバーコード / ISBNと管理用バーコードを分けて扱います。外部API照会は入力補助で、取得した内容は保存前に確認できます。
         </p>
       </div>
 
@@ -550,7 +572,9 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
               <ul className="field-error-list">
                 {error.errors.map((item) => (
                   <li key={`${item.field}:${item.message}`}>
-                    <a href={`#${item.field}`}>{formatFieldLabel(item.field)}</a>
+                    <a href={`#${item.field === "isbn" ? "bookBarcode" : item.field}`}>
+                      {formatFieldLabel(item.field)}
+                    </a>
                     <span>{item.message}</span>
                   </li>
                 ))}
@@ -568,7 +592,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
       ) : (
         <form className="book-form-layout" onSubmit={handleSubmit}>
           <ol className="registration-steps">
-            <li>本のバーコードまたはISBNを入力します。</li>
+            <li>本のバーコード / ISBNを入力します。</li>
             <li>必要に応じてカメラで読み取り、読み取り結果の入力先を選びます。</li>
             <li>外部APIで照会し、書誌情報を確認・補正します。</li>
             <li>保管場所、分類タグ、管理情報を設定して保存します。</li>
@@ -580,23 +604,28 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <h3>バーコード</h3>
               </div>
               <div className="field-pair">
-                <label className={getFieldError(error, "bookBarcode") ? "has-error" : undefined}>
-                  <span>本のバーコード</span>
+                <label className={primaryIdentifierError ? "has-error" : undefined}>
+                  <span>本のバーコード / ISBN</span>
                   <input
-                    aria-describedby={getFieldError(error, "bookBarcode") ? "bookBarcode-error" : undefined}
-                    aria-invalid={Boolean(getFieldError(error, "bookBarcode"))}
+                    aria-describedby={primaryIdentifierError ? "bookIdentifier-error" : undefined}
+                    aria-invalid={Boolean(primaryIdentifierError)}
                     id="bookBarcode"
                     maxLength={200}
-                    onChange={(event) => setForm({ ...form, bookBarcode: event.target.value })}
-                    placeholder="書籍自体のISBN/JANなど"
-                    value={form.bookBarcode}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        ...interpretBookIdentifier(event.target.value)
+                      }))
+                    }
+                    placeholder="ISBN、JAN、その他のバーコード"
+                    value={getBookIdentifierInputValue(form)}
                   />
                   <p className="field-help">
-                    ISBN由来の書籍JANなど、本そのもののバーコードです。雑誌やISBN以外の値も保存できます。
+                    有効なISBN-10はISBNとして、有効なISBN-13は本のバーコードとISBNとして保存します。その他の値は本のバーコードとして保存します。外部APIで照会するときは、個別編集欄に有効なISBNがあればそれを優先します。
                   </p>
-                  {getFieldError(error, "bookBarcode") ? (
-                    <p className="field-error" id="bookBarcode-error">
-                      {getFieldError(error, "bookBarcode")}
+                  {primaryIdentifierError ? (
+                    <p className="field-error" id="bookIdentifier-error">
+                      {primaryIdentifierError}
                     </p>
                   ) : null}
                 </label>
@@ -621,25 +650,49 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   ) : null}
                 </label>
               </div>
-              <label className={getFieldError(error, "isbn") ? "has-error" : undefined}>
-                <span>ISBN</span>
-                <input
-                  aria-describedby={getFieldError(error, "isbn") ? "isbn-error" : undefined}
-                  aria-invalid={Boolean(getFieldError(error, "isbn"))}
-                  id="isbn"
-                  maxLength={200}
-                  onChange={(event) => setForm({ ...form, isbn: event.target.value })}
-                  value={form.isbn}
-                />
+              <details className="identifier-details">
+                <summary>
+                  保存値を個別に編集
+                  {hasDistinctIdentifierValues ? "（ISBNとバーコードが異なります）" : ""}
+                </summary>
                 <p className="field-help">
-                  ISBNは数字とXで構成される書籍識別子です。照会時は本のバーコードを優先し、未入力の場合にISBNを使います。
+                  通常は上の入力から自動判定します。既存データなどで本のバーコードとISBNを別々に保持する場合は、ここで個別に編集できます。
                 </p>
-                {getFieldError(error, "isbn") ? (
-                  <p className="field-error" id="isbn-error">
-                    {getFieldError(error, "isbn")}
-                  </p>
-                ) : null}
-              </label>
+                <div className="field-pair">
+                  <label className={bookBarcodeError ? "has-error" : undefined}>
+                    <span>本のバーコード（保存値）</span>
+                    <input
+                      aria-describedby={bookBarcodeError ? "bookBarcode-details-error" : undefined}
+                      aria-invalid={Boolean(bookBarcodeError)}
+                      id="bookBarcode-details"
+                      maxLength={200}
+                      onChange={(event) => setForm({ ...form, bookBarcode: event.target.value })}
+                      value={form.bookBarcode}
+                    />
+                    {bookBarcodeError ? (
+                      <p className="field-error" id="bookBarcode-details-error">
+                        {bookBarcodeError}
+                      </p>
+                    ) : null}
+                  </label>
+                  <label className={isbnError ? "has-error" : undefined}>
+                    <span>ISBN（保存値）</span>
+                    <input
+                      aria-describedby={isbnError ? "isbn-error" : undefined}
+                      aria-invalid={Boolean(isbnError)}
+                      id="isbn-details"
+                      maxLength={200}
+                      onChange={(event) => setForm({ ...form, isbn: event.target.value })}
+                      value={form.isbn}
+                    />
+                    {isbnError ? (
+                      <p className="field-error" id="isbn-error">
+                        {isbnError}
+                      </p>
+                    ) : null}
+                  </label>
+                </div>
+              </details>
               <CameraBarcodeScanner onScan={handleCameraScan} />
               <div className="lookup-panel">
                 <button
@@ -652,7 +705,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   {isLookupLoading ? "照会中..." : "外部APIで照会"}
                 </button>
                 <p>
-                  本のバーコードを優先し、未入力の場合はISBNで照会します。取得できない場合は下の書誌情報を手入力できます。
+                  入力された値からISBNとして解釈できる値を使って照会します。個別編集欄に有効なISBNがある場合は、そのISBNを優先します。取得できない場合は下の書誌情報を手入力できます。
                 </p>
                 {lookupMessage ? <p className="inline-message">{lookupMessage}</p> : null}
               </div>
