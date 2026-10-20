@@ -74,6 +74,16 @@ const emptyInlineLocationForm: InlineLocationFormState = {
   name: ""
 };
 
+type InlineClassificationTagFormState = {
+  description: string;
+  name: string;
+};
+
+const emptyInlineClassificationTagForm: InlineClassificationTagFormState = {
+  description: "",
+  name: ""
+};
+
 export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   const isEdit = mode === "edit";
   const [candidateSource, setCandidateSource] = useState<ClassificationTagSource>("open_library");
@@ -84,16 +94,26 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   const [isLookupLoading, setIsLookupLoading] = useState(false);
   const [isInlineLocationOpen, setIsInlineLocationOpen] = useState(false);
   const [isInlineLocationSaving, setIsInlineLocationSaving] = useState(false);
+  const [isInlineTagOpen, setIsInlineTagOpen] = useState(false);
+  const [isInlineTagSaving, setIsInlineTagSaving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [inlineLocationError, setInlineLocationError] = useState<ApiError | null>(null);
   const [inlineLocationForm, setInlineLocationForm] = useState<InlineLocationFormState>(emptyInlineLocationForm);
   const [inlineLocationMessage, setInlineLocationMessage] = useState<string | null>(null);
+  const [inlineTagError, setInlineTagError] = useState<ApiError | null>(null);
+  const [inlineTagForm, setInlineTagForm] = useState<InlineClassificationTagFormState>(
+    emptyInlineClassificationTagForm
+  );
+  const [inlineTagMessage, setInlineTagMessage] = useState<string | null>(null);
   const [locations, setLocations] = useState<Location[]>([]);
   const [lookupMessage, setLookupMessage] = useState<string | null>(null);
   const [tags, setTags] = useState<ClassificationTag[]>([]);
   const inlineLocationNameInputRef = useRef<HTMLInputElement | null>(null);
   const inlineLocationSavingRef = useRef(false);
   const inlineLocationTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const inlineTagNameInputRef = useRef<HTMLInputElement | null>(null);
+  const inlineTagSavingRef = useRef(false);
+  const inlineTagTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -150,6 +170,24 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
     }
   }, [inlineLocationError, isInlineLocationOpen, isInlineLocationSaving]);
 
+  useEffect(() => {
+    if (isInlineTagOpen) {
+      inlineTagNameInputRef.current?.focus();
+    }
+  }, [isInlineTagOpen]);
+
+  useEffect(() => {
+    if (isInlineTagOpen && inlineTagError && !isInlineTagSaving) {
+      inlineTagNameInputRef.current?.focus();
+    }
+  }, [inlineTagError, isInlineTagOpen, isInlineTagSaving]);
+
+  useEffect(() => {
+    if (!isInlineTagOpen && !isInlineTagSaving && inlineTagMessage) {
+      inlineTagTriggerRef.current?.focus();
+    }
+  }, [inlineTagMessage, isInlineTagOpen, isInlineTagSaving]);
+
   async function handleLookup() {
     const lookupValue = form.bookBarcode.trim() || form.isbn.trim();
 
@@ -202,11 +240,23 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (isInlineLocationOpen || inlineLocationSavingRef.current) {
-      setInlineLocationError({
-        message: "保管場所の追加を保存またはキャンセルしてから、本を保存してください。",
-        status: 400
-      });
+    if (
+      isInlineLocationOpen ||
+      inlineLocationSavingRef.current ||
+      isInlineTagOpen ||
+      inlineTagSavingRef.current
+    ) {
+      if (isInlineTagOpen || inlineTagSavingRef.current) {
+        setInlineTagError({
+          message: "分類タグの追加を保存またはキャンセルしてから、本を保存してください。",
+          status: 400
+        });
+      } else {
+        setInlineLocationError({
+          message: "保管場所の追加を保存またはキャンセルしてから、本を保存してください。",
+          status: 400
+        });
+      }
       return;
     }
 
@@ -227,7 +277,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   }
 
   function openInlineLocationPanel() {
-    if (inlineLocationSavingRef.current) {
+    if (inlineLocationSavingRef.current || isInlineTagOpen || isInlineTagSaving) {
       return;
     }
 
@@ -300,6 +350,110 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
     }
   }
 
+  function openInlineTagPanel() {
+    if (inlineTagSavingRef.current || isInlineLocationOpen || isInlineLocationSaving) {
+      return;
+    }
+
+    setInlineTagForm(emptyInlineClassificationTagForm);
+    setInlineTagError(null);
+    setInlineTagMessage(null);
+    setIsInlineTagOpen(true);
+  }
+
+  function closeInlineTagPanel() {
+    if (inlineTagSavingRef.current) {
+      return;
+    }
+
+    setIsInlineTagOpen(false);
+    setInlineTagForm(emptyInlineClassificationTagForm);
+    setInlineTagError(null);
+    inlineTagTriggerRef.current?.focus();
+  }
+
+  async function handleInlineTagSubmit() {
+    if (inlineTagSavingRef.current) {
+      return;
+    }
+
+    const name = inlineTagForm.name.trim();
+    const existingTag = tags.find((tag) => normalizeTagName(tag.name) === normalizeTagName(name));
+
+    if (!name) {
+      setInlineTagError({
+        errors: [{ field: "name", message: "分類タグ名を入力してください。" }],
+        message: "入力内容を確認してください。",
+        status: 400
+      });
+      inlineTagNameInputRef.current?.focus();
+      return;
+    }
+
+    if (name.length > 200) {
+      setInlineTagError({
+        errors: [{ field: "name", message: "分類タグ名は200文字以内で入力してください。" }],
+        message: "入力内容を確認してください。",
+        status: 400
+      });
+      inlineTagNameInputRef.current?.focus();
+      return;
+    }
+
+    if (existingTag) {
+      if (!existingTag.isActive) {
+        setInlineTagError({
+          errors: [
+            {
+              field: "name",
+              message: "同名の分類タグは無効化されています。分類タグ管理画面で再有効化してください。"
+            }
+          ],
+          message: "無効化済みの分類タグは選択できません。",
+          status: 409
+        });
+        return;
+      }
+
+      selectTag(existingTag.id);
+      setInlineTagForm(emptyInlineClassificationTagForm);
+      setInlineTagMessage(`同名の分類タグ「${existingTag.name}」を選択しました。`);
+      setIsInlineTagOpen(false);
+      return;
+    }
+
+    inlineTagSavingRef.current = true;
+    setIsInlineTagSaving(true);
+    setInlineTagError(null);
+
+    try {
+      const createdTag = await createClassificationTag({
+        description: inlineTagForm.description.trim() || undefined,
+        name,
+        source: "manual"
+      });
+
+      setTags((current) => [...current, createdTag].sort((left, right) => left.name.localeCompare(right.name)));
+      selectTag(createdTag.id);
+      setInlineTagForm(emptyInlineClassificationTagForm);
+      setInlineTagMessage(`分類タグ「${createdTag.name}」を追加し、この本に設定しました。`);
+      setIsInlineTagOpen(false);
+    } catch (tagSaveError) {
+      const apiError = tagSaveError as ApiError;
+      setInlineTagError(
+        apiError.status === 409
+          ? {
+              ...apiError,
+              message: "同名の分類タグが既に存在します。名前を変更するか、既存のタグを選択してください。"
+            }
+          : apiError
+      );
+    } finally {
+      inlineTagSavingRef.current = false;
+      setIsInlineTagSaving(false);
+    }
+  }
+
   async function handleCandidateSelect(candidate: string) {
     const existingTag = tags.find((tag) => tag.name.toLowerCase() === candidate.toLowerCase());
 
@@ -360,7 +514,24 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
 
   const activeLocations = locations.filter((location) => location.isActive || location.id === form.locationId);
   const activeTags = tags.filter((tag) => tag.isActive || form.classificationTagIds.includes(tag.id));
-  const isBookSaveBlocked = isInlineLocationOpen || isInlineLocationSaving;
+  const isBookSaveBlocked =
+    isInlineLocationOpen ||
+    isInlineLocationSaving ||
+    isInlineTagOpen ||
+    isInlineTagSaving;
+  const bookSaveButtonLabel = isSaving
+    ? "保存中..."
+    : isInlineLocationSaving
+      ? "保管場所を追加中..."
+      : isInlineTagSaving
+        ? "分類タグを追加中..."
+        : isInlineLocationOpen
+          ? "保管場所を確認中..."
+          : isInlineTagOpen
+            ? "分類タグを確認中..."
+            : isEdit
+              ? "更新する"
+              : "登録する";
 
   return (
     <section className="page-panel">
@@ -572,8 +743,8 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <div className="field-label-row">
                   <label htmlFor="locationId">保管場所</label>
                   <button
-                    className="button-secondary location-add-button"
-                    disabled={isInlineLocationSaving}
+                    className="button-secondary inline-add-button"
+                    disabled={isInlineLocationSaving || isInlineTagOpen || isInlineTagSaving}
                     onClick={openInlineLocationPanel}
                     ref={inlineLocationTriggerRef}
                     type="button"
@@ -729,10 +900,123 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
 
           <aside className="book-form-side">
             <section className="form-section" id="classificationTagIds" tabIndex={-1}>
-              <div>
-                <p className="eyebrow">Classification</p>
-                <h3>分類タグ</h3>
+              <div className="field-label-row">
+                <div>
+                  <p className="eyebrow">Classification</p>
+                  <h3>分類タグ</h3>
+                </div>
+                <button
+                  className="button-secondary inline-add-button"
+                  disabled={isInlineTagSaving || isInlineLocationOpen || isInlineLocationSaving}
+                  onClick={openInlineTagPanel}
+                  ref={inlineTagTriggerRef}
+                  type="button"
+                >
+                  ＋分類タグを追加
+                </button>
               </div>
+              {inlineTagMessage ? (
+                <p aria-live="polite" className="inline-message">
+                  {inlineTagMessage}
+                </p>
+              ) : null}
+              {isInlineTagOpen ? (
+                <section
+                  aria-labelledby="inline-classification-tag-title"
+                  className="inline-location-panel"
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      closeInlineTagPanel();
+                    }
+                  }}
+                  role="dialog"
+                >
+                  <div className="inline-location-heading">
+                    <div>
+                      <p className="eyebrow">New Classification</p>
+                      <h4 id="inline-classification-tag-title">分類タグを追加</h4>
+                    </div>
+                    <button
+                      className="button-secondary"
+                      disabled={isInlineTagSaving}
+                      onClick={closeInlineTagPanel}
+                      type="button"
+                    >
+                      キャンセル
+                    </button>
+                  </div>
+                  <p className="subtle-text">
+                    保存した分類タグは本の登録とは独立して保存されます。本の登録をキャンセルしても削除されません。
+                  </p>
+                  {inlineTagError ? (
+                    <div aria-live="assertive" className="inline-location-error" role="alert">
+                      {inlineTagError.errors?.length ? (
+                        <p>入力内容を確認してください。</p>
+                      ) : (
+                        <p>{inlineTagError.message}</p>
+                      )}
+                    </div>
+                  ) : null}
+                  <label>
+                    <span>分類タグ名</span>
+                    <input
+                      aria-describedby={getFieldError(inlineTagError, "name") ? "inline-tag-name-error" : undefined}
+                      aria-invalid={Boolean(getFieldError(inlineTagError, "name"))}
+                      aria-required="true"
+                      disabled={isInlineTagSaving}
+                      id="inline-classification-tag-name"
+                      maxLength={200}
+                      onChange={(event) =>
+                        setInlineTagForm((current) => ({ ...current, name: event.target.value }))
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          void handleInlineTagSubmit();
+                        }
+                      }}
+                      ref={inlineTagNameInputRef}
+                      value={inlineTagForm.name}
+                    />
+                    {getFieldError(inlineTagError, "name") ? (
+                      <p className="field-error" id="inline-tag-name-error">
+                        {getFieldError(inlineTagError, "name")}
+                      </p>
+                    ) : null}
+                  </label>
+                  <label>
+                    <span>説明（任意）</span>
+                    <textarea
+                      disabled={isInlineTagSaving}
+                      maxLength={1000}
+                      onChange={(event) =>
+                        setInlineTagForm((current) => ({ ...current, description: event.target.value }))
+                      }
+                      value={inlineTagForm.description}
+                    />
+                  </label>
+                  <div className="form-actions">
+                    <button
+                      aria-busy={isInlineTagSaving}
+                      className="button-primary"
+                      disabled={isInlineTagSaving}
+                      onClick={() => void handleInlineTagSubmit()}
+                      type="button"
+                    >
+                      {isInlineTagSaving ? "追加中..." : "分類タグを保存"}
+                    </button>
+                    <button
+                      className="button-secondary"
+                      disabled={isInlineTagSaving}
+                      onClick={closeInlineTagPanel}
+                      type="button"
+                    >
+                      キャンセル
+                    </button>
+                  </div>
+                </section>
+              ) : null}
               {activeTags.length === 0 ? (
                 <p className="subtle-text">分類タグはまだありません。候補subjectやNDC9分類から追加するか、分類タグ管理画面で作成できます。</p>
               ) : (
@@ -793,24 +1077,16 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
           >
             <div className="form-actions">
               <button
-                aria-busy={isSaving}
+                aria-busy={isSaving || isInlineLocationSaving || isInlineTagSaving}
                 className="button-primary"
                 disabled={isSaving || isBookSaveBlocked}
                 type="submit"
               >
-                {isSaving
-                  ? "保存中..."
-                  : isInlineLocationSaving
-                    ? "保管場所を追加中..."
-                    : isInlineLocationOpen
-                      ? "保管場所を確認中..."
-                      : isEdit
-                        ? "更新する"
-                        : "登録する"}
+                {bookSaveButtonLabel}
               </button>
               <button
                 className="button-secondary"
-                disabled={isInlineLocationSaving}
+                disabled={isInlineLocationSaving || isInlineTagSaving}
                 onClick={() => navigateTo("/books")}
                 type="button"
               >
@@ -864,6 +1140,10 @@ function emptyToNull(value: string) {
 
 function compareLocations(left: Location, right: Location) {
   return left.sortOrder - right.sortOrder || left.name.localeCompare(right.name);
+}
+
+function normalizeTagName(value: string) {
+  return value.trim().toLocaleLowerCase();
 }
 
 function formatLookupSource(source: BookLookupResult["externalSource"]) {

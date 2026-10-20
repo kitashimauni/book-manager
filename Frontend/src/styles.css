@@ -596,7 +596,7 @@ button[aria-busy="true"] {
   font: inherit;
 }
 
-.location-add-button {
+.inline-add-button {
   min-height: 36px;
   padding: 6px 12px;
   font-size: 0.88rem;
