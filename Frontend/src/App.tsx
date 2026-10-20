@@ -14,7 +14,6 @@ export function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthError, setHealthError] = useState<ApiError | null>(null);
-  const [isHealthLoading, setIsHealthLoading] = useState(true);
 
   useEffect(() => {
     function handlePopState() {
@@ -35,23 +34,17 @@ export function App() {
     let isMounted = true;
 
     async function loadHealth() {
-      setIsHealthLoading(true);
-
       try {
         const result = await getHealth();
 
         if (isMounted) {
           setHealth(result);
-          setHealthError(null);
+          setHealthError(getHealthError(result));
         }
       } catch (error) {
         if (isMounted) {
           setHealth(null);
           setHealthError(error as ApiError);
-        }
-      } finally {
-        if (isMounted) {
-          setIsHealthLoading(false);
         }
       }
     }
@@ -67,7 +60,7 @@ export function App() {
 
   return (
     <AppLayout
-      backendStatus={<HealthBadge error={healthError} health={health} isLoading={isHealthLoading} />}
+      backendStatus={healthError ? <HealthWarning error={healthError} health={health} /> : null}
       currentPath={currentPath}
     >
       {renderRoute(route)}
@@ -96,22 +89,37 @@ function renderRoute(route: Route) {
   }
 }
 
-type HealthBadgeProps = {
+export function getHealthError(health: HealthResponse): ApiError | null {
+  if (health.ok && health.database === "ok") {
+    return null;
+  }
+
+  return {
+    message:
+      health.database && health.database !== "ok"
+        ? `データベースの状態が「${health.database}」です。`
+        : "APIまたはデータベースのヘルスチェックが正常ではありません。",
+    status: 503
+  };
+}
+
+type HealthWarningProps = {
   error: ApiError | null;
   health: HealthResponse | null;
-  isLoading: boolean;
 };
 
-function HealthBadge({ error, health, isLoading }: HealthBadgeProps) {
+function HealthWarning({ error, health }: HealthWarningProps) {
   return (
-    <details className={error ? "status-affordance error" : "status-affordance"}>
+    <details className="status-affordance error" role="alert">
       <summary>
-        <span className="status-dot" />
-        <span>{isLoading ? "API確認中" : error ? "API未接続" : "API接続中"}</span>
+        <span aria-hidden="true" className="status-dot" />
+        <span>API接続に問題があります</span>
       </summary>
       <div className="status-details" aria-live="polite">
         <strong>{health?.service ?? "backend"}</strong>
-        <span>{error ? error.message : `DB: ${health?.database ?? "unknown"}`}</span>
+        <span>{error?.message ?? "ヘルスチェックに失敗しました。"}</span>
+        <span>DB: {health?.database ?? "応答なし"}</span>
+        <span>Backendが起動しているか、接続先を確認してください。</span>
         <code>{getApiBaseUrl()}</code>
       </div>
     </details>

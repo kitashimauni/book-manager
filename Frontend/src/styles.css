@@ -1751,6 +1751,11 @@ button[aria-busy="true"] {
   display: none;
 }
 
+.status-affordance summary:focus-visible {
+  outline: 3px solid var(--cedar);
+  outline-offset: 3px;
+}
+
 .status-affordance summary::after {
   content: "⌄";
   color: var(--muted);
