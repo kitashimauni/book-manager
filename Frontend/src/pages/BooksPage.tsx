@@ -407,7 +407,7 @@ export function resolveBookViewMode(viewMode: ViewMode, isCompactViewport: boole
   return isCompactViewport ? "cards" : viewMode;
 }
 
-function BookCard({
+export function BookCard({
   book,
   isDeleting,
   onDelete
@@ -418,12 +418,12 @@ function BookCard({
 }) {
   return (
     <article className="book-card">
-      <div>
-        <p className="eyebrow">{book.location?.name ?? "No Location"}</p>
-        <h3>
+      <div className="book-card-primary">
+        <p className="eyebrow book-card-location">{book.location?.name ?? "保管場所未設定"}</p>
+        <h3 className="book-card-title">
           <Link href={`/books/${book.id}`}>{book.title}</Link>
         </h3>
-        <p>{book.author || "著者未設定"}</p>
+        <p className="book-card-author">{book.author || "著者未設定"}</p>
       </div>
       <dl className="book-meta-grid">
         <div>
@@ -437,6 +437,10 @@ function BookCard({
         <div>
           <dt>管理用バーコード</dt>
           <dd>{book.managementBarcode || "-"}</dd>
+        </div>
+        <div>
+          <dt>出版日</dt>
+          <dd>{book.publishedDate || "未設定"}</dd>
         </div>
         <div>
           <dt>更新</dt>
@@ -493,7 +497,8 @@ function DenseBookList({
         <div className="dense-book-row" key={book.id} role="row">
           <div className="dense-book-title" role="cell">
             <Link href={`/books/${book.id}`}>{book.title}</Link>
-            <span>{book.author || "著者未設定"}</span>
+            <span className="dense-book-author">{book.author || "著者未設定"}</span>
+            <small className="dense-book-publication">出版日：{book.publishedDate || "未設定"}</small>
           </div>
           <div className="dense-book-cell" role="cell">
             {book.location?.name ?? "保管場所未設定"}
