@@ -127,6 +127,35 @@ button[aria-busy="true"] {
   min-width: 0;
 }
 
+.mobile-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(85, 107, 79, 0.3);
+  border-radius: 14px;
+  background: rgba(255, 250, 240, 0.72);
+  color: var(--ink);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-weight: 800;
+  text-align: left;
+}
+
+.mobile-nav-toggle:focus-visible {
+  outline: 3px solid var(--cedar);
+  outline-offset: 3px;
+}
+
+.mobile-nav-toggle-icon {
+  color: var(--moss);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
 .nav-link {
   display: block;
   padding: 14px 16px;
@@ -1832,18 +1861,26 @@ button[aria-busy="true"] {
     margin-bottom: 12px;
   }
 
-  .nav-list {
+  .mobile-nav-toggle {
     display: flex;
+    margin-bottom: 12px;
+  }
+
+  .nav-list {
+    display: none;
     gap: 8px;
     max-width: 100%;
-    overflow-x: auto;
     padding-bottom: 4px;
   }
 
+  .nav-list.mobile-nav-open {
+    display: grid;
+  }
+
   .nav-link {
-    flex: 0 0 auto;
     padding: 10px 12px;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .nav-link:hover,
