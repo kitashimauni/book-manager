@@ -84,6 +84,17 @@ export type BookLookupResult = {
   classificationTagCandidates: string[];
 };
 
+export type BookIdentifierMatchField = "bookIdentifier" | "managementBarcode";
+
+export type BookIdentifierMatch = {
+  id: string;
+  title: string;
+};
+
+export type BookIdentifierMatchesResponse = {
+  matches: BookIdentifierMatch[];
+};
+
 export type ListBooksQuery = {
   direction?: "asc" | "desc";
   q?: string;
@@ -297,6 +308,20 @@ export function lookupBookByBarcode(bookBarcode: string) {
     body: JSON.stringify({ bookBarcode }),
     method: "POST"
   });
+}
+
+export function getBookIdentifierMatches(
+  value: string,
+  field: BookIdentifierMatchField = "bookIdentifier",
+  excludeBookId?: string
+) {
+  const params = new URLSearchParams({ field, value });
+
+  if (excludeBookId) {
+    params.set("excludeBookId", excludeBookId);
+  }
+
+  return apiRequest<BookIdentifierMatchesResponse>(`/books/identifier-matches?${params.toString()}`);
 }
 
 export function getLocations() {

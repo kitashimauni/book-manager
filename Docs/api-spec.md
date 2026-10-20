@@ -9,6 +9,7 @@ MVPではREST APIとして設計します。レスポンス形式はJSONです�
 | メソッド | パス | 説明 |
 | --- | --- | --- |
 | `GET` | `/api/books` | 本の一覧取得、検索、絞り込み |
+| `GET` | `/api/books/identifier-matches` | 本のバーコード / ISBNまたは管理用バーコードの完全一致候補を取得 |
 | `POST` | `/api/books` | 本の登録 |
 | `GET` | `/api/books/:id` | 本の詳細取得 |
 | `PUT` | `/api/books/:id` | 本の更新 |
@@ -94,6 +95,37 @@ MVPではREST APIとして設計します。レスポンス形式はJSONです�
   "total": 1
 }
 ```
+
+## GET /api/books/identifier-matches
+
+本登録・編集画面で、入力中の識別情報と一致する既存の本を警告表示するための軽量な完全一致APIです。検索用の `GET /api/books?q=...` と異なり、タイトルや著者の部分一致は行いません。
+
+### クエリパラメータ
+
+| 名前 | 必須 | 説明 |
+| --- | --- | --- |
+| `value` | 必須 | 確認する識別情報 |
+| `field` | 任意 | `bookIdentifier`（初期値）または `managementBarcode` |
+| `excludeBookId` | 任意 | 編集中の本のUUID。同じ本自身を候補から除外 |
+
+`field=bookIdentifier` の場合、有効なISBNは正規化して本の `isbn` と `bookBarcode` の両方を完全一致確認します。`978` ISBN-13とISBN-10は相互変換した値も確認し、`979` ISBN-13はISBN-10へ変換しません。有効なISBNでない値は本のバーコードとの完全一致だけを確認します。
+
+### 成功時
+
+- HTTPステータス: `200 OK`
+
+```json
+{
+  "matches": [
+    {
+      "id": "00000000-0000-4000-8000-000000000000",
+      "title": "Clean Code"
+    }
+  ]
+}
+```
+
+本のバーコード / ISBNの重複は警告扱いであり、本登録・更新を拒否しません。`managementBarcode` の重複は従来どおり登録・更新APIで `409 Conflict` として拒否します。
 
 ## POST /api/books
 

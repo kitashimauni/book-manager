@@ -93,11 +93,18 @@ export const bookLookupRequestSchema = z.object({
   bookBarcode: z.string().trim().min(1)
 });
 
+export const bookIdentifierMatchQuerySchema = z.object({
+  value: z.string().trim().min(1).max(200),
+  field: z.enum(["bookIdentifier", "managementBarcode"]).optional().default("bookIdentifier"),
+  excludeBookId: z.string().uuid().optional()
+});
+
 export type BookIdParams = z.infer<typeof bookIdParamsSchema>;
 export type ListBooksQuery = z.infer<typeof listBooksQuerySchema>;
 export type CreateBookRequest = z.infer<typeof createBookRequestSchema>;
 export type UpdateBookRequest = z.infer<typeof updateBookRequestSchema>;
 export type BookLookupRequest = z.infer<typeof bookLookupRequestSchema>;
+export type BookIdentifierMatchQuery = z.infer<typeof bookIdentifierMatchQuerySchema>;
 
 export type BookLookupResult = {
   title: string;

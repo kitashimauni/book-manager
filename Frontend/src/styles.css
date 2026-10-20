@@ -993,6 +993,32 @@ button[aria-busy="true"] {
   overflow-wrap: anywhere;
 }
 
+.field-warning,
+.field-check-status {
+  margin: -2px 0 0;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.field-warning {
+  color: #a33f35;
+}
+
+.field-warning a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.14em;
+}
+
+.field-check-status {
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .form-section input[aria-invalid="true"],
 .form-section textarea[aria-invalid="true"],
 .form-section select[aria-invalid="true"],
