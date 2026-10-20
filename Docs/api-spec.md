@@ -108,7 +108,7 @@ MVPではREST APIとして設計します。レスポンス形式はJSONです�
 | `field` | 任意 | `bookIdentifier`（初期値）または `managementBarcode` |
 | `excludeBookId` | 任意 | 編集中の本のUUID。同じ本自身を候補から除外 |
 
-`field=bookIdentifier` の場合、有効なISBNは正規化して本の `isbn` と `bookBarcode` の両方を完全一致確認します。`978` ISBN-13とISBN-10は相互変換した値も確認し、`979` ISBN-13はISBN-10へ変換しません。有効なISBNでない値は本のバーコードとの完全一致だけを確認します。
+`field=bookIdentifier` の場合、入力値そのものを本の `bookBarcode` と必ず完全一致確認します。さらに、数字・ハイフン・空白、または明示的な `ISBN` 接頭辞を含む妥当なISBN表記だけを正規化し、有効なISBNなら本の `isbn` と `bookBarcode` の相互変換値も完全一致確認します。`978` ISBN-13とISBN-10は相互変換し、`979` ISBN-13はISBN-10へ変換しません。任意文字列のバーコードから数字だけを抜き出してISBN扱いすることはありません。
 
 ### 成功時
 

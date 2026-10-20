@@ -219,6 +219,41 @@ describe("books API", () => {
     expect(partialBarcode.json()).toEqual({ matches: [] });
   });
 
+  it("keeps arbitrary barcode text exact even when it contains an ISBN-looking value", async () => {
+    const isbnBook = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "ISBN-looking book",
+        isbn: "9780132350884"
+      }
+    });
+    const customBarcodeBook = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Custom barcode book",
+        bookBarcode: "BOOK-9780132350884"
+      }
+    });
+
+    const customBarcode = await app.inject({
+      method: "GET",
+      url: "/api/books/identifier-matches?value=BOOK-9780132350884"
+    });
+    const plainIsbn = await app.inject({
+      method: "GET",
+      url: "/api/books/identifier-matches?value=9780132350884"
+    });
+
+    expect(customBarcode.json()).toEqual({
+      matches: [{ id: customBarcodeBook.json().id, title: "Custom barcode book" }]
+    });
+    expect(plainIsbn.json()).toEqual({
+      matches: [{ id: isbnBook.json().id, title: "ISBN-looking book" }]
+    });
+  });
+
   it("checks management barcodes exactly without changing save-time uniqueness", async () => {
     const created = await app.inject({
       method: "POST",

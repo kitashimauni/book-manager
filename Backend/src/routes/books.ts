@@ -383,16 +383,18 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
     }
 
     const { excludeBookId, field, value } = parsed.data;
-    const values =
-      field === "managementBarcode"
-        ? [value]
-        : isValidIsbn(value)
-          ? getIsbnEquivalentValues(value)
-          : [value];
     const identifierConditions =
       field === "managementBarcode"
         ? [eq(books.managementBarcode, value)]
-        : values.flatMap((identifier) => [eq(books.isbn, identifier), eq(books.bookBarcode, identifier)]);
+        : [
+            eq(books.bookBarcode, value),
+            ...(isValidIsbn(value)
+              ? getIsbnEquivalentValues(value).flatMap((identifier) => [
+                  eq(books.isbn, identifier),
+                  eq(books.bookBarcode, identifier)
+                ])
+              : [])
+          ];
     const identifierCondition = or(...identifierConditions);
     const where = excludeBookId
       ? and(identifierCondition, ne(books.id, excludeBookId))

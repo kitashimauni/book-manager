@@ -4,7 +4,14 @@ export type BookIdentifierValues = {
 };
 
 export function normalizeIsbn(value: string) {
-  return value.replace(/[^0-9Xx]/g, "").toUpperCase();
+  const trimmedValue = value.trim();
+  const withoutPrefix = trimmedValue.replace(/^ISBN(?:[-\s]?(?:10|13))?[\s:：-]*/i, "");
+
+  if (!/^[0-9Xx][0-9Xx\s-]*$/.test(withoutPrefix)) {
+    return trimmedValue.toUpperCase();
+  }
+
+  return withoutPrefix.replace(/[\s-]/g, "").toUpperCase();
 }
 
 export function isValidIsbn(value: string) {
