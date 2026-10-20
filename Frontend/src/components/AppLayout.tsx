@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "./Link.js";
 import { resolveRoute } from "../router.js";
 
@@ -47,8 +47,21 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isMobileNavOpen]);
 
-  function handleNavigationSelect() {
+  function handleNavigationSelect(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      !isMobileNavOpen ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
     setIsMobileNavOpen(false);
+    mobileNavToggleRef.current?.focus();
   }
 
   return (
