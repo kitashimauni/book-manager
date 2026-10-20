@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getIdentifierCheckKey, getIdentifierCheckRequests, mergeIdentifierMatches } from "./bookIdentifierDuplicates.js";
+import {
+  consumeIdentifierCheckSkipKey,
+  getIdentifierCheckKey,
+  getIdentifierCheckRequests,
+  mergeIdentifierMatches
+} from "./bookIdentifierDuplicates.js";
 
 describe("book identifier duplicate helpers", () => {
   it("checks distinct book identifiers and the management barcode", () => {
@@ -36,5 +41,32 @@ describe("book identifier duplicate helpers", () => {
         managementBarcode: " BM-001 "
       })
     ).toBe("9780132350884\u0000\u0000BM-001");
+  });
+
+  it("consumes a camera-scan skip key even when the next value differs", () => {
+    const firstScanKey = getIdentifierCheckKey({
+      bookBarcode: "A",
+      isbn: "",
+      managementBarcode: ""
+    });
+    const secondValueKey = getIdentifierCheckKey({
+      bookBarcode: "B",
+      isbn: "",
+      managementBarcode: ""
+    });
+    const originalValueKey = getIdentifierCheckKey({
+      bookBarcode: "A",
+      isbn: "",
+      managementBarcode: ""
+    });
+
+    const afterSecondValue = consumeIdentifierCheckSkipKey(firstScanKey, secondValueKey);
+    const afterReturningToOriginal = consumeIdentifierCheckSkipKey(
+      afterSecondValue.nextSkipKey,
+      originalValueKey
+    );
+
+    expect(afterSecondValue).toEqual({ shouldSkip: false, nextSkipKey: null });
+    expect(afterReturningToOriginal).toEqual({ shouldSkip: false, nextSkipKey: null });
   });
 });

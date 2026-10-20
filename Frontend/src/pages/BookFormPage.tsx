@@ -37,6 +37,7 @@ import {
   mergeLookupIdentifiers
 } from "../bookIdentifiers.js";
 import {
+  consumeIdentifierCheckSkipKey,
   getIdentifierCheckKey,
   getIdentifierCheckRequests,
   mergeIdentifierMatches,
@@ -212,8 +213,13 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
     };
     const identifierCheckKey = getIdentifierCheckKey(identifierValues);
 
-    if (skipNextIdentifierCheckKeyRef.current === identifierCheckKey) {
-      skipNextIdentifierCheckKeyRef.current = null;
+    const skipCheck = consumeIdentifierCheckSkipKey(
+      skipNextIdentifierCheckKeyRef.current,
+      identifierCheckKey
+    );
+    skipNextIdentifierCheckKeyRef.current = skipCheck.nextSkipKey;
+
+    if (skipCheck.shouldSkip) {
       return;
     }
 

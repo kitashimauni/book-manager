@@ -45,3 +45,10 @@ export function mergeIdentifierMatches(matchGroups: BookIdentifierMatch[][]) {
 export function getIdentifierCheckKey(values: IdentifierCheckValues) {
   return [values.bookBarcode.trim(), values.isbn.trim(), values.managementBarcode.trim()].join("\u0000");
 }
+
+export function consumeIdentifierCheckSkipKey(skipKey: string | null, currentKey: string) {
+  return {
+    shouldSkip: skipKey === currentKey,
+    nextSkipKey: null
+  };
+}
