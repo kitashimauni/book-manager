@@ -628,8 +628,8 @@ button[aria-busy="true"] {
 .field-help-button {
   display: inline-grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: 1.5px solid var(--cedar);
   border-radius: 50%;
