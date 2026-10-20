@@ -32,6 +32,8 @@ describe("BookCard", () => {
     expect(html).toContain('class="book-card-primary"');
     expect(html).toContain('class="book-card-secondary"');
     expect(html).toContain('<p class="book-card-publication">出版日：<span>2024-03</span></p>');
+    expect(html).toContain('class="book-card-updated"');
+    expect(html).toContain('dateTime="2026-01-02T03:04:05Z"'.replace("dateTime", "dateTime") );
     expect(html).toContain('<details class="book-card-identifiers">');
     expect(html).toContain("ISBN・バーコードなどの詳細情報");
     expect(html.indexOf('class="book-card-title"')).toBeLessThan(html.indexOf('class="book-card-identifiers"'));
