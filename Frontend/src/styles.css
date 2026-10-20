@@ -615,6 +615,10 @@ button[aria-busy="true"] {
   font: inherit;
 }
 
+.field-label-row > .field-label-with-help {
+  flex: 1 1 210px;
+}
+
 .field-help-control {
   display: inline-flex;
   flex: none;
