@@ -425,36 +425,40 @@ export function BookCard({
         </h3>
         <p className="book-card-author">{book.author || "著者未設定"}</p>
       </div>
-      <dl className="book-meta-grid">
-        <div>
-          <dt>ISBN</dt>
-          <dd>{book.isbn || "-"}</dd>
+      <div className="book-card-secondary">
+        <p className="book-card-publication">
+          出版日：<span>{book.publishedDate || "未設定"}</span>
+        </p>
+        <div className="book-tag-row">
+          {book.classificationTags.length > 0 ? (
+            book.classificationTags.map((tag) => <span key={tag.id}>{tag.name}</span>)
+          ) : (
+            <span>分類なし</span>
+          )}
         </div>
-        <div>
-          <dt>本のバーコード</dt>
-          <dd>{book.bookBarcode || "-"}</dd>
-        </div>
-        <div>
-          <dt>管理用バーコード</dt>
-          <dd>{book.managementBarcode || "-"}</dd>
-        </div>
-        <div>
-          <dt>出版日</dt>
-          <dd>{book.publishedDate || "未設定"}</dd>
-        </div>
-        <div>
-          <dt>更新</dt>
-          <dd>{formatDate(book.updatedAt)}</dd>
-        </div>
-      </dl>
-      <div className="book-tag-row">
-        {book.classificationTags.length > 0 ? (
-          book.classificationTags.map((tag) => <span key={tag.id}>{tag.name}</span>)
-        ) : (
-          <span>分類なし</span>
-        )}
+        <details className="book-card-identifiers">
+          <summary>ISBN・バーコードなどの詳細情報</summary>
+          <dl className="book-meta-grid">
+            <div>
+              <dt>ISBN</dt>
+              <dd>{book.isbn || "-"}</dd>
+            </div>
+            <div>
+              <dt>本のバーコード</dt>
+              <dd>{book.bookBarcode || "-"}</dd>
+            </div>
+            <div>
+              <dt>管理用バーコード</dt>
+              <dd>{book.managementBarcode || "-"}</dd>
+            </div>
+            <div>
+              <dt>更新日時</dt>
+              <dd>{formatDate(book.updatedAt)}</dd>
+            </div>
+          </dl>
+        </details>
       </div>
-      <div className="card-actions">
+      <div className="card-actions book-card-actions">
         <Link className="button-secondary link-button" href={`/books/${book.id}`}>
           詳細
         </Link>
