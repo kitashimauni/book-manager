@@ -314,10 +314,6 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
         </button>
       </div>
 
-      <p className="subtle-text">
-        必要なときだけカメラを起動します。HTTPSまたはlocalhost環境で利用でき、手入力やキーボード型バーコードリーダーもそのまま使えます。
-      </p>
-
       {lastScannedValue ? (
         <p className="inline-message" role="status">
           読み取り結果: {lastScannedValue}
