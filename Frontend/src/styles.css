@@ -1505,6 +1505,20 @@ button[aria-busy="true"] {
   align-content: start;
 }
 
+.book-card-dates {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.book-card .book-card-updated {
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
 .book-card .book-card-publication {
   margin: 0;
   color: var(--muted);
