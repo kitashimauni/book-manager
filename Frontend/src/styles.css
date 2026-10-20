@@ -737,6 +737,61 @@ button[aria-busy="true"] {
   grid-template-rows: subgrid;
 }
 
+.identifier-details {
+  border: 1px solid rgba(85, 107, 79, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.identifier-details summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  color: #3f4b3d;
+  cursor: pointer;
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  list-style: none;
+}
+
+.identifier-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.identifier-details summary::after {
+  color: var(--moss);
+  content: "＋";
+  font-size: 1.05rem;
+}
+
+.identifier-details[open] {
+  padding-bottom: 14px;
+}
+
+.identifier-details[open] summary {
+  border-bottom: 1px solid rgba(85, 107, 79, 0.14);
+}
+
+.identifier-details[open] summary::after {
+  content: "−";
+}
+
+.identifier-details > .field-help {
+  margin: 14px 14px 0;
+}
+
+.identifier-details > .field-pair {
+  margin: 14px 14px 0;
+}
+
+.identifier-details summary:focus-visible {
+  outline: 3px solid var(--cedar);
+  outline-offset: -3px;
+}
+
 .lookup-panel {
   display: grid;
   gap: 10px;
