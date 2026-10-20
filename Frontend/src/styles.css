@@ -594,12 +594,89 @@ button[aria-busy="true"] {
   margin: 0;
 }
 
-.form-section label {
+.form-section label,
+.form-section .field-with-help {
   display: grid;
   gap: 8px;
   color: #3d493b;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
   font-weight: 800;
+}
+
+/* A tappable help button lives next to an explicit label, not nested inside it. */
+.field-label-with-help {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.form-section .field-label-with-help > label {
+  display: inline;
+  color: inherit;
+  font: inherit;
+}
+
+.field-label-row > .field-label-with-help {
+  flex: 1 1 210px;
+}
+
+.field-help-control {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+}
+
+.field-help-button {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1.5px solid var(--cedar);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--cedar);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.field-help-button:hover,
+.field-help-button[aria-expanded="true"] {
+  background: rgba(85, 107, 79, 0.12);
+}
+
+.field-help-button:focus-visible {
+  outline: 3px solid var(--cedar);
+  outline-offset: 2px;
+}
+
+.field-help-popover {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(380px, 100%);
+  padding: 12px 14px;
+  border: 1px solid rgba(85, 107, 79, 0.28);
+  border-radius: 12px;
+  background: #fffaf0;
+  box-shadow: 0 14px 35px rgba(65, 49, 27, 0.22);
+  color: var(--ink);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.field-help-popover[hidden] {
+  display: none;
 }
 
 .location-field {
@@ -699,6 +776,7 @@ button[aria-busy="true"] {
 }
 
 .form-section label.has-error,
+.form-section .field-with-help.has-error,
 .management-form label.has-error {
   color: #8d3f2b;
 }
@@ -735,7 +813,8 @@ button[aria-busy="true"] {
   row-gap: 8px;
 }
 
-.field-pair > label {
+.field-pair > label,
+.field-pair > .field-with-help {
   min-width: 0;
   grid-row: span 4;
   grid-template-rows: subgrid;
@@ -1469,6 +1548,16 @@ button[aria-busy="true"] {
   font-weight: 800;
 }
 
+.book-detail-page-layout {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.book-detail-back-link {
+  justify-self: start;
+}
+
 .book-detail {
   display: grid;
   gap: 18px;
@@ -2109,7 +2198,8 @@ button[aria-busy="true"] {
     row-gap: 14px;
   }
 
-  .field-pair > label {
+  .field-pair > label,
+  .field-pair > .field-with-help {
     grid-row: auto;
     grid-template-rows: none;
   }
