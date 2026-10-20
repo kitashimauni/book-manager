@@ -110,18 +110,23 @@ type HealthWarningProps = {
 
 function HealthWarning({ error, health }: HealthWarningProps) {
   return (
-    <details className="status-affordance error" role="alert">
-      <summary>
-        <span aria-hidden="true" className="status-dot" />
-        <span>API接続に問題があります</span>
-      </summary>
-      <div className="status-details" aria-live="polite">
-        <strong>{health?.service ?? "backend"}</strong>
-        <span>{error?.message ?? "ヘルスチェックに失敗しました。"}</span>
-        <span>DB: {health?.database ?? "応答なし"}</span>
-        <span>Backendが起動しているか、接続先を確認してください。</span>
-        <code>{getApiBaseUrl()}</code>
-      </div>
-    </details>
+    <>
+      <span aria-atomic="true" aria-live="polite" className="visually-hidden">
+        API接続に問題があります。詳細を開いて診断情報を確認できます。
+      </span>
+      <details className="status-affordance error">
+        <summary>
+          <span aria-hidden="true" className="status-dot" />
+          <span>API接続に問題があります</span>
+        </summary>
+        <div className="status-details">
+          <strong>{health?.service ?? "backend"}</strong>
+          <span>{error?.message ?? "ヘルスチェックに失敗しました。"}</span>
+          <span>DB: {health?.database ?? "応答なし"}</span>
+          <span>Backendが起動しているか、接続先を確認してください。</span>
+          <code>{getApiBaseUrl()}</code>
+        </div>
+      </details>
+    </>
   );
 }
