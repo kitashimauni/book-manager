@@ -70,82 +70,82 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
         ← 一覧へ戻る
       </Link>
       <section className="page-panel">
-      <div className="page-heading">
-        <p className="eyebrow">Book Detail</p>
-        <h2>本詳細</h2>
-        <p>登録済みの書誌情報、バーコード、保管場所、分類タグ、管理メモを確認できます。</p>
-      </div>
+        <div className="page-heading">
+          <p className="eyebrow">Book Detail</p>
+          <h2>本詳細</h2>
+          <p>登録済みの書誌情報、バーコード、保管場所、分類タグ、管理メモを確認できます。</p>
+        </div>
 
-      {error ? <ErrorState title="本詳細の取得に失敗しました">{formatApiError(error)}</ErrorState> : null}
+        {error ? <ErrorState title="本詳細の取得に失敗しました">{formatApiError(error)}</ErrorState> : null}
 
-      {isLoading ? <LoadingState title="本詳細を読み込み中" /> : null}
+        {isLoading ? <LoadingState title="本詳細を読み込み中" /> : null}
 
-      {!isLoading && book ? (
-        <article className="book-detail">
-          <header className="book-detail-hero">
-            <div>
-              <p className="eyebrow">{book.location?.name ?? "No Location"}</p>
-              <h3>{book.title}</h3>
-              <p>{book.author || "著者未設定"}</p>
-            </div>
-            <div className="card-actions">
-              <Link className="button-primary link-button" href={`/books/${book.id}/edit`}>
-                編集
-              </Link>
-              <button
-                aria-busy={isDeleting}
-                className="button-danger"
-                disabled={isDeleting}
-                onClick={() => void handleDelete()}
-                type="button"
-              >
-                {isDeleting ? "削除中..." : "削除"}
-              </button>
-            </div>
-          </header>
+        {!isLoading && book ? (
+          <article className="book-detail">
+            <header className="book-detail-hero">
+              <div>
+                <p className="eyebrow">{book.location?.name ?? "No Location"}</p>
+                <h3>{book.title}</h3>
+                <p>{book.author || "著者未設定"}</p>
+              </div>
+              <div className="card-actions">
+                <Link className="button-primary link-button" href={`/books/${book.id}/edit`}>
+                  編集
+                </Link>
+                <button
+                  aria-busy={isDeleting}
+                  className="button-danger"
+                  disabled={isDeleting}
+                  onClick={() => void handleDelete()}
+                  type="button"
+                >
+                  {isDeleting ? "削除中..." : "削除"}
+                </button>
+              </div>
+            </header>
 
-          <section className="detail-section">
-            <p className="eyebrow">Bibliography</p>
-            <dl className="detail-grid">
-              <DetailItem label="著者" value={book.author} />
-              <DetailItem label="出版社" value={book.publisher} />
-              <DetailItem label="出版日" value={book.publishedDate} />
-              <DetailItem label="ISBN" value={book.isbn} />
-            </dl>
-          </section>
+            <section className="detail-section">
+              <p className="eyebrow">Bibliography</p>
+              <dl className="detail-grid">
+                <DetailItem label="著者" value={book.author} />
+                <DetailItem label="出版社" value={book.publisher} />
+                <DetailItem label="出版日" value={book.publishedDate} />
+                <DetailItem label="ISBN" value={book.isbn} />
+              </dl>
+            </section>
 
-          <section className="detail-section">
-            <p className="eyebrow">Barcodes</p>
-            <dl className="detail-grid">
-              <DetailItem label="本のバーコード" value={book.bookBarcode} />
-              <DetailItem label="管理用バーコード" value={book.managementBarcode} />
-              <DetailItem label="外部ソース" value={formatExternalSource(book.externalSource)} />
-              <DetailItem label="外部ID" value={book.externalId} />
-            </dl>
-          </section>
+            <section className="detail-section">
+              <p className="eyebrow">Barcodes</p>
+              <dl className="detail-grid">
+                <DetailItem label="本のバーコード" value={book.bookBarcode} />
+                <DetailItem label="管理用バーコード" value={book.managementBarcode} />
+                <DetailItem label="外部ソース" value={formatExternalSource(book.externalSource)} />
+                <DetailItem label="外部ID" value={book.externalId} />
+              </dl>
+            </section>
 
-          <section className="detail-section">
-            <p className="eyebrow">Management</p>
-            <dl className="detail-grid">
-              <DetailItem label="保管場所" value={book.location?.name} />
-              <DetailItem label="登録日時" value={formatDate(book.createdAt)} />
-              <DetailItem label="更新日時" value={formatDate(book.updatedAt)} />
-            </dl>
-            <div className="book-tag-row detail-tags">
-              {book.classificationTags.length > 0 ? (
-                book.classificationTags.map((tag) => <span key={tag.id}>{tag.name}</span>)
-              ) : (
-                <span>分類なし</span>
-              )}
-            </div>
-          </section>
+            <section className="detail-section">
+              <p className="eyebrow">Management</p>
+              <dl className="detail-grid">
+                <DetailItem label="保管場所" value={book.location?.name} />
+                <DetailItem label="登録日時" value={formatDate(book.createdAt)} />
+                <DetailItem label="更新日時" value={formatDate(book.updatedAt)} />
+              </dl>
+              <div className="book-tag-row detail-tags">
+                {book.classificationTags.length > 0 ? (
+                  book.classificationTags.map((tag) => <span key={tag.id}>{tag.name}</span>)
+                ) : (
+                  <span>分類なし</span>
+                )}
+              </div>
+            </section>
 
-          <section className="detail-section">
-            <p className="eyebrow">Memo</p>
-            <p className="memo-box">{book.managementMemo || "管理メモはありません。"}</p>
-          </section>
-        </article>
-      ) : null}
+            <section className="detail-section">
+              <p className="eyebrow">Memo</p>
+              <p className="memo-box">{book.managementMemo || "管理メモはありません。"}</p>
+            </section>
+          </article>
+        ) : null}
       </section>
     </div>
   );
