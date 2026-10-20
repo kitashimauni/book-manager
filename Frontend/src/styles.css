@@ -2090,6 +2090,10 @@ button[aria-busy="true"] {
     display: none;
   }
 
+  .content-header:not(.has-backend-status) {
+    display: none;
+  }
+
   .content-shell {
     padding-inline: 14px;
   }

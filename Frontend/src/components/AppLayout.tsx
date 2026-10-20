@@ -18,6 +18,7 @@ const navigationItems = [
 
 export function AppLayout({ backendStatus, children, currentPath }: AppLayoutProps) {
   const activeNavigationHref = getActiveNavigationHref(currentPath);
+  const contentHeaderClassName = getContentHeaderClassName(backendStatus);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const mobileNavRef = useRef<HTMLElement | null>(null);
   const mobileNavToggleRef = useRef<HTMLButtonElement | null>(null);
@@ -107,7 +108,7 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
         </nav>
       </aside>
       <main className="content-shell">
-        <header className="content-header">
+        <header className={contentHeaderClassName}>
           <div className="content-context">
             <p className="eyebrow">Workspace</p>
             <strong>蔵書管理</strong>
@@ -118,6 +119,10 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
       </main>
     </div>
   );
+}
+
+export function getContentHeaderClassName(backendStatus: ReactNode): string {
+  return backendStatus ? "content-header has-backend-status" : "content-header";
 }
 
 export function getActiveNavigationHref(currentPath: string): string | null {
