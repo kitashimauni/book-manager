@@ -88,18 +88,6 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
             {isMobileNavOpen ? "×" : "☰"}
           </span>
         </button>
-        {isMobileNavOpen ? (
-          <button
-            aria-label="メニューを閉じる"
-            className="mobile-nav-dismiss"
-            onClick={() => {
-              setIsMobileNavOpen(false);
-              mobileNavToggleRef.current?.focus();
-            }}
-            tabIndex={-1}
-            type="button"
-          />
-        ) : null}
         <nav
           aria-label="ページ"
           className={isMobileNavOpen ? "nav-list mobile-nav-open" : "nav-list"}
@@ -119,6 +107,18 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
           ))}
         </nav>
       </aside>
+      {isMobileNavOpen ? (
+        <button
+          aria-label="メニューを閉じる"
+          className="mobile-nav-dismiss"
+          onClick={() => {
+            setIsMobileNavOpen(false);
+            mobileNavToggleRef.current?.focus();
+          }}
+          tabIndex={-1}
+          type="button"
+        />
+      ) : null}
       <main className="content-shell">
         <header className={contentHeaderClassName}>
           <div className="content-context">
