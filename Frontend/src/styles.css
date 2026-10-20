@@ -1500,6 +1500,16 @@ button[aria-busy="true"] {
   font-weight: 800;
 }
 
+.book-detail-page-layout {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.book-detail-back-link {
+  justify-self: start;
+}
+
 .book-detail {
   display: grid;
   gap: 18px;
