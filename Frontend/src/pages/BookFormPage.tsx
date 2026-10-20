@@ -23,6 +23,7 @@ import {
   type BarcodeScanTarget
 } from "../components/CameraBarcodeScanner.js";
 import { Link } from "../components/Link.js";
+import { FieldHelp } from "../components/FieldHelp.js";
 import { ErrorState, LoadingState } from "../components/StateBlocks.js";
 import {
   focusFirstFieldError,
@@ -768,8 +769,11 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <h3>バーコード</h3>
               </div>
               <div className="field-pair">
-                <label className={primaryIdentifierError ? "has-error" : undefined}>
-                  <span>本のバーコード / ISBN</span>
+                <div className={primaryIdentifierError ? "field-with-help has-error" : "field-with-help"}>
+                  <div className="field-label-with-help">
+                    <label htmlFor="bookBarcode">本のバーコード / ISBN</label>
+                    <FieldHelp label="本のバーコード / ISBN">ISBN-10はISBNだけに、ISBN-13はISBNと本のバーコードの両方に保存されます。その他のバーコードはバーコードとして保存します。個別編集欄に有効なISBNがある場合、外部API照会ではそのISBNを優先します。</FieldHelp>
+                  </div>
                   <input
                     aria-describedby={bookIdentifierDescribedBy || undefined}
                     aria-invalid={Boolean(primaryIdentifierError)}
@@ -784,9 +788,6 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     placeholder="ISBN、JAN、その他のバーコード"
                     value={getBookIdentifierInputValue(form)}
                   />
-                  <p className="field-help">
-                    有効なISBN-10はISBNとして、有効なISBN-13は本のバーコードとISBNとして保存します。その他の値は本のバーコードとして保存します。外部APIで照会するときは、個別編集欄に有効なISBNがあればそれを優先します。
-                  </p>
                   {primaryIdentifierError ? (
                     <p className="field-error" id="bookIdentifier-error">
                       {primaryIdentifierError}
@@ -808,9 +809,12 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                       重複を確認できませんでした。登録済みかどうかを確認せずに保存できます。
                     </p>
                   ) : null}
-                </label>
-                <label className={getFieldError(error, "managementBarcode") ? "has-error" : undefined}>
-                  <span>管理用バーコード</span>
+                </div>
+                <div className={getFieldError(error, "managementBarcode") ? "field-with-help has-error" : "field-with-help"}>
+                  <div className="field-label-with-help">
+                    <label htmlFor="managementBarcode">管理用バーコード</label>
+                    <FieldHelp label="管理用バーコード">本とは別に貼り付ける管理用の番号です。同じ番号は複数の本に登録できず、書誌情報の照会には使用しません。</FieldHelp>
+                  </div>
                   <input
                     aria-describedby={managementBarcodeDescribedBy || undefined}
                     aria-invalid={Boolean(getFieldError(error, "managementBarcode"))}
@@ -820,9 +824,6 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     placeholder="独自に貼付する管理番号"
                     value={form.managementBarcode}
                   />
-                  <p className="field-help">
-                    利用者が貼付する蔵書管理用IDです。書誌情報の照会には使いません。
-                  </p>
                   {getFieldError(error, "managementBarcode") ? (
                     <p className="field-error" id="managementBarcode-error">
                       {getFieldError(error, "managementBarcode")}
@@ -852,7 +853,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                       重複を確認できませんでした。保存時に重複が拒否される場合があります。
                     </p>
                   ) : null}
-                </label>
+                </div>
               </div>
               <details className="identifier-details">
                 <summary>
@@ -899,6 +900,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
               </details>
               <CameraBarcodeScanner onScan={handleCameraScan} />
               <div className="lookup-panel">
+                <div className="field-label-with-help">
                 <button
                   aria-busy={isLookupLoading}
                   className="button-secondary"
@@ -908,9 +910,8 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 >
                   {isLookupLoading ? "照会中..." : "外部APIで照会"}
                 </button>
-                <p>
-                  入力された値からISBNとして解釈できる値を使って照会します。個別編集欄に有効なISBNがある場合は、そのISBNを優先します。取得できない場合は下の書誌情報を手入力できます。
-                </p>
+                <FieldHelp label="外部APIで照会">入力された値から有効なISBNを使ってNDLサーチなどで書誌情報を照会します。個別編集欄に有効なISBNがある場合はそちらを優先します。取得できない場合は手入力で登録できます。</FieldHelp>
+                </div>
                 {lookupMessage ? <p className="inline-message">{lookupMessage}</p> : null}
               </div>
             </section>
@@ -937,8 +938,11 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   </p>
                 ) : null}
               </label>
-              <label className={getFieldError(error, "author") ? "has-error" : undefined}>
-                <span>著者</span>
+              <div className={getFieldError(error, "author") ? "field-with-help has-error" : "field-with-help"}>
+                <div className="field-label-with-help">
+                    <label htmlFor="author">著者</label>
+                    <FieldHelp label="著者">複数の著者を登録する場合は、カンマ区切りで入力してください。</FieldHelp>
+                  </div>
                 <input
                   aria-describedby={getFieldError(error, "author") ? "author-error" : undefined}
                   aria-invalid={Boolean(getFieldError(error, "author"))}
@@ -953,7 +957,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     {getFieldError(error, "author")}
                   </p>
                 ) : null}
-              </label>
+              </div>
               <div className="field-pair">
                 <label className={getFieldError(error, "publisher") ? "has-error" : undefined}>
                   <span>出版社</span>
@@ -971,8 +975,11 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     </p>
                   ) : null}
                 </label>
-                <label className={getFieldError(error, "publishedDate") ? "has-error" : undefined}>
-                  <span>出版日</span>
+                <div className={getFieldError(error, "publishedDate") ? "field-with-help has-error" : "field-with-help"}>
+                  <div className="field-label-with-help">
+                    <label htmlFor="publishedDate">出版日</label>
+                    <FieldHelp label="出版日">YYYY、YYYY-MM、YYYY-MM-DDのいずれかの形式で入力できます。</FieldHelp>
+                  </div>
                   <input
                     aria-describedby={getFieldError(error, "publishedDate") ? "publishedDate-error" : undefined}
                     aria-invalid={Boolean(getFieldError(error, "publishedDate"))}
@@ -987,7 +994,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                       {getFieldError(error, "publishedDate")}
                     </p>
                   ) : null}
-                </label>
+                </div>
               </div>
             </section>
 
@@ -998,7 +1005,10 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
               </div>
               <div className={getFieldError(error, "locationId") ? "location-field has-error" : "location-field"}>
                 <div className="field-label-row">
-                  <label htmlFor="locationId">保管場所</label>
+                  <div className="field-label-with-help">
+                    <label htmlFor="locationId">保管場所</label>
+                    <FieldHelp label="保管場所">本を置いている場所を選択します。選択肢がない場合は、右側のボタンから追加できます。</FieldHelp>
+                  </div>
                   <button
                     className="button-secondary inline-add-button"
                     disabled={isInlineLocationSaving || isInlineTagOpen || isInlineTagSaving}
@@ -1134,8 +1144,11 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   </section>
                 ) : null}
               </div>
-              <label className={getFieldError(error, "managementMemo") ? "has-error" : undefined}>
-                <span>管理メモ</span>
+              <div className={getFieldError(error, "managementMemo") ? "field-with-help has-error" : "field-with-help"}>
+                <div className="field-label-with-help">
+                    <label htmlFor="managementMemo">管理メモ</label>
+                    <FieldHelp label="管理メモ">破損、付属品、棚卸しの補足など、蔵書固有の情報を任意で記録できます。</FieldHelp>
+                  </div>
                 <textarea
                   aria-describedby={getFieldError(error, "managementMemo") ? "managementMemo-error" : undefined}
                   aria-invalid={Boolean(getFieldError(error, "managementMemo"))}
@@ -1150,7 +1163,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                     {getFieldError(error, "managementMemo")}
                   </p>
                 ) : null}
-              </label>
+              </div>
             </section>
 
           </div>
