@@ -44,8 +44,24 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
       mobileNavToggleRef.current?.focus();
     }
 
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target;
+
+      if (
+        target instanceof Node &&
+        !mobileNavRef.current?.contains(target) &&
+        !mobileNavToggleRef.current?.contains(target)
+      ) {
+        setIsMobileNavOpen(false);
+      }
+    }
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
   }, [isMobileNavOpen]);
 
   function handleNavigationSelect(event: MouseEvent<HTMLAnchorElement>) {
