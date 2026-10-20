@@ -2013,7 +2013,7 @@ button[aria-busy="true"] {
 
   .mobile-nav-dismiss {
     position: fixed;
-    z-index: 1;
+    z-index: 9;
     inset: 0;
     display: block;
     width: 100%;
