@@ -65,7 +65,11 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
   }
 
   return (
-    <section className="page-panel">
+    <div className="book-detail-page-layout">
+      <Link className="button-secondary link-button book-detail-back-link" href="/books">
+        ← 一覧へ戻る
+      </Link>
+      <section className="page-panel">
       <div className="page-heading">
         <p className="eyebrow">Book Detail</p>
         <h2>本詳細</h2>
@@ -85,9 +89,6 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
               <p>{book.author || "著者未設定"}</p>
             </div>
             <div className="card-actions">
-              <Link className="button-secondary link-button" href="/books">
-                一覧へ戻る
-              </Link>
               <Link className="button-primary link-button" href={`/books/${book.id}/edit`}>
                 編集
               </Link>
@@ -145,7 +146,8 @@ export function BookDetailPage({ bookId }: BookDetailPageProps) {
           </section>
         </article>
       ) : null}
-    </section>
+      </section>
+    </div>
   );
 }
 
