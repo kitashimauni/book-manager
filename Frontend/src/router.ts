@@ -10,6 +10,9 @@ export type Route =
 
 export function navigateTo(path: string) {
   window.history.pushState({}, "", path);
+  // pushState does not reset the scroll position as a normal page navigation does.
+  // Reset before rendering the destination so book details start at the top.
+  window.scrollTo(0, 0);
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 

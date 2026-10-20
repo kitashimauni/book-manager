@@ -29,7 +29,16 @@ describe("BookCard", () => {
     expect(html).toContain('class="book-card-author"');
     expect(html).toContain("タイトルの視認性を確認する本");
     expect(html).toContain("テスト著者");
-    expect(html).toContain("<dt>出版日</dt><dd>2024-03</dd>");
+    expect(html).toContain('class="book-card-primary"');
+    expect(html).toContain('class="book-card-secondary"');
+    expect(html).toContain('<p class="book-card-publication">出版日：<span>2024-03</span></p>');
+    expect(html).toContain('class="book-card-updated"');
+    expect(html).toContain("更新：");
+    expect(html.indexOf('class="book-card-updated"')).toBeLessThan(html.indexOf('class="book-card-identifiers"'));
+    expect(html).toContain('<details class="book-card-identifiers">');
+    expect(html).toContain("ISBN・バーコードなどの詳細情報");
+    expect(html.indexOf('class="book-card-title"')).toBeLessThan(html.indexOf('class="book-card-identifiers"'));
+    expect(html).toContain("<dt>ISBN</dt><dd>9780132350884</dd>");
     expect(html).toContain("保管場所未設定");
   });
 
@@ -37,7 +46,7 @@ describe("BookCard", () => {
     const html = renderToStaticMarkup(
       <BookCard book={{ ...book, publishedDate: null, author: null }} isDeleting={false} onDelete={() => {}} />
     );
-    expect(html).toContain("<dt>出版日</dt><dd>未設定</dd>");
+    expect(html).toContain("出版日：<span>未設定</span>");
     expect(html).toContain("著者未設定");
   });
 });
