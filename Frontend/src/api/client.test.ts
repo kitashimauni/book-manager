@@ -77,4 +77,19 @@ describe("api client", () => {
       expect.anything()
     );
   });
+
+  it("requests exact identifier matches and excludes the current book when provided", async () => {
+    const { getBookIdentifierMatches } = await loadClient("");
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({ matches: [{ id: "book-1", title: "Existing book" }] })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getBookIdentifierMatches("9780132350884", "bookIdentifier", "book-2");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/books/identifier-matches?field=bookIdentifier&value=9780132350884&excludeBookId=book-2",
+      expect.anything()
+    );
+  });
 });

@@ -27,6 +27,13 @@ describe("interpretBookIdentifier", () => {
       isbn: ""
     });
   });
+
+  it("keeps an arbitrary barcode prefix out of the ISBN field", () => {
+    expect(interpretBookIdentifier("BOOK-9780132350884")).toEqual({
+      bookBarcode: "BOOK-9780132350884",
+      isbn: ""
+    });
+  });
 });
 
 describe("book identifier lookup helpers", () => {

@@ -161,6 +161,125 @@ describe("books API", () => {
     });
   });
 
+  it("finds exact book identifier matches with ISBN equivalence and edit exclusion", async () => {
+    const first = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "ISBN copy one",
+        isbn: "0306406152",
+        bookBarcode: "BOOK-BARCODE-1"
+      }
+    });
+    const second = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "ISBN copy two",
+        isbn: "0306406152",
+        bookBarcode: "BOOK-BARCODE-2"
+      }
+    });
+
+    const equivalentIsbn = await app.inject({
+      method: "GET",
+      url: "/api/books/identifier-matches?value=9780306406157"
+    });
+
+    expect(equivalentIsbn.statusCode).toBe(200);
+    expect(equivalentIsbn.json()).toEqual({
+      matches: [
+        { id: first.json().id, title: "ISBN copy one" },
+        { id: second.json().id, title: "ISBN copy two" }
+      ]
+    });
+
+    const excluded = await app.inject({
+      method: "GET",
+      url: `/api/books/identifier-matches?value=9780306406157&excludeBookId=${first.json().id}`
+    });
+
+    expect(excluded.statusCode).toBe(200);
+    expect(excluded.json()).toEqual({
+      matches: [{ id: second.json().id, title: "ISBN copy two" }]
+    });
+
+    const exactBarcode = await app.inject({
+      method: "GET",
+      url: "/api/books/identifier-matches?value=BOOK-BARCODE-1"
+    });
+    const partialBarcode = await app.inject({
+      method: "GET",
+      url: "/api/books/identifier-matches?value=BOOK-BARCODE"
+    });
+
+    expect(exactBarcode.json()).toEqual({
+      matches: [{ id: first.json().id, title: "ISBN copy one" }]
+    });
+    expect(partialBarcode.json()).toEqual({ matches: [] });
+  });
+
+  it("keeps arbitrary barcode text exact even when it contains an ISBN-looking value", async () => {
+    const isbnBook = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "ISBN-looking book",
+        isbn: "9780132350884"
+      }
+    });
+    const customBarcodeBook = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Custom barcode book",
+        bookBarcode: "BOOK-9780132350884"
+      }
+    });
+
+    const customBarcode = await app.inject({
+      method: "GET",
+      url: "/api/books/identifier-matches?value=BOOK-9780132350884"
+    });
+    const plainIsbn = await app.inject({
+      method: "GET",
+      url: "/api/books/identifier-matches?value=9780132350884"
+    });
+
+    expect(customBarcode.json()).toEqual({
+      matches: [{ id: customBarcodeBook.json().id, title: "Custom barcode book" }]
+    });
+    expect(plainIsbn.json()).toEqual({
+      matches: [{ id: isbnBook.json().id, title: "ISBN-looking book" }]
+    });
+  });
+
+  it("checks management barcodes exactly without changing save-time uniqueness", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/books",
+      payload: {
+        title: "Managed book",
+        managementBarcode: "MANAGED-001"
+      }
+    });
+
+    const matches = await app.inject({
+      method: "GET",
+      url: "/api/books/identifier-matches?field=managementBarcode&value=MANAGED-001"
+    });
+    const excluded = await app.inject({
+      method: "GET",
+      url: `/api/books/identifier-matches?field=managementBarcode&value=MANAGED-001&excludeBookId=${created.json().id}`
+    });
+
+    expect(matches.statusCode).toBe(200);
+    expect(matches.json()).toEqual({
+      matches: [{ id: created.json().id, title: "Managed book" }]
+    });
+    expect(excluded.json()).toEqual({ matches: [] });
+  });
+
   it("sorts books by the requested field and direction", async () => {
     for (const title of ["Zebra", "Alpha", "Middle"]) {
       await app.inject({

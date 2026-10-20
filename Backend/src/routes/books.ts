@@ -7,6 +7,7 @@ import { bookClassificationTags, books, classificationTags, locations } from "..
 import { validationError } from "../errors.js";
 import {
   bookIdParamsSchema,
+  bookIdentifierMatchQuerySchema,
   bookLookupRequestSchema,
   createBookRequestSchema,
   listBooksQuerySchema,
@@ -16,6 +17,7 @@ import {
 } from "../schemas/books.js";
 import { createBookLookupService } from "../services/bookLookup.js";
 import { createSqliteBookLookupCache } from "../services/bookLookupCache.js";
+import { getIsbnEquivalentValues, isValidIsbn } from "../utils/isbn.js";
 
 export type BookRouteOptions = {
   config: AppConfig;
@@ -371,6 +373,40 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
       limit: parsed.data.limit,
       total: total ?? 0
     };
+  });
+
+  app.get("/api/books/identifier-matches", async (request, reply) => {
+    const parsed = bookIdentifierMatchQuerySchema.safeParse(request.query);
+
+    if (!parsed.success) {
+      return reply.status(400).send(mapValidationIssues(parsed.error.issues));
+    }
+
+    const { excludeBookId, field, value } = parsed.data;
+    const identifierConditions =
+      field === "managementBarcode"
+        ? [eq(books.managementBarcode, value)]
+        : [
+            eq(books.bookBarcode, value),
+            ...(isValidIsbn(value)
+              ? getIsbnEquivalentValues(value).flatMap((identifier) => [
+                  eq(books.isbn, identifier),
+                  eq(books.bookBarcode, identifier)
+                ])
+              : [])
+          ];
+    const identifierCondition = or(...identifierConditions);
+    const where = excludeBookId
+      ? and(identifierCondition, ne(books.id, excludeBookId))
+      : identifierCondition;
+    const matches = db
+      .select({ id: books.id, title: books.title })
+      .from(books)
+      .where(where)
+      .orderBy(asc(books.title), asc(books.id))
+      .all();
+
+    return { matches };
   });
 
   app.post("/api/books", async (request, reply) => {

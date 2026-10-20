@@ -3,6 +3,7 @@ import {
   createBook,
   createClassificationTag,
   createLocation,
+  getBookIdentifierMatches,
   getBook,
   getClassificationTags,
   getLocations,
@@ -10,6 +11,7 @@ import {
   updateBook,
   type ApiError,
   type Book,
+  type BookIdentifierMatch,
   type BookFormRequest,
   type BookLookupResult,
   type ClassificationTag,
@@ -20,6 +22,7 @@ import {
   CameraBarcodeScanner,
   type BarcodeScanTarget
 } from "../components/CameraBarcodeScanner.js";
+import { Link } from "../components/Link.js";
 import { ErrorState, LoadingState } from "../components/StateBlocks.js";
 import {
   focusFirstFieldError,
@@ -33,6 +36,13 @@ import {
   interpretBookIdentifier,
   mergeLookupIdentifiers
 } from "../bookIdentifiers.js";
+import {
+  consumeIdentifierCheckSkipKey,
+  getIdentifierCheckKey,
+  getIdentifierCheckRequests,
+  mergeIdentifierMatches,
+  type IdentifierCheckValues
+} from "../bookIdentifierDuplicates.js";
 import { navigateTo } from "../router.js";
 
 type BookFormPageProps = {
@@ -55,6 +65,16 @@ type BookFormState = {
   title: string;
 };
 
+type DuplicateMatchesState = {
+  bookIdentifier: BookIdentifierMatch[];
+  managementBarcode: BookIdentifierMatch[];
+};
+
+type DuplicateCheckErrorsState = {
+  bookIdentifier: boolean;
+  managementBarcode: boolean;
+};
+
 const emptyForm: BookFormState = {
   author: "",
   bookBarcode: "",
@@ -68,6 +88,16 @@ const emptyForm: BookFormState = {
   publishedDate: "",
   publisher: "",
   title: ""
+};
+
+const emptyDuplicateMatches: DuplicateMatchesState = {
+  bookIdentifier: [],
+  managementBarcode: []
+};
+
+const emptyDuplicateCheckErrors: DuplicateCheckErrorsState = {
+  bookIdentifier: false,
+  managementBarcode: false
 };
 
 type InlineLocationFormState = {
@@ -94,6 +124,10 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   const isEdit = mode === "edit";
   const [candidateSource, setCandidateSource] = useState<ClassificationTagSource>("open_library");
   const [candidateSubjects, setCandidateSubjects] = useState<string[]>([]);
+  const [duplicateCheckErrors, setDuplicateCheckErrors] = useState<DuplicateCheckErrorsState>(
+    emptyDuplicateCheckErrors
+  );
+  const [duplicateMatches, setDuplicateMatches] = useState<DuplicateMatchesState>(emptyDuplicateMatches);
   const [error, setError] = useState<ApiError | null>(null);
   const [form, setForm] = useState<BookFormState>(emptyForm);
   const [isLoading, setIsLoading] = useState(isEdit);
@@ -113,6 +147,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   const [inlineTagMessage, setInlineTagMessage] = useState<string | null>(null);
   const [locations, setLocations] = useState<Location[]>([]);
   const [lookupMessage, setLookupMessage] = useState<string | null>(null);
+  const [isDuplicateCheckLoading, setIsDuplicateCheckLoading] = useState(false);
   const [tags, setTags] = useState<ClassificationTag[]>([]);
   const inlineLocationNameInputRef = useRef<HTMLInputElement | null>(null);
   const inlineLocationSavingRef = useRef(false);
@@ -120,6 +155,8 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   const inlineTagNameInputRef = useRef<HTMLInputElement | null>(null);
   const inlineTagSavingRef = useRef(false);
   const inlineTagTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const identifierCheckSequenceRef = useRef(0);
+  const skipNextIdentifierCheckKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -163,6 +200,44 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
       isMounted = false;
     };
   }, [bookId, isEdit]);
+
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    const identifierValues: IdentifierCheckValues = {
+      bookBarcode: form.bookBarcode,
+      isbn: form.isbn,
+      managementBarcode: form.managementBarcode
+    };
+    const identifierCheckKey = getIdentifierCheckKey(identifierValues);
+
+    const skipCheck = consumeIdentifierCheckSkipKey(
+      skipNextIdentifierCheckKeyRef.current,
+      identifierCheckKey
+    );
+    skipNextIdentifierCheckKeyRef.current = skipCheck.nextSkipKey;
+
+    if (skipCheck.shouldSkip) {
+      return;
+    }
+
+    identifierCheckSequenceRef.current += 1;
+    setDuplicateMatches(emptyDuplicateMatches);
+    setDuplicateCheckErrors(emptyDuplicateCheckErrors);
+
+    if (getIdentifierCheckRequests(identifierValues).length === 0) {
+      setIsDuplicateCheckLoading(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void checkIdentifierDuplicates(identifierValues);
+    }, 350);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [bookId, form.bookBarcode, form.isbn, form.managementBarcode, isLoading]);
 
   useEffect(() => {
     if (isInlineLocationOpen) {
@@ -227,6 +302,59 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
     } finally {
       setIsLookupLoading(false);
     }
+  }
+
+  async function checkIdentifierDuplicates(identifierValues: IdentifierCheckValues) {
+    const requestId = ++identifierCheckSequenceRef.current;
+    const requests = getIdentifierCheckRequests(identifierValues);
+
+    setDuplicateMatches(emptyDuplicateMatches);
+    setDuplicateCheckErrors(emptyDuplicateCheckErrors);
+
+    if (requests.length === 0) {
+      setIsDuplicateCheckLoading(false);
+      return;
+    }
+
+    setIsDuplicateCheckLoading(true);
+
+    const results = await Promise.all(
+      requests.map(async (request) => {
+        try {
+          const result = await getBookIdentifierMatches(request.value, request.field, bookId);
+
+          return {
+            field: request.field,
+            matches: result.matches,
+            failed: false
+          };
+        } catch {
+          return {
+            field: request.field,
+            matches: [],
+            failed: true
+          };
+        }
+      })
+    );
+
+    if (requestId !== identifierCheckSequenceRef.current) {
+      return;
+    }
+
+    setDuplicateMatches({
+      bookIdentifier: mergeIdentifierMatches(
+        results.filter((result) => result.field === "bookIdentifier").map((result) => result.matches)
+      ),
+      managementBarcode: mergeIdentifierMatches(
+        results.filter((result) => result.field === "managementBarcode").map((result) => result.matches)
+      )
+    });
+    setDuplicateCheckErrors({
+      bookIdentifier: results.some((result) => result.field === "bookIdentifier" && result.failed),
+      managementBarcode: results.some((result) => result.field === "managementBarcode" && result.failed)
+    });
+    setIsDuplicateCheckLoading(false);
   }
 
   function applyLookupResult(result: BookLookupResult, lookupValue: string) {
@@ -507,11 +635,18 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   function handleCameraScan(value: string, target: BarcodeScanTarget) {
     if (target === "bookBarcode") {
       const interpreted = interpretBookIdentifier(value);
+      const nextIdentifierValues: IdentifierCheckValues = {
+        bookBarcode: interpreted.bookBarcode,
+        isbn: interpreted.isbn,
+        managementBarcode: form.managementBarcode
+      };
 
       setForm((current) => ({
         ...current,
         ...interpreted
       }));
+      skipNextIdentifierCheckKeyRef.current = getIdentifierCheckKey(nextIdentifierValues);
+      void checkIdentifierDuplicates(nextIdentifierValues);
       setLookupMessage(
         interpreted.isbn
           ? "カメラで読み取った値をISBNとして入力しました。必要に応じて外部APIで照会できます。"
@@ -520,10 +655,18 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
       return;
     }
 
+    const nextIdentifierValues: IdentifierCheckValues = {
+      bookBarcode: form.bookBarcode,
+      isbn: form.isbn,
+      managementBarcode: value
+    };
+
     setForm((current) => ({
       ...current,
       managementBarcode: value
     }));
+    skipNextIdentifierCheckKeyRef.current = getIdentifierCheckKey(nextIdentifierValues);
+    void checkIdentifierDuplicates(nextIdentifierValues);
     setLookupMessage("カメラで読み取った値を管理用バーコードに入力しました。");
   }
 
@@ -532,6 +675,27 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
   const bookBarcodeError = getFieldError(error, "bookBarcode");
   const isbnError = getFieldError(error, "isbn");
   const primaryIdentifierError = bookBarcodeError ?? isbnError;
+  const bookIdentifierDuplicateWarning = duplicateMatches.bookIdentifier.length > 0;
+  const managementBarcodeDuplicateWarning = duplicateMatches.managementBarcode.length > 0;
+  const hasBookIdentifierValue = Boolean(form.bookBarcode.trim() || form.isbn.trim());
+  const bookIdentifierDescribedBy = [
+    primaryIdentifierError ? "bookIdentifier-error" : null,
+    bookIdentifierDuplicateWarning ? "bookIdentifier-duplicate-warning" : null,
+    isDuplicateCheckLoading && hasBookIdentifierValue ? "bookIdentifier-duplicate-check-status" : null,
+    duplicateCheckErrors.bookIdentifier ? "bookIdentifier-duplicate-check-error" : null
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const managementBarcodeDescribedBy = [
+    getFieldError(error, "managementBarcode") ? "managementBarcode-error" : null,
+    managementBarcodeDuplicateWarning ? "managementBarcode-duplicate-warning" : null,
+    isDuplicateCheckLoading && Boolean(form.managementBarcode.trim())
+      ? "managementBarcode-duplicate-check-status"
+      : null,
+    duplicateCheckErrors.managementBarcode ? "managementBarcode-duplicate-check-error" : null
+  ]
+    .filter(Boolean)
+    .join(" ");
   const hasDistinctIdentifierValues =
     Boolean(form.bookBarcode.trim()) &&
     Boolean(form.isbn.trim()) &&
@@ -607,7 +771,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                 <label className={primaryIdentifierError ? "has-error" : undefined}>
                   <span>本のバーコード / ISBN</span>
                   <input
-                    aria-describedby={primaryIdentifierError ? "bookIdentifier-error" : undefined}
+                    aria-describedby={bookIdentifierDescribedBy || undefined}
                     aria-invalid={Boolean(primaryIdentifierError)}
                     id="bookBarcode"
                     maxLength={200}
@@ -628,11 +792,27 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                       {primaryIdentifierError}
                     </p>
                   ) : null}
+                  {bookIdentifierDuplicateWarning ? (
+                    <DuplicateBookWarning
+                      field="bookIdentifier"
+                      matches={duplicateMatches.bookIdentifier}
+                    />
+                  ) : null}
+                  {isDuplicateCheckLoading && hasBookIdentifierValue ? (
+                    <p aria-live="polite" className="field-check-status" id="bookIdentifier-duplicate-check-status">
+                      登録済みの本との重複を確認中です。
+                    </p>
+                  ) : null}
+                  {duplicateCheckErrors.bookIdentifier ? (
+                    <p aria-live="polite" className="field-check-status" id="bookIdentifier-duplicate-check-error">
+                      重複を確認できませんでした。登録済みかどうかを確認せずに保存できます。
+                    </p>
+                  ) : null}
                 </label>
                 <label className={getFieldError(error, "managementBarcode") ? "has-error" : undefined}>
                   <span>管理用バーコード</span>
                   <input
-                    aria-describedby={getFieldError(error, "managementBarcode") ? "managementBarcode-error" : undefined}
+                    aria-describedby={managementBarcodeDescribedBy || undefined}
                     aria-invalid={Boolean(getFieldError(error, "managementBarcode"))}
                     id="managementBarcode"
                     maxLength={200}
@@ -646,6 +826,30 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   {getFieldError(error, "managementBarcode") ? (
                     <p className="field-error" id="managementBarcode-error">
                       {getFieldError(error, "managementBarcode")}
+                    </p>
+                  ) : null}
+                  {managementBarcodeDuplicateWarning ? (
+                    <DuplicateBookWarning
+                      field="managementBarcode"
+                      matches={duplicateMatches.managementBarcode}
+                    />
+                  ) : null}
+                  {isDuplicateCheckLoading && form.managementBarcode.trim() ? (
+                    <p
+                      aria-live="polite"
+                      className="field-check-status"
+                      id="managementBarcode-duplicate-check-status"
+                    >
+                      登録済みの本との重複を確認中です。
+                    </p>
+                  ) : null}
+                  {duplicateCheckErrors.managementBarcode ? (
+                    <p
+                      aria-live="polite"
+                      className="field-check-status"
+                      id="managementBarcode-duplicate-check-error"
+                    >
+                      重複を確認できませんでした。保存時に重複が拒否される場合があります。
                     </p>
                   ) : null}
                 </label>
@@ -1201,4 +1405,35 @@ function normalizeTagName(value: string) {
 
 function formatLookupSource(source: BookLookupResult["externalSource"]) {
   return source === "ndl_search" ? "NDLサーチ" : "Open Library";
+}
+
+function DuplicateBookWarning({
+  field,
+  matches
+}: {
+  field: "bookIdentifier" | "managementBarcode";
+  matches: BookIdentifierMatch[];
+}) {
+  const message =
+    field === "managementBarcode"
+      ? matches.length === 1
+        ? "同じ管理用バーコードの本があります："
+        : `同じ管理用バーコードの本が${matches.length}件あります：`
+      : matches.length === 1
+        ? "登録済みの本があります："
+        : `同じ識別情報の本が${matches.length}件登録されています：`;
+
+  return (
+    <p aria-live="polite" className="field-warning" id={`${field}-duplicate-warning`}>
+      {message} {" "}
+      {matches.map((match, index) => (
+        <span key={match.id}>
+          {index > 0 ? "、" : null}
+          <Link href={`/books/${encodeURIComponent(match.id)}`}>
+            {match.title || "無題"}（詳細を見る）
+          </Link>
+        </span>
+      ))}
+    </p>
+  );
 }
