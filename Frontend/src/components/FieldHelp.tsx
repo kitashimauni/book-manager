@@ -30,12 +30,20 @@ export function FieldHelp({ label, children }: FieldHelpProps) {
       }
     }
 
+    function handleFocusIn(event: FocusEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("focusin", handleFocusIn);
 
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("focusin", handleFocusIn);
     };
   }, [isOpen]);
 
@@ -43,6 +51,7 @@ export function FieldHelp({ label, children }: FieldHelpProps) {
     <span className="field-help-control" ref={containerRef}>
       <button
         aria-controls={popoverId}
+        aria-describedby={isOpen ? popoverId : undefined}
         aria-expanded={isOpen}
         aria-label={`${label}の説明`}
         className="field-help-button"
