@@ -156,6 +156,10 @@ button[aria-busy="true"] {
   line-height: 1;
 }
 
+.mobile-nav-dismiss {
+  display: none;
+}
+
 .nav-link {
   display: block;
   padding: 14px 16px;
@@ -2001,8 +2005,23 @@ button[aria-busy="true"] {
   }
 
   .mobile-nav-toggle {
+    position: relative;
+    z-index: 2;
     display: flex;
     margin-bottom: 12px;
+  }
+
+  .mobile-nav-dismiss {
+    position: fixed;
+    z-index: 1;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: default;
   }
 
   .nav-list {
@@ -2014,7 +2033,7 @@ button[aria-busy="true"] {
 
   .nav-list.mobile-nav-open {
     position: absolute;
-    z-index: 1;
+    z-index: 2;
     top: calc(100% - 4px);
     right: 20px;
     left: 20px;
