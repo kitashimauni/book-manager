@@ -44,24 +44,8 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
       mobileNavToggleRef.current?.focus();
     }
 
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target;
-
-      if (
-        target instanceof Node &&
-        !mobileNavRef.current?.contains(target) &&
-        !mobileNavToggleRef.current?.contains(target)
-      ) {
-        setIsMobileNavOpen(false);
-      }
-    }
-
     window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("pointerdown", handlePointerDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isMobileNavOpen]);
 
   function handleNavigationSelect(event: MouseEvent<HTMLAnchorElement>) {
@@ -104,6 +88,18 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
             {isMobileNavOpen ? "×" : "☰"}
           </span>
         </button>
+        {isMobileNavOpen ? (
+          <button
+            aria-label="メニューを閉じる"
+            className="mobile-nav-dismiss"
+            onClick={() => {
+              setIsMobileNavOpen(false);
+              mobileNavToggleRef.current?.focus();
+            }}
+            tabIndex={-1}
+            type="button"
+          />
+        ) : null}
         <nav
           aria-label="ページ"
           className={isMobileNavOpen ? "nav-list mobile-nav-open" : "nav-list"}
