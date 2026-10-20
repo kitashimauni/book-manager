@@ -28,7 +28,8 @@ Copy-Item .env.example .env
 }
 ```
 
-- [ ] Frontend上部のコンパクトなAPIステータスを開くと、Backend APIの接続先とDB `ok` を確認できる
+- [ ] APIとDBが正常な場合、Frontend上部に常時表示のAPI接続バッジが表示されない
+- [ ] APIまたはDBのヘルスチェックに失敗した場合、Frontend上部の警告を開いてBackend APIの接続先、エラー内容、DB状態を確認できる
 - [ ] 終了時にFrontendとBackendのプロセスを停止する
 
 通常のホスト側テストは、依存関係をインストールした後に `mise run typecheck`、`mise run test`、`mise run build` を実行します。

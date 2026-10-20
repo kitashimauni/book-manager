@@ -1720,6 +1720,18 @@ button[aria-busy="true"] {
   box-shadow: 0 0 0 8px rgba(92, 127, 79, 0.16);
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .loading-dot {
   animation: pulse 1.1s ease-in-out infinite;
 }
@@ -1749,6 +1761,11 @@ button[aria-busy="true"] {
 
 .status-affordance summary::-webkit-details-marker {
   display: none;
+}
+
+.status-affordance summary:focus-visible {
+  outline: 3px solid var(--cedar);
+  outline-offset: 3px;
 }
 
 .status-affordance summary::after {
