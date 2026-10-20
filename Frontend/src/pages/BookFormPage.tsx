@@ -949,7 +949,7 @@ export function BookFormPage({ mode, bookId }: BookFormPageProps) {
                   id="author"
                   maxLength={500}
                   onChange={(event) => setForm({ ...form, author: event.target.value })}
-                  placeholder="複数名はカンマ区切り"
+                  placeholder="例：山田太郎, 佐藤花子"
                   value={form.author}
                 />
                 {getFieldError(error, "author") ? (
