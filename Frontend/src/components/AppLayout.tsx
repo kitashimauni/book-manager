@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type MouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "./Link.js";
 import { resolveRoute } from "../router.js";
 
@@ -18,6 +18,51 @@ const navigationItems = [
 
 export function AppLayout({ backendStatus, children, currentPath }: AppLayoutProps) {
   const activeNavigationHref = getActiveNavigationHref(currentPath);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const mobileNavRef = useRef<HTMLElement | null>(null);
+  const mobileNavToggleRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    setIsMobileNavOpen(false);
+  }, [currentPath]);
+
+  useEffect(() => {
+    if (!isMobileNavOpen) {
+      return;
+    }
+
+    mobileNavRef.current?.querySelector<HTMLAnchorElement>("a")?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      event.preventDefault();
+      setIsMobileNavOpen(false);
+      mobileNavToggleRef.current?.focus();
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isMobileNavOpen]);
+
+  function handleNavigationSelect(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      !isMobileNavOpen ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    setIsMobileNavOpen(false);
+    mobileNavToggleRef.current?.focus();
+  }
 
   return (
     <div className="app-shell">
@@ -29,12 +74,32 @@ export function AppLayout({ backendStatus, children, currentPath }: AppLayoutPro
             <h1>蔵書管理</h1>
           </div>
         </div>
-        <nav className="nav-list">
+        <button
+          aria-controls="primary-navigation"
+          aria-expanded={isMobileNavOpen}
+          className="mobile-nav-toggle"
+          onClick={() => setIsMobileNavOpen((isOpen) => !isOpen)}
+          ref={mobileNavToggleRef}
+          type="button"
+        >
+          <span>{isMobileNavOpen ? "メニューを閉じる" : "メニューを開く"}</span>
+          <span aria-hidden="true" className="mobile-nav-toggle-icon">
+            {isMobileNavOpen ? "×" : "☰"}
+          </span>
+        </button>
+        <nav
+          aria-label="ページ"
+          className={isMobileNavOpen ? "nav-list mobile-nav-open" : "nav-list"}
+          id="primary-navigation"
+          ref={mobileNavRef}
+        >
           {navigationItems.map((item) => (
             <Link
+              aria-current={activeNavigationHref === item.href ? "page" : undefined}
               className={activeNavigationHref === item.href ? "nav-link active" : "nav-link"}
               href={item.href}
               key={item.href}
+              onClick={handleNavigationSelect}
             >
               {item.label}
             </Link>
