@@ -418,12 +418,14 @@ export function BookCard({
 }) {
   return (
     <article className="book-card">
-      <div className="book-card-primary">
+      <div className="book-card-heading">
         <p className="eyebrow book-card-location">{book.location?.name ?? "保管場所未設定"}</p>
-        <h3 className="book-card-title">
-          <Link href={`/books/${book.id}`}>{book.title}</Link>
-        </h3>
-        <p className="book-card-author">{book.author || "著者未設定"}</p>
+        <div className="book-card-primary">
+          <h3 className="book-card-title">
+            <Link href={`/books/${book.id}`}>{book.title}</Link>
+          </h3>
+          <p className="book-card-author">{book.author || "著者未設定"}</p>
+        </div>
       </div>
       <div className="book-card-secondary">
         <div className="book-card-dates">
