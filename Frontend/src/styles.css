@@ -34,6 +34,17 @@ a {
   color: inherit;
 }
 
+/* Avoid WebKit's transient blue flash on touch controls without hiding keyboard focus. */
+a,
+button,
+summary,
+label,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
 button,
 input,
 textarea,
@@ -1461,8 +1472,12 @@ button[aria-busy="true"] {
   text-decoration: none;
 }
 
-.book-card-primary {
+.book-card-heading {
   grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.book-card-primary {
   min-width: 0;
   padding-left: 14px;
   border-left: 3px solid var(--moss);
