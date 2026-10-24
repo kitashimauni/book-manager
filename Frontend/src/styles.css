@@ -13,6 +13,11 @@
   --moss: #556b4f;
   --line: rgba(65, 55, 39, 0.16);
   --shadow: 0 28px 90px rgba(65, 49, 27, 0.16);
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
 }
 
 * {
@@ -103,7 +108,7 @@ button[aria-busy="true"] {
   height: 54px;
   place-items: center;
   border: 1px solid rgba(138, 87, 56, 0.38);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: #2f3a2d;
   color: #f6d59b;
   font-weight: 800;
@@ -148,7 +153,7 @@ button[aria-busy="true"] {
   margin: 0;
   padding: 10px 14px;
   border: 1px solid rgba(85, 107, 79, 0.3);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: rgba(255, 250, 240, 0.72);
   color: var(--ink);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -175,7 +180,7 @@ button[aria-busy="true"] {
   display: block;
   padding: 14px 16px;
   border: 1px solid transparent;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   color: #435042;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
   font-weight: 700;
@@ -227,7 +232,7 @@ button[aria-busy="true"] {
 
 .page-panel {
   border: 1px solid var(--line);
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   background: var(--paper-soft);
   box-shadow: var(--shadow);
   min-width: 0;
@@ -263,7 +268,7 @@ button[aria-busy="true"] {
   align-items: center;
   margin-top: 24px;
   padding: 13px 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: #2f3a2d;
   color: #fff5df;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -285,7 +290,7 @@ button[aria-busy="true"] {
   place-items: center;
   padding: 18px;
   border: 1px dashed rgba(85, 107, 79, 0.34);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.35);
   color: #526150;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -328,7 +333,7 @@ button[aria-busy="true"] {
   gap: 18px;
   padding: 22px;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   background: rgba(255, 250, 240, 0.64);
   box-shadow: 0 20px 60px rgba(65, 49, 27, 0.08);
 }
@@ -345,7 +350,7 @@ button[aria-busy="true"] {
 .safety-warning {
   margin: 0;
   padding: 12px 14px;
-  border-radius: 15px;
+  border-radius: var(--radius-md);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
   font-weight: 800;
   line-height: 1.7;
@@ -390,7 +395,7 @@ button[aria-busy="true"] {
 .json-paste-field textarea {
   width: 100%;
   border: 1px solid rgba(65, 55, 39, 0.18);
-  border-radius: 15px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -465,7 +470,7 @@ button[aria-busy="true"] {
   gap: 8px;
   padding: 16px;
   border: 1px solid rgba(85, 107, 79, 0.18);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.48);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
 }
@@ -491,7 +496,7 @@ button[aria-busy="true"] {
   gap: 14px;
   padding: 18px;
   border: 1px solid rgba(65, 55, 39, 0.12);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background: rgba(255, 250, 240, 0.48);
 }
 
@@ -513,7 +518,7 @@ button[aria-busy="true"] {
 .conflict-card {
   padding: 16px;
   border: 1px solid rgba(85, 107, 79, 0.18);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.5);
 }
 
@@ -561,7 +566,7 @@ button[aria-busy="true"] {
   min-height: 38px;
   padding: 7px 11px;
   border: 1px solid rgba(85, 107, 79, 0.2);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.5);
   color: #354433;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -596,7 +601,7 @@ button[aria-busy="true"] {
   gap: 18px;
   padding: 22px;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   background: rgba(255, 250, 240, 0.64);
   box-shadow: 0 20px 60px rgba(65, 49, 27, 0.08);
 }
@@ -686,7 +691,7 @@ button[aria-busy="true"] {
   width: min(380px, 100%);
   padding: 12px 14px;
   border: 1px solid rgba(85, 107, 79, 0.28);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: #fffaf0;
   box-shadow: 0 14px 35px rgba(65, 49, 27, 0.22);
   color: var(--ink);
@@ -739,7 +744,7 @@ button[aria-busy="true"] {
   gap: 14px;
   padding: 16px;
   border: 1px solid rgba(85, 107, 79, 0.28);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: rgba(85, 107, 79, 0.08);
 }
 
@@ -763,7 +768,7 @@ button[aria-busy="true"] {
 .inline-location-panel textarea {
   width: 100%;
   border: 1px solid rgba(65, 55, 39, 0.18);
-  border-radius: 15px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -808,7 +813,7 @@ button[aria-busy="true"] {
 .form-section select {
   width: 100%;
   border: 1px solid rgba(65, 55, 39, 0.18);
-  border-radius: 15px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -844,7 +849,7 @@ button[aria-busy="true"] {
 
 .identifier-details {
   border: 1px solid rgba(85, 107, 79, 0.2);
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.3);
 }
 
@@ -902,7 +907,7 @@ button[aria-busy="true"] {
   gap: 10px;
   padding: 16px;
   border: 1px dashed rgba(85, 107, 79, 0.32);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: rgba(85, 107, 79, 0.08);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
 }
@@ -912,7 +917,7 @@ button[aria-busy="true"] {
   gap: 14px;
   padding: 16px;
   border: 1px solid rgba(65, 55, 39, 0.14);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background:
     radial-gradient(circle at 18% 12%, rgba(246, 213, 155, 0.35), transparent 34%),
     rgba(47, 58, 45, 0.08);
@@ -962,7 +967,7 @@ button[aria-busy="true"] {
   overflow-y: auto;
   padding: 22px;
   border: 1px solid rgba(65, 55, 39, 0.18);
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   outline: none;
   background: var(--paper);
   box-shadow: 0 28px 90px rgba(22, 30, 23, 0.34);
@@ -995,7 +1000,7 @@ button[aria-busy="true"] {
   min-height: 38px;
   padding: 7px 11px;
   border: 1px solid rgba(85, 107, 79, 0.2);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.5);
   color: #354433;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -1014,7 +1019,7 @@ button[aria-busy="true"] {
   overflow: hidden;
   place-items: center;
   border: 1px dashed rgba(85, 107, 79, 0.32);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background:
     linear-gradient(135deg, rgba(47, 58, 45, 0.9), rgba(36, 48, 38, 0.82)),
     #243026;
@@ -1041,7 +1046,7 @@ button[aria-busy="true"] {
   position: absolute;
   z-index: 1;
   padding: 8px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(36, 48, 38, 0.76);
   color: #fff5df;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -1051,14 +1056,44 @@ button[aria-busy="true"] {
 
 .scanner-reticle {
   position: absolute;
-  width: min(78%, 420px);
-  height: 82px;
+  top: 50%;
+  left: 50%;
+  width: min(86%, 440px);
+  height: 52px;
+  transform: translate(-50%, -50%);
   border: 2px solid rgba(246, 213, 155, 0.9);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   box-shadow:
     0 0 0 999px rgba(0, 0, 0, 0.18),
     0 0 28px rgba(246, 213, 155, 0.28);
   pointer-events: none;
+}
+
+.scanner-reticle.wide {
+  width: auto;
+  height: min(60%, 220px);
+  aspect-ratio: 1;
+}
+
+.scanner-region-switch {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-family: "Yu Gothic", "Meiryo", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.scanner-region-switch .button-secondary {
+  padding: 6px 10px;
+}
+
+.scanner-region-switch .button-secondary[aria-pressed="true"] {
+  border-color: #2f3a2d;
+  background: #2f3a2d;
+  color: #fff5df;
 }
 
 .scanner-error {
@@ -1154,7 +1189,7 @@ button[aria-busy="true"] {
   min-height: 40px;
   padding: 8px 12px;
   border: 1px solid rgba(85, 107, 79, 0.22);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.52);
   color: #354433;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -1227,7 +1262,7 @@ button[aria-busy="true"] {
   max-width: 1320px;
   padding: 18px;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   background: rgba(255, 250, 240, 0.62);
 }
 
@@ -1261,7 +1296,7 @@ button[aria-busy="true"] {
   min-height: 46px;
   padding: 0 14px;
   border: 1px solid rgba(65, 55, 39, 0.18);
-  border-radius: 15px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -1342,7 +1377,7 @@ button[aria-busy="true"] {
   min-width: 0;
   padding: 13px 16px;
   border: 1px solid rgba(85, 107, 79, 0.16);
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.46);
 }
 
@@ -1421,7 +1456,7 @@ button[aria-busy="true"] {
 
 .dense-book-tags span {
   padding: 3px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(85, 107, 79, 0.12);
   color: #3f6639;
   font-size: 0.75rem;
@@ -1447,7 +1482,7 @@ button[aria-busy="true"] {
 .book-card,
 .book-detail {
   border: 1px solid rgba(85, 107, 79, 0.18);
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.64), rgba(255, 250, 240, 0.5)),
     rgba(255, 255, 255, 0.36);
@@ -1643,7 +1678,7 @@ button[aria-busy="true"] {
 .book-tag-row span {
   display: inline-flex;
   padding: 6px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(85, 107, 79, 0.12);
   color: #3f6639;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -1698,7 +1733,7 @@ button[aria-busy="true"] {
   gap: 12px;
   padding: 18px;
   border: 1px solid rgba(65, 55, 39, 0.12);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background: rgba(255, 250, 240, 0.48);
 }
 
@@ -1717,7 +1752,7 @@ button[aria-busy="true"] {
 .memo-box {
   min-height: 72px;
   padding: 16px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.5);
   white-space: pre-wrap;
 }
@@ -1725,7 +1760,7 @@ button[aria-busy="true"] {
 .management-form,
 .management-list {
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   background: rgba(255, 250, 240, 0.64);
   box-shadow: 0 20px 60px rgba(65, 49, 27, 0.08);
 }
@@ -1757,7 +1792,7 @@ button[aria-busy="true"] {
 .management-form select {
   width: 100%;
   border: 1px solid rgba(65, 55, 39, 0.18);
-  border-radius: 15px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -1811,7 +1846,7 @@ button[aria-busy="true"] {
   margin: 0 0 22px;
   padding: 16px 18px 16px 38px;
   border: 1px solid rgba(85, 107, 79, 0.22);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: rgba(85, 107, 79, 0.08);
   color: #3f4b3d;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -1827,7 +1862,7 @@ button[aria-busy="true"] {
   justify-content: center;
   min-height: 42px;
   padding: 8px 15px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
   font-weight: 800;
   line-height: 1.35;
@@ -1891,7 +1926,7 @@ button[aria-busy="true"] {
   gap: 18px;
   padding: 18px;
   border: 1px solid rgba(85, 107, 79, 0.18);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 250, 240, 0.48)),
     rgba(255, 255, 255, 0.36);
@@ -1919,7 +1954,7 @@ button[aria-busy="true"] {
 .status-pill {
   display: inline-flex;
   padding: 5px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(102, 114, 98, 0.14);
   color: #667262;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -1962,7 +1997,7 @@ button[aria-busy="true"] {
 .state-block {
   max-width: 680px;
   padding: 20px;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   font-family: "Yu Gothic", "Meiryo", sans-serif;
 }
 
@@ -2010,7 +2045,7 @@ button[aria-busy="true"] {
   margin: 0;
   padding: 14px 16px 14px 34px;
   border: 1px solid rgba(85, 107, 79, 0.18);
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.36);
   color: #3f4b3d;
   font-family: "Yu Gothic", "Meiryo", sans-serif;
@@ -2044,7 +2079,7 @@ button[aria-busy="true"] {
 .status-dot {
   width: 12px;
   height: 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: #5c7f4f;
   box-shadow: 0 0 0 8px rgba(92, 127, 79, 0.16);
 }
@@ -2080,7 +2115,7 @@ button[aria-busy="true"] {
   min-height: 38px;
   padding: 7px 12px;
   border: 1px solid rgba(85, 107, 79, 0.2);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(85, 107, 79, 0.1);
   cursor: pointer;
   font-size: 0.86rem;
@@ -2128,7 +2163,7 @@ button[aria-busy="true"] {
   max-width: calc(100vw - 28px);
   padding: 14px 16px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: rgba(255, 250, 240, 0.98);
   box-shadow: 0 18px 44px rgba(65, 49, 27, 0.16);
   font-size: 0.86rem;
@@ -2246,7 +2281,7 @@ button[aria-busy="true"] {
     overflow-y: auto;
     padding: 10px;
     border: 1px solid rgba(85, 107, 79, 0.28);
-    border-radius: 18px;
+    border-radius: var(--radius-lg);
     background: #fffaf0;
     box-shadow: 0 20px 50px rgba(47, 58, 45, 0.22);
   }
@@ -2405,13 +2440,13 @@ button[aria-busy="true"] {
   }
 
   .scanner-modal {
-    place-items: end center;
+    place-items: start center;
   }
 
   .scanner-dialog {
     width: 100%;
     padding: 18px;
-    border-radius: 20px;
+    border-radius: var(--radius-lg);
   }
 
   .scanner-targets label {
@@ -2440,5 +2475,9 @@ button[aria-busy="true"] {
 
   .scanner-preview {
     height: 160px;
+  }
+
+  .scanner-reticle:not(.wide) {
+    height: 40px;
   }
 }
