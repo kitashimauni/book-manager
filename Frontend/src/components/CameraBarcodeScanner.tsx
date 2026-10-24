@@ -19,7 +19,6 @@ const FOCUSABLE_ELEMENT_SELECTOR =
 export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const previewRef = useRef<HTMLDivElement | null>(null);
   const reticleRef = useRef<HTMLSpanElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const isMountedRef = useRef(false);
@@ -179,17 +178,15 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
       return;
     }
 
-    const previewBounds = previewRef.current?.getBoundingClientRect();
+    const videoBounds = videoElement.getBoundingClientRect();
     const guideBounds = reticleRef.current?.getBoundingClientRect();
 
-    if (previewBounds && guideBounds && videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+    if (guideBounds && videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
       const crop = getBarcodeScanCrop(
         videoElement.videoWidth,
         videoElement.videoHeight,
-        previewBounds.width,
-        previewBounds.height,
-        guideBounds.width,
-        guideBounds.height
+        videoBounds,
+        guideBounds
       );
 
       if (crop) {
@@ -307,7 +304,7 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
               </button>
             </div>
 
-            <div className={isScanning || isStarting ? "scanner-preview active" : "scanner-preview"} ref={previewRef}>
+            <div className={isScanning || isStarting ? "scanner-preview active" : "scanner-preview"}>
               <video aria-label="バーコードカメラプレビュー" autoPlay muted playsInline ref={videoRef} />
               <span aria-hidden="true" className={scanRegionMode === "wide" ? "scanner-reticle wide" : "scanner-reticle"} ref={reticleRef} />
               {isStarting ? <span className="scanner-preview-status">カメラを起動しています…</span> : null}
