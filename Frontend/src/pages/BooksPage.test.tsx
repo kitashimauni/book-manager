@@ -29,7 +29,9 @@ describe("BookCard", () => {
     expect(html).toContain('class="book-card-author"');
     expect(html).toContain("タイトルの視認性を確認する本");
     expect(html).toContain("テスト著者");
+    expect(html).toContain('class="book-card-heading"');
     expect(html).toContain('class="book-card-primary"');
+    expect(html).toMatch(/<div class="book-card-heading"><p class="eyebrow book-card-location">保管場所未設定<\/p><div class="book-card-primary">/);
     expect(html).toContain('class="book-card-secondary"');
     expect(html).toContain('<p class="book-card-publication">出版日：<span>2024-03</span></p>');
     expect(html).toContain('class="book-card-updated"');
