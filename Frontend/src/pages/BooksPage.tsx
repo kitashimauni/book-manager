@@ -291,7 +291,7 @@ export function BooksPage() {
         </div>
 
         <div className="view-mode-switcher" aria-label="本一覧の表示形式">
-          <span>表示形式:</span>
+          <span>表示:</span>
           <button
             aria-pressed={viewMode === "cards"}
             className="button-secondary"
@@ -306,7 +306,7 @@ export function BooksPage() {
             onClick={() => setViewMode("dense")}
             type="button"
           >
-            密度高めの一覧
+            表形式
           </button>
         </div>
       </section>
@@ -443,23 +443,6 @@ export function BookCard({
             <span>分類なし</span>
           )}
         </div>
-        <details className="book-card-identifiers">
-          <summary>ISBN・バーコードなどの詳細情報</summary>
-          <dl className="book-meta-grid">
-            <div>
-              <dt>ISBN</dt>
-              <dd>{book.isbn || "-"}</dd>
-            </div>
-            <div>
-              <dt>本のバーコード</dt>
-              <dd>{book.bookBarcode || "-"}</dd>
-            </div>
-            <div>
-              <dt>管理用バーコード</dt>
-              <dd>{book.managementBarcode || "-"}</dd>
-            </div>
-          </dl>
-        </details>
       </div>
       <div className="card-actions book-card-actions">
         <Link className="button-secondary link-button" href={`/books/${book.id}`}>
@@ -478,6 +461,23 @@ export function BookCard({
           {isDeleting ? "削除中..." : "削除"}
         </button>
       </div>
+      <details className="book-card-identifiers">
+        <summary>ISBN・バーコードなどの詳細情報</summary>
+        <dl className="book-meta-grid">
+          <div>
+            <dt>ISBN</dt>
+            <dd>{book.isbn || "-"}</dd>
+          </div>
+          <div>
+            <dt>本のバーコード</dt>
+            <dd>{book.bookBarcode || "-"}</dd>
+          </div>
+          <div>
+            <dt>管理用バーコード</dt>
+            <dd>{book.managementBarcode || "-"}</dd>
+          </div>
+        </dl>
+      </details>
     </article>
   );
 }
@@ -492,7 +492,7 @@ function DenseBookList({
   pendingDeleteId: string | null;
 }) {
   return (
-    <div className="book-dense-list" role="table" aria-label="本の密度高めの一覧">
+    <div className="book-dense-list" role="table" aria-label="本の表形式">
       <div className="dense-book-row dense-book-header" role="row">
         <span role="columnheader">本</span>
         <span role="columnheader">保管場所</span>
