@@ -57,8 +57,8 @@ export const listBooksDirectionSchema = z.enum(["asc", "desc"]);
 
 export const listBooksQuerySchema = z.object({
   q: z.string().trim().optional(),
-  locationId: z.string().uuid().optional(),
-  classificationTagId: z.string().uuid().optional(),
+  locationId: z.union([z.string().uuid(), z.literal("unassigned")]).optional(),
+  classificationTagId: z.union([z.string().uuid(), z.literal("unassigned")]).optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
   sort: listBooksSortSchema.optional().default("updatedAt"),
