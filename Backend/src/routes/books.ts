@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, like, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, like, ne, notExists, or, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import type { AppConfig } from "../config/env.js";
@@ -322,11 +322,22 @@ export async function registerBookRoutes(app: FastifyInstance, options: BookRout
       );
     }
 
-    if (parsed.data.locationId) {
+    if (parsed.data.locationId === "unassigned") {
+      conditions.push(isNull(books.locationId));
+    } else if (parsed.data.locationId) {
       conditions.push(eq(books.locationId, parsed.data.locationId));
     }
 
-    if (parsed.data.classificationTagId) {
+    if (parsed.data.classificationTagId === "unassigned") {
+      conditions.push(
+        notExists(
+          db
+            .select({ bookId: bookClassificationTags.bookId })
+            .from(bookClassificationTags)
+            .where(eq(bookClassificationTags.bookId, books.id))
+        )
+      );
+    } else if (parsed.data.classificationTagId) {
       const bookIds = db
         .select({ bookId: bookClassificationTags.bookId })
         .from(bookClassificationTags)

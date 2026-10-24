@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { Book } from "../api/client.js";
-import { BookCard, BooksPage } from "./BooksPage.js";
+import { BookCard, BooksPage, defaultBookSearch } from "./BooksPage.js";
 
 const book: Book = {
   id: "book-123",
@@ -22,6 +22,13 @@ const book: Book = {
 };
 
 describe("BooksPage", () => {
+  it("defaults to ascending title order and offers unassigned filter options", () => {
+    const html = renderToStaticMarkup(<BooksPage />);
+
+    expect(defaultBookSearch).toMatchObject({ sort: "title", direction: "asc" });
+    expect(html.match(/<option value="unassigned">未設定<\/option>/g)).toHaveLength(2);
+  });
+
   it("labels the display options clearly", () => {
     const html = renderToStaticMarkup(<BooksPage />);
 

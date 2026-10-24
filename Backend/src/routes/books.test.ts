@@ -161,6 +161,81 @@ describe("books API", () => {
     });
   });
 
+  it("filters books with unassigned locations and classification tags", async () => {
+    const location = await createLocation("Desk shelf");
+    const tag = await createClassificationTag("Reference");
+
+    const fixtures = [
+      { title: "Assigned both", locationId: location.id, classificationTagIds: [tag.id] },
+      { title: "Only location", locationId: location.id, classificationTagIds: [] },
+      { title: "Only tag", classificationTagIds: [tag.id] },
+      { title: "Neither", classificationTagIds: [] },
+      { title: "Second neither", classificationTagIds: [] }
+    ];
+
+    for (const payload of fixtures) {
+      const created = await app.inject({ method: "POST", url: "/api/books", payload });
+      expect(created.statusCode).toBe(201);
+    }
+
+    async function filteredTitles(query: string) {
+      const response = await app.inject({
+        method: "GET",
+        url: `/api/books?sort=title&direction=asc&${query}`
+      });
+      expect(response.statusCode).toBe(200);
+      return {
+        total: response.json().total as number,
+        titles: response.json().items.map((book: { title: string }) => book.title) as string[]
+      };
+    }
+
+    expect(await filteredTitles("locationId=unassigned")).toEqual({
+      total: 3,
+      titles: ["Neither", "Only tag", "Second neither"]
+    });
+    expect(await filteredTitles("classificationTagId=unassigned")).toEqual({
+      total: 3,
+      titles: ["Neither", "Only location", "Second neither"]
+    });
+    expect(await filteredTitles("locationId=unassigned&classificationTagId=unassigned")).toEqual({
+      total: 2,
+      titles: ["Neither", "Second neither"]
+    });
+    expect(await filteredTitles(`locationId=${location.id}&classificationTagId=unassigned`)).toEqual({
+      total: 1,
+      titles: ["Only location"]
+    });
+    expect(await filteredTitles(`locationId=unassigned&classificationTagId=${tag.id}`)).toEqual({
+      total: 1,
+      titles: ["Only tag"]
+    });
+    expect(await filteredTitles("locationId=unassigned&classificationTagId=unassigned&q=Second")).toEqual({
+      total: 1,
+      titles: ["Second neither"]
+    });
+
+    const pageTwo = await app.inject({
+      method: "GET",
+      url: "/api/books?locationId=unassigned&classificationTagId=unassigned&sort=title&direction=asc&limit=1&page=2"
+    });
+    expect(pageTwo.statusCode).toBe(200);
+    expect(pageTwo.json()).toMatchObject({
+      total: 2,
+      page: 2,
+      limit: 1,
+      items: [expect.objectContaining({ title: "Second neither" })]
+    });
+
+    for (const key of ["locationId", "classificationTagId"]) {
+      const invalid = await app.inject({
+        method: "GET",
+        url: `/api/books?${key}=invalid-id`
+      });
+      expect(invalid.statusCode).toBe(400);
+    }
+  });
+
   it("finds exact book identifier matches with ISBN equivalence and edit exclusion", async () => {
     const first = await app.inject({
       method: "POST",
