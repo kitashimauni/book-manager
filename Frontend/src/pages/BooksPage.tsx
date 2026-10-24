@@ -25,12 +25,12 @@ type SearchState = {
 
 type ViewMode = "cards" | "dense";
 
-const emptySearch: SearchState = {
+export const defaultBookSearch: SearchState = {
   classificationTagId: "",
-  direction: "desc",
+  direction: "asc",
   locationId: "",
   q: "",
-  sort: "updatedAt"
+  sort: "title"
 };
 
 const sortOptions: Array<{ label: string; value: SearchState["sort"] }> = [
@@ -45,12 +45,12 @@ const sortOptions: Array<{ label: string; value: SearchState["sort"] }> = [
 export function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [error, setError] = useState<ApiError | null>(null);
-  const [filters, setFilters] = useState<SearchState>(emptySearch);
+  const [filters, setFilters] = useState<SearchState>(defaultBookSearch);
   const [locations, setLocations] = useState<Location[]>([]);
   const [page, setPage] = useState(1);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [search, setSearch] = useState<SearchState>(emptySearch);
+  const [search, setSearch] = useState<SearchState>(defaultBookSearch);
   const [tags, setTags] = useState<ClassificationTag[]>([]);
   const [total, setTotal] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
@@ -156,8 +156,8 @@ export function BooksPage() {
   }
 
   function clearFilters() {
-    setSearch(emptySearch);
-    setFilters(emptySearch);
+    setSearch(defaultBookSearch);
+    setFilters(defaultBookSearch);
     setPage(1);
   }
 
@@ -222,6 +222,7 @@ export function BooksPage() {
               value={search.locationId}
             >
               <option value="">すべて</option>
+              <option value="unassigned">未設定</option>
               {locations.map((location) => (
                 <option key={location.id} value={location.id}>
                   {location.name}
@@ -240,6 +241,7 @@ export function BooksPage() {
               value={search.classificationTagId}
             >
               <option value="">すべて</option>
+              <option value="unassigned">未設定</option>
               {tags.map((tag) => (
                 <option key={tag.id} value={tag.id}>
                   {tag.name}
@@ -316,7 +318,7 @@ export function BooksPage() {
           <span>冊</span>
           {hasActiveFilters ? <span>現在の条件で絞り込み中</span> : <span>登録済みの本</span>}
           <span className="result-sort-status">
-            並び順: {sortOptions.find((option) => option.value === filters.sort)?.label ?? "更新日時"}・
+            並び順: {sortOptions.find((option) => option.value === filters.sort)?.label ?? "タイトル"}・
             {filters.direction === "asc" ? "昇順" : "降順"}
           </span>
       </div>
