@@ -1,19 +1,26 @@
 import { createPortal } from "react-dom";
 import type { KeyboardEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import type { BarcodeFormat as ZxingBarcodeFormat, IScannerControls } from "@zxing/browser";
+import type { BarcodeFormat as ZxingBarcodeFormat, BrowserMultiFormatReader } from "@zxing/browser";
+import { getBarcodeScanCrop } from "./cameraScanCrop.js";
 
 export type BarcodeScanTarget = "bookBarcode" | "managementBarcode";
+type ScanRegionMode = "barcode" | "wide";
 
 type CameraBarcodeScannerProps = {
   onScan: (value: string, target: BarcodeScanTarget) => void;
 };
 
+const SCAN_INTERVAL_MS = 250;
+
 const FOCUSABLE_ELEMENT_SELECTOR =
   'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 
 export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
-  const controlsRef = useRef<IScannerControls | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const reticleRef = useRef<HTMLSpanElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const isMountedRef = useRef(false);
   const scanSessionRef = useRef(0);
@@ -25,6 +32,7 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [lastScannedValue, setLastScannedValue] = useState<string | null>(null);
+  const [scanRegionMode, setScanRegionMode] = useState<ScanRegionMode>("barcode");
   const [target, setTarget] = useState<BarcodeScanTarget>("bookBarcode");
 
   useEffect(() => {
@@ -77,15 +85,15 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
 
   function stopScanner() {
     scanSessionRef.current += 1;
-    controlsRef.current?.stop();
-    controlsRef.current = null;
 
-    const mediaSource = videoRef.current?.srcObject;
-    if (mediaSource && typeof mediaSource === "object" && "getTracks" in mediaSource) {
-      for (const track of (mediaSource as MediaStream).getTracks()) {
-        track.stop();
-      }
+    if (scanTimerRef.current !== null) {
+      window.clearTimeout(scanTimerRef.current);
+      scanTimerRef.current = null;
     }
+
+    const stream = mediaStreamRef.current;
+    mediaStreamRef.current = null;
+    stream?.getTracks().forEach((track) => track.stop());
 
     if (videoRef.current) {
       videoRef.current.pause();
@@ -123,39 +131,33 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
         return;
       }
 
-      const controls = await reader.decodeFromConstraints(
-        {
-          audio: false,
-          video: {
-            facingMode: { ideal: "environment" }
-          }
-        },
-        videoElement,
-        (result) => {
-          if (!isSessionActive(session)) {
-            return;
-          }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: "environment" } }
+      });
 
-          const value = result?.getText().trim();
-          if (!value) {
-            return;
-          }
-
-          setLastScannedValue(value);
-          onScan(value, targetRef.current);
-          stopScanner();
-          setIsOpen(false);
-        }
-      );
-
+      // The user may have closed the dialog while the camera permission prompt was open.
       if (!isSessionActive(session)) {
-        controls.stop();
+        stream.getTracks().forEach((track) => track.stop());
         return;
       }
 
-      controlsRef.current = controls;
+      mediaStreamRef.current = stream;
+      videoElement.srcObject = stream;
+      await videoElement.play();
+      if (!isSessionActive(session)) {
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) {
+        throw new Error("Camera frame canvas is unavailable");
+      }
+
       setIsStarting(false);
       setIsScanning(true);
+      scanFrame(reader, videoElement, canvas, context, session);
     } catch (error) {
       if (!isSessionActive(session)) {
         return;
@@ -164,6 +166,62 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
       stopScanner();
       setErrorMessage(formatCameraError(error));
     }
+  }
+
+  function scanFrame(
+    reader: BrowserMultiFormatReader,
+    videoElement: HTMLVideoElement,
+    canvas: HTMLCanvasElement,
+    context: CanvasRenderingContext2D,
+    session: number
+  ) {
+    if (!isSessionActive(session)) {
+      return;
+    }
+
+    const previewBounds = previewRef.current?.getBoundingClientRect();
+    const guideBounds = reticleRef.current?.getBoundingClientRect();
+
+    if (previewBounds && guideBounds && videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+      const crop = getBarcodeScanCrop(
+        videoElement.videoWidth,
+        videoElement.videoHeight,
+        previewBounds.width,
+        previewBounds.height,
+        guideBounds.width,
+        guideBounds.height
+      );
+
+      if (crop) {
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+
+        let value: string | undefined;
+        try {
+          context.drawImage(
+            videoElement,
+            crop.x, crop.y, crop.width, crop.height,
+            0, 0, crop.width, crop.height
+          );
+          value = reader.decodeFromCanvas(canvas).getText().trim();
+        } catch {
+          // A frame without a complete barcode inside the guide is expected.
+        }
+
+        if (value) {
+          stopScanner();
+          setLastScannedValue(value);
+          onScan(value, targetRef.current);
+          setIsOpen(false);
+          return;
+        }
+      }
+    }
+
+    scanTimerRef.current = window.setTimeout(
+      () => scanFrame(reader, videoElement, canvas, context, session),
+      SCAN_INTERVAL_MS
+    );
   }
 
   function failToStart(session: number, message: string) {
@@ -249,9 +307,35 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
               </button>
             </div>
 
+            <div className={isScanning || isStarting ? "scanner-preview active" : "scanner-preview"} ref={previewRef}>
+              <video aria-label="バーコードカメラプレビュー" autoPlay muted playsInline ref={videoRef} />
+              <span aria-hidden="true" className={scanRegionMode === "wide" ? "scanner-reticle wide" : "scanner-reticle"} ref={reticleRef} />
+              {isStarting ? <span className="scanner-preview-status">カメラを起動しています…</span> : null}
+            </div>
+
             <p className="subtle-text" id="camera-scanner-description">
-              読み取り結果の入力先を選び、バーコードを枠内に合わせてください。
+              枠内だけを読み取ります。ISBNとJANが近い場合は「1本ずつ」を選び、読み取りたい方を細い枠に合わせてください。
             </p>
+
+            <div aria-label="読み取り範囲" className="scanner-region-switch" role="group">
+              <span>読み取り範囲</span>
+              <button
+                aria-pressed={scanRegionMode === "barcode"}
+                className="button-secondary"
+                onClick={() => setScanRegionMode("barcode")}
+                type="button"
+              >
+                1本ずつ
+              </button>
+              <button
+                aria-pressed={scanRegionMode === "wide"}
+                className="button-secondary"
+                onClick={() => setScanRegionMode("wide")}
+                type="button"
+              >
+                QR・広い範囲
+              </button>
+            </div>
 
             <fieldset className="scanner-targets">
               <legend>読み取り結果の入力先</legend>
@@ -279,11 +363,6 @@ export function CameraBarcodeScanner({ onScan }: CameraBarcodeScannerProps) {
               </label>
             </fieldset>
 
-            <div className={isScanning || isStarting ? "scanner-preview active" : "scanner-preview"}>
-              <video aria-label="バーコードカメラプレビュー" autoPlay muted playsInline ref={videoRef} />
-              <span aria-hidden="true" className="scanner-reticle" />
-              {isStarting ? <span className="scanner-preview-status">カメラを起動しています…</span> : null}
-            </div>
 
             {errorMessage ? (
               <p className="scanner-error" role="alert">
