@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { Book } from "../api/client.js";
-import { BookCard } from "./BooksPage.js";
+import { BookCard, BooksPage } from "./BooksPage.js";
 
 const book: Book = {
   id: "book-123",
@@ -21,6 +21,17 @@ const book: Book = {
   updatedAt: "2026-01-02T03:04:05Z"
 };
 
+describe("BooksPage", () => {
+  it("labels the display options clearly", () => {
+    const html = renderToStaticMarkup(<BooksPage />);
+
+    expect(html).toContain("表示:");
+    expect(html).toContain(">カード</button>");
+    expect(html).toContain(">表形式</button>");
+    expect(html).not.toContain("密度高めの一覧");
+  });
+});
+
 describe("BookCard", () => {
   it("emphasizes title and author and shows the publication date", () => {
     const html = renderToStaticMarkup(<BookCard book={book} isDeleting={false} onDelete={() => {}} />);
@@ -38,6 +49,9 @@ describe("BookCard", () => {
     expect(html).toContain("更新：");
     expect(html.indexOf('class="book-card-updated"')).toBeLessThan(html.indexOf('class="book-card-identifiers"'));
     expect(html).toContain('<details class="book-card-identifiers">');
+    expect(html.indexOf('class="card-actions book-card-actions"')).toBeLessThan(
+      html.indexOf('<details class="book-card-identifiers">')
+    );
     expect(html).toContain("ISBN・バーコードなどの詳細情報");
     expect(html.indexOf('class="book-card-title"')).toBeLessThan(html.indexOf('class="book-card-identifiers"'));
     expect(html).toContain("<dt>ISBN</dt><dd>9780132350884</dd>");
